@@ -5,7 +5,7 @@ import org.testng.annotations.Test;
 import base.BaseTest;
 import utils.ConfigReader;
 
-public class POFlow extends BaseTest{
+public class POFlow extends BaseTest {
 
 	@Test(groups = { "basic", "purchase_order", "regression" })
 	public void verificationOFPurchaseOrderFlow() {
