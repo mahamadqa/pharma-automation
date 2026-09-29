@@ -1,0 +1,26 @@
+# Maven build artifacts
+target/
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Test reports & logs
+test-output/
+logs/
+*.log
+ExtentReport.html
+
+# IDE / Editor files
+.vscode/
+.settings/
+.project
+.classpath
+.idea/
+*.iml
+.DS_Store
+
+# Temporary files
+/tmp/
+*.tmp
