@@ -67,37 +67,46 @@ public class BaseTest {
 		Playwright playwright = Playwright.create();
 		playwrightTL.set(playwright);
 
-		String browserName = prop.getProperty("browser");
+		String browserName = ConfigReader.get("browser");
 		reader = new ConfigReader();
+
+		boolean isHeadless = ConfigReader.headlessMode();
 
 		Browser browser;
 		switch (browserName.toLowerCase()) {
 		case "chrome":
+		case "chromium":
 			browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-					.setHeadless(ConfigReader.headlessMode()).setArgs(Arrays.asList("--start-maximized")));
+					.setHeadless(isHeadless).setArgs(Arrays.asList("--start-maximized", "--no-sandbox", "--disable-dev-shm-usage")));
 			break;
 
 		case "firefox":
 			browser = playwright.firefox().launch(new BrowserType.LaunchOptions()
-					.setHeadless(ConfigReader.headlessMode()).setArgs(Arrays.asList("--start-maximized")));
+					.setHeadless(isHeadless).setArgs(Arrays.asList("--start-maximized")));
 			break;
 
 		default:
-			throw new RuntimeException("Browser not supported");
+			throw new RuntimeException("Browser not supported: " + browserName);
 		}
 		browserTL.set(browser);
 
-		BrowserContext context = browser
-				.newContext(new Browser.NewContextOptions().setIgnoreHTTPSErrors(true).setViewportSize(null));
+		Browser.NewContextOptions contextOptions = new Browser.NewContextOptions().setIgnoreHTTPSErrors(true);
+		if (isHeadless) {
+			contextOptions.setViewportSize(1920, 1080);
+		} else {
+			contextOptions.setViewportSize(null);
+		}
+
+		BrowserContext context = browser.newContext(contextOptions);
 		contextTL.set(context);
 
 		Page page = context.newPage();
 		pageTL.set(page);
 
-		page.navigate(prop.getProperty("url"));
+		page.navigate(ConfigReader.get("url"));
 		page.bringToFront();
 		page.locator("body").click();
-		log.info("Launched " + browserName + " browser and navigated to URL: " + prop.getProperty("url"));
+		log.info("Launched " + browserName + " browser (headless=" + isHeadless + ") and navigated to URL: " + ConfigReader.get("url"));
 		return page;
 	}
 	

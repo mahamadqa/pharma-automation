@@ -78,7 +78,7 @@ pipeline {
                         groupFlag = "-Dgroups=${params.MODULE}"
                     }
 
-                    // Run with Java 17 JDK environment
+                    // Execute Maven test (wraps with xvfb-run if headed mode is selected on headless Linux)
                     sh """
                         if [ -d "/usr/lib/jvm/java-17-openjdk-amd64" ]; then
                             export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
@@ -88,7 +88,12 @@ pipeline {
                             export PATH="\$JAVA_HOME/bin:\$PATH"
                         fi
 
-                        mvn clean test -Dregion=${params.REGION} ${groupFlag} -Dbrowser=${params.BROWSER} -Dheadless=${params.HEADLESS}
+                        if [ "${params.HEADLESS}" = "false" ] && [ -z "\$DISPLAY" ] && which xvfb-run >/dev/null 2>&1; then
+                            echo "Headed mode requested without active display: Running with xvfb-run virtual display..."
+                            xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" mvn clean test -Dregion=${params.REGION} ${groupFlag} -Dbrowser=${params.BROWSER} -Dheadless=${params.HEADLESS}
+                        else
+                            mvn clean test -Dregion=${params.REGION} ${groupFlag} -Dbrowser=${params.BROWSER} -Dheadless=${params.HEADLESS}
+                        fi
                     """
                 }
             }
