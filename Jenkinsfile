@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     /* 
-    // Uncomment and configure if Maven and JDK tools are configured in Jenkins Global Tool Configuration
+    // If you configure JDK & Maven in Jenkins "Global Tool Configuration", you can uncomment this:
     tools {
-        maven 'Maven-3.9'
         jdk 'JDK-17'
+        maven 'Maven-3.9'
     }
     */
 
@@ -40,16 +40,33 @@ pipeline {
     stages {
         stage('Environment Info') {
             steps {
-                echo "=================================================="
-                echo " Pharma Automation Test Execution Pipeline"
-                echo "=================================================="
-                echo " Test Data Profile (Region) : ${params.REGION}"
-                echo " Test Module / Groups       : ${params.MODULE}"
-                echo " Target Browser             : ${params.BROWSER}"
-                echo " Headless Mode              : ${params.HEADLESS}"
-                echo " Build ID                   : ${env.BUILD_ID}"
-                echo " Git Branch                 : ${env.GIT_BRANCH ?: 'N/A'}"
-                echo "=================================================="
+                script {
+                    echo "=================================================="
+                    echo " Pharma Automation Test Execution Pipeline"
+                    echo "=================================================="
+                    echo " Test Data Profile (Region) : ${params.REGION}"
+                    echo " Test Module / Groups       : ${params.MODULE}"
+                    echo " Target Browser             : ${params.BROWSER}"
+                    echo " Headless Mode              : ${params.HEADLESS}"
+                    echo " Build ID                   : ${env.BUILD_ID}"
+                    echo " Git Branch                 : ${env.GIT_BRANCH ?: 'N/A'}"
+                    echo "=================================================="
+                    
+                    // Display Java & Maven version in build log
+                    sh '''
+                        if [ -d "/usr/lib/jvm/java-17-openjdk-amd64" ]; then
+                            export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
+                            export PATH="$JAVA_HOME/bin:$PATH"
+                        elif [ -d "/usr/lib/jvm/java-1.17.0-openjdk-amd64" ]; then
+                            export JAVA_HOME="/usr/lib/jvm/java-1.17.0-openjdk-amd64"
+                            export PATH="$JAVA_HOME/bin:$PATH"
+                        fi
+                        echo "JAVA_HOME is set to: $JAVA_HOME"
+                        java -version
+                        javac -version || echo "javac not in default PATH"
+                        mvn -version
+                    '''
+                }
             }
         }
 
@@ -61,8 +78,18 @@ pipeline {
                         groupFlag = "-Dgroups=${params.MODULE}"
                     }
 
-                    // Execute Maven test with dynamic properties passed to DataManager and BaseTest
-                    sh "mvn clean test -Dregion=${params.REGION} ${groupFlag} -Dbrowser=${params.BROWSER} -Dheadless=${params.HEADLESS}"
+                    // Run with Java 17 JDK environment
+                    sh """
+                        if [ -d "/usr/lib/jvm/java-17-openjdk-amd64" ]; then
+                            export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
+                            export PATH="\$JAVA_HOME/bin:\$PATH"
+                        elif [ -d "/usr/lib/jvm/java-1.17.0-openjdk-amd64" ]; then
+                            export JAVA_HOME="/usr/lib/jvm/java-1.17.0-openjdk-amd64"
+                            export PATH="\$JAVA_HOME/bin:\$PATH"
+                        fi
+
+                        mvn clean test -Dregion=${params.REGION} ${groupFlag} -Dbrowser=${params.BROWSER} -Dheadless=${params.HEADLESS}
+                    """
                 }
             }
         }
