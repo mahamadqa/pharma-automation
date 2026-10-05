@@ -14,9 +14,16 @@ public class DataManager {
     private static String currentRegion;
 
     public static synchronized Properties initData() {
-        // Read region from System property (-Dregion=india or -Dregion=abroad), fallback to 'india'
-        String region = System.getProperty("region", "india").trim().toLowerCase();
+        // Read region from System property (-Dregion=localization or -Dregion=non-localization), fallback to 'localization'
+        String region = System.getProperty("region", "localization").trim().toLowerCase();
         
+        // Handle common aliases for backwards compatibility
+        if (region.equals("india") || region.equals("local")) {
+            region = "localization";
+        } else if (region.equals("abroad") || region.equals("non_localization") || region.equals("nonlocalization") || region.equals("international")) {
+            region = "non-localization";
+        }
+
         // If data is already loaded for the current region, return it
         if (testData != null && region.equalsIgnoreCase(currentRegion)) {
             return testData;
@@ -30,9 +37,9 @@ public class DataManager {
 
         File file = new File(dataFilePath);
         if (!file.exists()) {
-            log.warn("Test data file not found at: {}. Falling back to india.properties", dataFilePath);
-            dataFilePath = System.getProperty("user.dir") + "/src/test/resources/testdata/india.properties";
-            currentRegion = "india";
+            log.warn("Test data file not found at: {}. Falling back to localization.properties", dataFilePath);
+            dataFilePath = System.getProperty("user.dir") + "/src/test/resources/testdata/localization.properties";
+            currentRegion = "localization";
         }
 
         try (FileInputStream fis = new FileInputStream(dataFilePath)) {

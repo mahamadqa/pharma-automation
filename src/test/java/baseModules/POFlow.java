@@ -15,7 +15,7 @@ public class POFlow extends BaseTest {
 		purchaseOrder.navigateToPOWindow();
 		toolbar.createNewRecord();
 
-		// Methods fetch India vs Abroad data dynamically based on -Dregion
+		// Methods fetch Localization vs Non-Localization data dynamically based on -Dregion
 		purchaseOrder.selectOrg();
 		purchaseOrder.selecTtargetDocType();
 		purchaseOrder.selectBPartner();

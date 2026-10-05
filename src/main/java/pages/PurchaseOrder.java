@@ -14,6 +14,7 @@ public class PurchaseOrder {
 
 	private static final Logger log = LogManager.getLogger(PurchaseOrder.class);
 	private Page page;
+		
 	
 	protected String org = "//span[@instancename='C_Order0AD_Org_ID']//input";
 	protected String targetDocType = "//span[@instancename='C_Order0C_DocTypeTarget_ID']//input";
