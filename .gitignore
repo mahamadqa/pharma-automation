@@ -1,3 +1,4 @@
+
 # Maven build artifacts
 target/
 *.war
@@ -24,3 +25,4 @@ ExtentReport.html
 # Temporary files
 /tmp/
 *.tmp
+
