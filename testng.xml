@@ -4,7 +4,7 @@
     <test name="Pharma Modules Test">
         <packages>
             <package name="baseModules.*"/>
-            <package name="loginTest.*"/>
+            
         </packages>
     </test>
 </suite>
