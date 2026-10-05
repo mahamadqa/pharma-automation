@@ -30,6 +30,7 @@ public class PurchaseOrder {
 	
 	public void selectOrg(String orgName) {
 		BaseTest.fill(org, orgName);
+		log.info("Selected Organization: " + orgName);
 	}
 
 	public void selectOrg() {
@@ -38,6 +39,7 @@ public class PurchaseOrder {
 	
 	public void selecTtargetDocType(String docType) {
 		BaseTest.fill(targetDocType, docType);
+		log.info("Selected Target Document Type: " + docType);
 	}
 
 	public void selecTtargetDocType() {
@@ -46,6 +48,7 @@ public class PurchaseOrder {
 	
 	public void selectBPartner(String partnerName) {
 		BaseTest.fill(bPartner, partnerName);
+		log.info("Selected Business Partner: " + partnerName);
 	}
 
 	public void selectBPartner() {
@@ -54,6 +57,7 @@ public class PurchaseOrder {
 	
 	public void selectSalesRep(String repName) {
 		BaseTest.fill(salesRep, repName);
+		log.info("Selected Sales Representative: " + repName);
 	}
 
 	public void selectSalesRep() {
@@ -62,21 +66,25 @@ public class PurchaseOrder {
 	
 	public void clickOnPOLineTab() {
 		BaseTest.click(POLineTab);
+		log.info("Clicked on 'PO Line' tab");
 	}
 	
 	public void navigateToPOWindow() {
+		log.info("Navigating to Purchase Order window");
 		Locator searchPOWindow = page.locator("//td[@title='Manage Purchase Orders']//span[normalize-space()='Purchase Order']");
 		page.locator("//input[@class='z-bandbox-input']").fill("Purchase Order");
 		
 		searchPOWindow.waitFor(new Locator.WaitForOptions()
 		        .setState(WaitForSelectorState.ATTACHED));
 		//page.waitForLoadState(LoadState.NETWORKIDLE);
-		searchPOWindow.click();	
+		searchPOWindow.click();
+		log.info("Opened Purchase Order window successfully");
 	}
 	
 	public void enterProdct(String productName) {
 		page.fill(product, productName);
 		page.click("//textarea[@instancename='C_OrderLine0Description']");
+		log.info("Entered Product: " + productName);
 	}
 
 	public void enterProdct() {
@@ -85,11 +93,6 @@ public class PurchaseOrder {
 	
 	public void navigateBackOnPoHeader() {
 		page.click("//div[@instancename='breadcrumb']//a[text()='Purchase Order']");
+		log.info("Navigated back to Purchase Order header");
 	}
-	
-	
-	
-	
-	
-	
 }
