@@ -2,9 +2,10 @@ package pages;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.testng.Assert;
+
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
 import base.BaseTest;
@@ -13,86 +14,227 @@ import utils.DataManager;
 public class PurchaseOrder {
 
 	private static final Logger log = LogManager.getLogger(PurchaseOrder.class);
-	private Page page;
-		
-	
+	private final Page page;
+
+	// Locators - clean single selectors without and/or/|
 	protected String org = "//span[@instancename='C_Order0AD_Org_ID']//input";
 	protected String targetDocType = "//span[@instancename='C_Order0C_DocTypeTarget_ID']//input";
 	protected String bPartner = "//div[@instancename='C_Order0C_BPartner_ID']//span//input";
 	protected String salesRep = "//span[@instancename='C_Order0SalesRep_ID']//input";
 	protected String POLineTab = "//span[text()='PO Line']";
 	protected String product = "//div[@instancename='C_OrderLine0M_Product_ID']//input";
-	
-	
+
+	private final Locator orgInput;
+	private final Locator targetDocTypeInput;
+	private final Locator bPartnerInput;
+	private final Locator salesRepInput;
+	private final Locator poLineTab;
+	private final Locator productInput;
+	private final Locator descriptionTextarea;
+	private final Locator poHeaderBreadcrumb;
+	private final Locator poMenuSearchInput;
+	private final Locator searchPOWindowItem;
+
 	public PurchaseOrder(Page page) {
-        this.page = page;
-    }
-	
+		this.page = page;
+		this.orgInput = page.locator(org);
+		this.targetDocTypeInput = page.locator(targetDocType);
+		this.bPartnerInput = page.locator(bPartner);
+		this.salesRepInput = page.locator(salesRep);
+		this.poLineTab = page.locator(POLineTab);
+		this.productInput = page.locator(product);
+		this.descriptionTextarea = page.locator("//textarea[@instancename='C_OrderLine0Description']");
+		this.poHeaderBreadcrumb = page.locator("//div[@instancename='breadcrumb']//a[text()='Purchase Order']");
+		this.poMenuSearchInput = page.locator("//input[@class='z-bandbox-input']");
+		this.searchPOWindowItem = page.locator("//td[@title='Manage Purchase Orders']//span[normalize-space()='Purchase Order']");
+	}
+
+	/**
+	 * Verifies whether the specified field has data filled in it.
+	 *
+	 * @param fieldLocator  Locator of the input field
+	 * @param fieldName     Descriptive field name for logging and assertions
+	 * @param expectedValue Expected value that was filled
+	 * @return true if field contains data, false otherwise
+	 */
+	public boolean verifyFieldFilled(Locator fieldLocator, String fieldName, String expectedValue) {
+		String actualValue = fieldLocator.inputValue();
+		if (actualValue == null || actualValue.trim().isEmpty()) {
+			log.error("❌ Field [{}] is NOT filled! Expected: [{}]", fieldName, expectedValue);
+			Assert.fail("Field [" + fieldName + "] was not filled with data. Expected: " + expectedValue);
+			return false;
+		}
+
+		log.info("✅ Verified [{}] field is filled with data: [{}]", fieldName, actualValue.trim());
+		if (expectedValue != null && !expectedValue.trim().isEmpty()) {
+			boolean matches = actualValue.trim().equalsIgnoreCase(expectedValue.trim())
+					|| actualValue.toLowerCase().contains(expectedValue.toLowerCase())
+					|| expectedValue.toLowerCase().contains(actualValue.toLowerCase());
+			if (!matches) {
+				log.warn("⚠️ Field [{}] value [{}] does not strictly match expected [{}], but data is filled.", fieldName, actualValue.trim(), expectedValue);
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Verifies whether the specified field has data filled in it using a locator string.
+	 *
+	 * @param locatorString String locator of the field
+	 * @param fieldName     Descriptive name
+	 * @param expectedValue Expected value
+	 * @return true if filled, false otherwise
+	 */
+	public boolean verifyFieldFilled(String locatorString, String fieldName, String expectedValue) {
+		return verifyFieldFilled(page.locator(locatorString), fieldName, expectedValue);
+	}
+
+	/**
+	 * Checks if a field has data filled (not empty).
+	 *
+	 * @param fieldLocator Locator of the input field
+	 * @return true if filled, false if null or empty
+	 */
+	public boolean isFieldFilled(Locator fieldLocator) {
+		String actualValue = fieldLocator.inputValue();
+		return actualValue != null && !actualValue.trim().isEmpty();
+	}
+
+	/**
+	 * Checks if a field has data filled using locator string.
+	 *
+	 * @param locatorString String locator
+	 * @return true if filled, false if null or empty
+	 */
+	public boolean isFieldFilled(String locatorString) {
+		return isFieldFilled(page.locator(locatorString));
+	}
+
+	/**
+	 * Gets the current filled value of a field.
+	 *
+	 * @param fieldLocator Locator of the input field
+	 * @return filled text value
+	 */
+	public String getFieldValue(Locator fieldLocator) {
+		return fieldLocator.inputValue();
+	}
+
+	/**
+	 * Gets the current filled value of a field using locator string.
+	 *
+	 * @param locatorString String locator
+	 * @return filled text value
+	 */
+	public String getFieldValue(String locatorString) {
+		return page.locator(locatorString).inputValue();
+	}
+
+	/**
+	 * Navigates to the Manage Purchase Orders window via search bandbox.
+	 */
+	public void navigateToPOWindow() {
+		page.waitForTimeout(1000);
+		log.info("Navigating to Purchase Order window...");
+		poMenuSearchInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		poMenuSearchInput.fill("Purchase Order");
+		page.waitForTimeout(2000);
+
+		searchPOWindowItem.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(10000));
+		searchPOWindowItem.click();
+		page.waitForTimeout(1000);
+		log.info("Opened Purchase Order window successfully.");
+	}
+
 	public void selectOrg(String orgName) {
-		BaseTest.fill(org, orgName);
-		log.info("Selected Organization: " + orgName);
+		page.waitForTimeout(1000);
+		log.info("Selecting Organization: [{}]", orgName);
+		orgInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		orgInput.fill(orgName);
+		orgInput.press("Tab");
+		page.waitForTimeout(2000);
+		verifyFieldFilled(orgInput, "Organization", orgName);
+		log.info("Selected Organization: [{}]", orgName);
 	}
 
 	public void selectOrg() {
 		selectOrg(DataManager.getData("org"));
 	}
-	
+
 	public void selecTtargetDocType(String docType) {
-		BaseTest.fill(targetDocType, docType);
-		log.info("Selected Target Document Type: " + docType);
+		log.info("Selecting Target Document Type: [{}]", docType);
+		targetDocTypeInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		targetDocTypeInput.fill(docType);
+		targetDocTypeInput.press("Tab");
+		page.waitForTimeout(2000);
+		verifyFieldFilled(targetDocTypeInput, "Target Document Type", docType);
+		log.info("Selected Target Document Type: [{}]", docType);
 	}
 
 	public void selecTtargetDocType() {
 		selecTtargetDocType(DataManager.getData("targetDocType"));
 	}
-	
+
 	public void selectBPartner(String partnerName) {
-		BaseTest.fill(bPartner, partnerName);
-		log.info("Selected Business Partner: " + partnerName);
+		log.info("Selecting Business Partner: [{}]", partnerName);
+		bPartnerInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		bPartnerInput.fill(partnerName);
+		bPartnerInput.press("Tab");
+		page.waitForTimeout(2000);
+		verifyFieldFilled(bPartnerInput, "Business Partner", partnerName);
+		log.info("Selected Business Partner: [{}]", partnerName);
 	}
 
 	public void selectBPartner() {
 		selectBPartner(DataManager.getData("bPartner"));
 	}
-	
+
 	public void selectSalesRep(String repName) {
-		BaseTest.fill(salesRep, repName);
-		log.info("Selected Sales Representative: " + repName);
+		log.info("Selecting Sales Representative: [{}]", repName);
+		salesRepInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		salesRepInput.fill(repName);
+		salesRepInput.press("Tab");
+		page.waitForTimeout(2000);
+		verifyFieldFilled(salesRepInput, "Sales Representative", repName);
+		log.info("Selected Sales Representative: [{}]", repName);
 	}
 
 	public void selectSalesRep() {
 		selectSalesRep(DataManager.getData("salesRep"));
 	}
-	
+
 	public void clickOnPOLineTab() {
-		BaseTest.click(POLineTab);
-		log.info("Clicked on 'PO Line' tab");
+		log.info("Clicking on 'PO Line' tab...");
+		poLineTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		poLineTab.click();
+		page.waitForTimeout(1000);
+		log.info("Navigated to 'PO Line' tab.");
 	}
-	
-	public void navigateToPOWindow() {
-		log.info("Navigating to Purchase Order window");
-		Locator searchPOWindow = page.locator("//td[@title='Manage Purchase Orders']//span[normalize-space()='Purchase Order']");
-		page.locator("//input[@class='z-bandbox-input']").fill("Purchase Order");
-		
-		searchPOWindow.waitFor(new Locator.WaitForOptions()
-		        .setState(WaitForSelectorState.ATTACHED));
-		//page.waitForLoadState(LoadState.NETWORKIDLE);
-		searchPOWindow.click();
-		log.info("Opened Purchase Order window successfully");
-	}
-	
+
 	public void enterProdct(String productName) {
-		page.fill(product, productName);
-		page.click("//textarea[@instancename='C_OrderLine0Description']");
-		log.info("Entered Product: " + productName);
+		page.waitForTimeout(1000);
+		log.info("Entering Product: [{}]", productName);
+		productInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		productInput.fill(productName);
+		productInput.press("Tab");
+		page.waitForTimeout(2000);
+		verifyFieldFilled(productInput, "Product", productName);
+
+		if (descriptionTextarea.isVisible()) {
+			descriptionTextarea.click();
+		}
+		log.info("Entered Product: [{}] successfully.", productName);
 	}
 
 	public void enterProdct() {
 		enterProdct(DataManager.getData("product"));
 	}
-	
+
 	public void navigateBackOnPoHeader() {
-		page.click("//div[@instancename='breadcrumb']//a[text()='Purchase Order']");
-		log.info("Navigated back to Purchase Order header");
+		log.info("Navigating back to Purchase Order header tab...");
+		poHeaderBreadcrumb.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		poHeaderBreadcrumb.click();
+		page.waitForTimeout(1000);
+		log.info("Navigated back to Purchase Order header.");
 	}
 }

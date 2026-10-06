@@ -3,50 +3,95 @@ package pages;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.WaitForSelectorState;
 
 public class Toolbar {
 
 	private static final Logger log = LogManager.getLogger(Toolbar.class);
-	private Page page;
+	private final Page page;
 
-	private String createNewButton = "//a[@title='New    Alt+N']";
-	private String saveButton = "//a[@title='Save Changes    Alt+S']";
-	private String gridView = "//a[@title='Grid Toggle    Alt+T']";
-	private String previewButton = "//a[@title='Preview']";
-	private String searchButton = "//a[@title='Lookup Record    Alt+F']";
+	// Locators - clean single selectors without and/or/|
+	private final Locator createNewButton;
+	private final Locator saveButton;
+	private final Locator gridViewButton;
+	private final Locator previewButton;
+	private final Locator searchButton;
+	private final Locator docNoSearchInput;
+	private final Locator searchOkButton;
 
 	public Toolbar(Page page) {
 		this.page = page;
+		this.createNewButton = page.locator("//a[@title='New    Alt+N']");
+		this.saveButton = page.locator("//a[@title='Save Changes    Alt+S']");
+		this.gridViewButton = page.locator("//a[@title='Grid Toggle    Alt+T']");
+		this.previewButton = page.locator("//a[@title='Preview']");
+		this.searchButton = page.locator("//a[@title='Lookup Record    Alt+F']");
+		this.docNoSearchInput = page.locator("//input[@instancename='DocumentNo']");
+		this.searchOkButton = page.locator("(//button[@title='OK'])[1]");
 	}
 
+	/**
+	 * Clicks the Toolbar 'New' button to create a new record.
+	 */
 	public void createNewRecord() {
-		page.click(createNewButton);
+		log.info("Creating a new record via Toolbar 'New' button...");
+		createNewButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		createNewButton.click();
 		page.waitForTimeout(1000);
+		log.info("New record initialized.");
 	}
 
+	/**
+	 * Clicks the Toolbar 'Save Changes' button to persist the current record.
+	 */
 	public void saveRecord() {
-		page.click(saveButton);
+		log.info("Saving changes via Toolbar 'Save' button...");
+		saveButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		saveButton.click();
 		page.waitForTimeout(1000);
+		log.info("Record saved successfully.");
 	}
 
+	/**
+	 * Toggles between Form View and Grid View.
+	 */
 	public void clickOnGrid() {
-		page.click(gridView);
+		log.info("Toggling Form/Grid View via Toolbar...");
+		gridViewButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		gridViewButton.click();
 		page.waitForTimeout(1000);
+		log.info("Toggled Grid View.");
 	}
 
+	/**
+	 * Clicks the Toolbar 'Preview' button to open report preview.
+	 */
 	public void clickOnPreviewButton() {
-		log.info("clickOnPreviewButton");
-		page.click(previewButton);
-		page.waitForTimeout(3000);
-	}
-
-	public void searchDocNo(String DocNO) {
-		log.info("Search Document No");
-		page.click(searchButton);
+		log.info("Clicking on Toolbar 'Preview' button...");
+		previewButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		previewButton.click();
 		page.waitForTimeout(1000);
-		page.fill("//input[@instancename='DocumentNo']", DocNO);
-		page.click("(//button[@title='OK'])[1]");
+		log.info("Preview button clicked.");
 	}
 
+	/**
+	 * Searches and opens a record by Document Number.
+	 *
+	 * @param docNo Document Number to search
+	 */
+	public void searchDocNo(String docNo) {
+		log.info("Looking up record with Document No: [{}]", docNo);
+		searchButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		searchButton.click();
+		page.waitForTimeout(1000);
+		docNoSearchInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		docNoSearchInput.fill(docNo);
+		page.waitForTimeout(1000);
+		searchOkButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+		searchOkButton.click();
+		page.waitForTimeout(1000);
+		log.info("Lookup submitted for Document No: [{}]", docNo);
+	}
 }

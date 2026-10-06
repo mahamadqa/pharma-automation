@@ -2,46 +2,55 @@ package pages;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.testng.Assert;
 
+import com.microsoft.playwright.FrameLocator;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.BoundingBox;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
 public class HTMLReportsPreview {
+
 	private static final Logger log = LogManager.getLogger(HTMLReportsPreview.class);
-	private Page page;
-
-	private String header1 = "(//div[@class='pagedjs_margin-top'])[1]";
-	private String Content1 = "(//div[@class='pagedjs_area'])[1]";
-	private String Footer1 = "(//div[@class='pagedjs_margin-bottom'])[1]";
-
-	private String header2 = "(//div[@class='pagedjs_margin-top'])[2]";
-	private String Content2 = "(//div[@class='pagedjs_area'])[2]";
+	private final Page page;
 
 	public HTMLReportsPreview(Page page) {
 		this.page = page;
 	}
 
+	/**
+	 * Verifies that header, content, and footer do not overlap across all pages of the HTML report preview.
+	 */
 	public void checkOverlapIssue() {
-		Locator lastPage = page.frameLocator("//iframe[@class='z-iframe']")
-				.locator("(//div[@data-page-number])[last()]");
-		lastPage.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED));
+		log.info("Checking for header/content/footer overlap issues in HTML Report Preview...");
 
-		int totalPages = Integer.parseInt(lastPage.getAttribute("data-page-number"));
+		FrameLocator reportFrame = page.frameLocator("//iframe[@class='z-iframe']");
+		Locator lastPage = reportFrame.locator("(//div[@data-page-number])[last()]");
+		lastPage.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(15000));
 
-		log.info("Total Pages: " + totalPages);
+		String pageNumAttr = lastPage.getAttribute("data-page-number");
+		Assert.assertNotNull(pageNumAttr, "Failed to retrieve 'data-page-number' from report preview.");
+
+		int totalPages = Integer.parseInt(pageNumAttr.trim());
+		log.info("Total pages detected in report: [{}]", totalPages);
 
 		for (int i = 1; i <= totalPages; i++) {
-			BoundingBox headerBox = page.frameLocator("//iframe[@class='z-iframe']")
-					.locator("(//div[@class='pagedjs_margin-top'])[" + i + "]").boundingBox();
-			BoundingBox contentBox = page.frameLocator("//iframe[@class='z-iframe']")
-					.locator("(//div[@class='pagedjs_area'])[" + i + "]").boundingBox();
-			BoundingBox footerBox = page.frameLocator("//iframe[@class='z-iframe']")
-					.locator("(//div[@class='pagedjs_margin-bottom'])[" + i + "]").boundingBox();
+			Locator headerLoc = reportFrame.locator("(//div[@class='pagedjs_margin-top'])[" + i + "]");
+			Locator contentLoc = reportFrame.locator("(//div[@class='pagedjs_area'])[" + i + "]");
+			Locator footerLoc = reportFrame.locator("(//div[@class='pagedjs_margin-bottom'])[" + i + "]");
+
+			headerLoc.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(5000));
+			contentLoc.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(5000));
+			footerLoc.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(5000));
+
+			BoundingBox headerBox = headerLoc.boundingBox();
+			BoundingBox contentBox = contentLoc.boundingBox();
+			BoundingBox footerBox = footerLoc.boundingBox();
 
 			if (headerBox == null || contentBox == null || footerBox == null) {
-				throw new AssertionError("Unable to get bounding box for Header/Content/Footer");
+				log.error("Unable to calculate bounding box for Page [{}]", i);
+				Assert.fail("Unable to get bounding box for Header/Content/Footer on Page " + i);
 			}
 
 			// Header coordinates
@@ -56,44 +65,30 @@ public class HTMLReportsPreview {
 			double footerTop = footerBox.y;
 			double footerBottom = footerBox.y + footerBox.height;
 
-			log.info("====================Page:" + i + "======================");
-			log.info("HEADER");
-			log.info("Top    : " + headerTop);
-			log.info("Bottom : " + headerBottom);
+			log.info("-------------------- Page: [{}] --------------------", i);
+			log.info("HEADER  -> Top: {}, Bottom: {}", headerTop, headerBottom);
+			log.info("CONTENT -> Top: {}, Bottom: {}", contentTop, contentBottom);
+			log.info("FOOTER  -> Top: {}, Bottom: {}", footerTop, footerBottom);
 
-			log.info("CONTENT");
-			log.info("Top    : " + contentTop);
-			log.info("Bottom : " + contentBottom);
-
-			log.info("FOOTER");
-			log.info("Top    : " + footerTop);
-			log.info("Bottom : " + footerBottom);
-
-			// Header vs Content
+			// Check Header vs Content overlap
 			if (headerBottom > contentTop) {
 				double overlap = headerBottom - contentTop;
-				log.info("❌ HEADER / CONTENT OVERLAP");
-				log.info("Overlap: " + overlap + " px");
-				throw new AssertionError("HEADER / CONTENT OVERLAP");
-
+				log.error("❌ HEADER / CONTENT OVERLAP detected on Page [{}] by {} px", i, overlap);
+				Assert.fail("HEADER / CONTENT OVERLAP on Page " + i + " by " + overlap + " px");
 			} else {
-
-				log.info("✅ Header and Content do not overlap");
+				log.info("✅ Page [{}]: Header and Content do not overlap.", i);
 			}
 
-			// Content vs Footer
+			// Check Content vs Footer overlap
 			if (contentBottom > footerTop) {
 				double overlap = contentBottom - footerTop;
-				log.info("❌ CONTENT / FOOTER OVERLAP");
-				log.info("Overlap: " + overlap + " px");
-				throw new AssertionError("CONTENT / FOOTER OVERLAP");
-
+				log.error("❌ CONTENT / FOOTER OVERLAP detected on Page [{}] by {} px", i, overlap);
+				Assert.fail("CONTENT / FOOTER OVERLAP on Page " + i + " by " + overlap + " px");
 			} else {
-
-				log.info("✅ Content and Footer do not overlap");
+				log.info("✅ Page [{}]: Content and Footer do not overlap.", i);
 			}
 		}
 
+		log.info("HTML Report Preview overlap verification passed for all [{}] pages.", totalPages);
 	}
-
 }

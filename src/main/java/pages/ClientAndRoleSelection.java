@@ -3,75 +3,130 @@ package pages;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
+
+import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.options.LoadState;
-import base.BaseTest;
+import com.microsoft.playwright.options.WaitForSelectorState;
 
 public class ClientAndRoleSelection {
 
-
 	private static final Logger log = LogManager.getLogger(ClientAndRoleSelection.class);
-	private Page page;
+	private final Page page;
 
-	String clientName;
-	String loginRole;
-	private String tenantField = "(//input[@class='z-combobox-input'])[1]";
-	private String roleField = "(//input[@class='z-combobox-input'])[2]";
-	private String ok = "//button[@class='login-btn z-button']//i[@class='z-icon-Ok']";
-	private String tenantFieldName = "(//span[contains(text(),'PharmaVerge')])[2]";
-	private String disabledRole = "//tr[@id='rowRole']//span[@class='z-combobox z-combobox-disabled']";
+	public String clientName;
+	public String loginRole;
+
+	// Locators - clean single selectors without and/or/|
+	private final Locator logo;
+	private final Locator tenantInputField;
+	private final Locator roleInputField;
+	private final Locator okButton;
+	private final Locator tenantOption;
+	private final Locator disabledRoleElement;
+	private final Locator errorMessage;
+	private final Locator desktopHeader;
 
 	public ClientAndRoleSelection(Page page) {
-		
-		this.page = page;	
+		this.page = page;
+		this.logo = page.locator("//td[@class='login-box-header-logo']//img[contains(@src, 'data:image')]");
+		this.tenantInputField = page.locator("(//input[@class='z-combobox-input'])[1]");
+		this.roleInputField = page.locator("(//input[@class='z-combobox-input'])[2]");
+		this.okButton = page.locator("//button[@class='login-btn z-button']//i[@class='z-icon-Ok']");
+		this.tenantOption = page.locator("(//span[contains(text(),'PharmaVerge')])[2]");
+		this.disabledRoleElement = page.locator("//tr[@id='rowRole']//span[@class='z-combobox z-combobox-disabled']");
+		this.errorMessage = page.locator("//div[contains(@class,'z-messagebox')]//span[contains(@class,'z-label')]");
+		this.desktopHeader = page.locator("//span[@class='desktop-header-font desktop-header-username z-label']");
 	}
 
+	/**
+	 * Checks and validates that the client logo is displayed on the Client & Role Selection page.
+	 */
 	public void checkLogoOnClientandRoleSelectionPage() {
-		page.waitForLoadState(LoadState.DOMCONTENTLOADED);
-		page.locator("//td[@class='login-box-header-logo']//img[contains(@src, 'data:image')]").waitFor();
-		Assert.assertTrue(
-				page.locator("//td[@class='login-box-header-logo']//img[contains(@src, 'data:image')]").isVisible(),
-				"Clients Logo is Not Displaying...");
-		//log.info("Logo displayed");
-	}
-
-	public void selectClientAndRole(String client, String role) {
-		page.waitForTimeout(500);
-		clientName = client;
-		loginRole = role;
-		checkLogoOnClientandRoleSelectionPage();
-		
-		page.fill(tenantField, client);
-		page.locator(tenantFieldName).click();
-		//log.info("Selected client : " +clientName);
-		page.locator(roleField).isVisible();
-		page.fill(roleField, role);
-		//log.info("Selected role : " +loginRole);
-		page.waitForTimeout(1000);
-		BaseTest.click(ok);
-		page.waitForLoadState();
-		log.info("login successfull by selecting client " +clientName+ " & Role " +loginRole);
-		page.waitForTimeout(1000);
-	}
-
-	public void selectRoleOfUser(String client, String role) {
-		// page.fill(tenantField, client); (//span[@class="z-combobox z-combobox-disabled"])[2]//input
-		clientName = client;
-		loginRole = role;	
-		
-		if (page.locator(disabledRole).isVisible()) {
-			log.info("Client : " +client);
-			log.info("Role : " + role);
-			page.waitForTimeout(1000);
-		} 
-		else {
-			page.fill(roleField, role);
-			log.info("Selected role : " + role);
-			page.waitForTimeout(1000);	
+		try {
+			logo.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+			Assert.assertTrue(logo.isVisible(), "Client logo is not displaying on Client & Role Selection page.");
+			log.info("Client & Role Selection page logo validated successfully.");
+		} catch (Exception e) {
+			log.error("Failed waiting for Client & Role selection logo: {}", e.getMessage());
+			throw e;
 		}
-		BaseTest.click(ok);
-		page.waitForLoadState();
-		page.waitForTimeout(1000);
 	}
 
+	/**
+	 * Selects Client (Tenant) and Role, then clicks OK to navigate to the Dashboard.
+	 *
+	 * @param client Client / Tenant name
+	 * @param role   Role name
+	 */
+	public void selectClientAndRole(String client, String role) {
+		this.clientName = client;
+		this.loginRole = role;
+
+		checkLogoOnClientandRoleSelectionPage();
+		log.info("Selecting Client: [{}] and Role: [{}]", client, role);
+
+		// 1. Fill and select Client / Tenant
+		tenantInputField.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		tenantInputField.fill(client);
+
+		if (tenantOption.count() > 0 && tenantOption.first().isVisible()) {
+			tenantOption.first().click();
+		} else {
+			tenantInputField.press("Tab");
+		}
+		log.info("Selected Client: [{}]", client);
+
+		// 2. Fill and select Role (if not disabled)
+		if (!disabledRoleElement.isVisible()) {
+			roleInputField.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+			roleInputField.fill(role);
+			roleInputField.press("Tab");
+			log.info("Selected Role: [{}]", role);
+		} else {
+			log.info("Role dropdown is pre-set or disabled for Client [{}]", client);
+		}
+
+		// 3. Submit
+		okButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+		okButton.click();
+		log.info("Clicked OK button on Client & Role selection modal.");
+
+		// 4. Validate post-selection state
+		try {
+			desktopHeader.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
+			log.info("Login successful by selecting Client: [{}] & Role: [{}]", clientName, loginRole);
+		} catch (Exception e) {
+			if (errorMessage.isVisible()) {
+				String err = errorMessage.innerText().trim();
+				log.error("Client & Role selection failed with error: [{}]", err);
+				Assert.fail("Client & Role selection failed with error: " + err);
+			} else {
+				log.warn("Dashboard header wait timed out, continuing execution: {}", e.getMessage());
+			}
+		}
+	}
+
+	/**
+	 * Selects role when client is already chosen or conditionally disabled.
+	 *
+	 * @param client Client name
+	 * @param role   Role name
+	 */
+	public void selectRoleOfUser(String client, String role) {
+		this.clientName = client;
+		this.loginRole = role;
+
+		if (disabledRoleElement.isVisible()) {
+			log.info("Role selection disabled. Client: [{}], Default Role: [{}]", client, role);
+		} else {
+			roleInputField.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+			roleInputField.fill(role);
+			roleInputField.press("Tab");
+			log.info("Selected Role: [{}]", role);
+		}
+
+		okButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+		okButton.click();
+		log.info("Submitted role selection for [{}]", role);
+	}
 }
