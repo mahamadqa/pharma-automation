@@ -99,8 +99,7 @@ public class ClientAndRoleSelection {
 
 		// 4. Validate post-selection state
 		try {
-			desktopHeader.first()
-					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
+			desktopHeader.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
 			log.info("Login successful by selecting Client: [{}] & Role: [{}]", clientName, loginRole);
 		} catch (Exception e) {
 			if (errorMessage.isVisible()) {
