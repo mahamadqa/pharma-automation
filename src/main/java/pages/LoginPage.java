@@ -26,13 +26,15 @@ public class LoginPage {
 	private final Locator loginLogo;
 	private final Locator nextScreenLogo;
 	private final Locator errorMessage;
+	private final Locator rememberMeCheckbox;
 
 	public LoginPage(Page page) {
 		this.page = page;
 		this.navigateLoginButton = page.locator("//li[@id='main-requestBtns-btnLogin']");
 		this.usernameInput = page.locator("//td[@class='login-field']//input[@autocomplete='username']");
 		this.passwordInput = page.locator("//td[@class='login-field']//input[@autocomplete='current-password']");
-		this.selectRoleCheckbox = page.locator("(//input[@type='checkbox'])[1]");
+		this.selectRoleCheckbox = page.locator("//tr[@id='rowSelectRole']//label[text()='Select Role']");
+		this.rememberMeCheckbox = page.locator("//tr[@id='rowRememberMe']//label[text()='Remember Me']");
 		this.okButton = page.locator("(//button[@class='login-btn z-button'])[1]");
 		this.loginLogo = page.locator("//td[@class='login-box-header-logo']//img[contains(@src, 'data:image')]");
 		this.nextScreenLogo = page.locator("//img[@class='z-image']");
@@ -106,6 +108,12 @@ public class LoginPage {
 			selectRoleCheckbox.check();
 			log.info("Checked 'Select Role' checkbox.");
 		}
+		
+		rememberMeCheckbox.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(5000));
+		if (!rememberMeCheckbox.isChecked()) {
+			rememberMeCheckbox.check();
+			log.info("Checked 'Remember Me' checkbox.");
+		}
 
 		// 4. Click OK / Login submit button
 		okButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
@@ -131,12 +139,4 @@ public class LoginPage {
 		}
 	}
 
-	/**
-	 * Gets the logged-in username.
-	 *
-	 * @return username string
-	 */
-	public String getUserName() {
-		return UserName;
-	}
 }

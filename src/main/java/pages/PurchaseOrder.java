@@ -1,5 +1,8 @@
 package pages;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
@@ -250,4 +253,27 @@ public class PurchaseOrder {
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Navigated back to Purchase Order header.");
 	}
+	
+	public void verifyDateFields() {
+		
+		Locator DateOrdered = page.locator("//span[@instancename='C_Order0DateOrdered']//input[@class='z-datebox-input']");
+		String dateOrdered = DateOrdered.inputValue();
+		
+		Locator DatePromised = page.locator("//span[@instancename='C_Order0DatePromised']//input[@class='z-datebox-input']");
+		String datePromised = DatePromised.inputValue();
+		
+		String currentDate = LocalDate.now()
+		        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+		
+		Assert.assertEquals(dateOrdered, currentDate);
+		Assert.assertEquals(datePromised, currentDate);
+		log.info("DateOrdered & DatePromised are Current Date");
+	}
+	
+	public String getPODocNo() {
+		Locator documentSequence = page.locator("//input[@title='Document sequence number of the document']");
+		String value = documentSequence.inputValue();
+		return value;
+	}
+	
 }

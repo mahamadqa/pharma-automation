@@ -34,7 +34,11 @@ public class POFlow extends BaseTest {
 		purchaseOrder.selectBPartner();
 		purchaseOrder.selectSalesRep();
 		toolbar.saveRecord();
-
+		
+		log.info("Purchase Order created with Doc No : " +purchaseOrder.getPODocNo());
+		purchaseOrder.verifyDateFields();
+		
+		
 		// Step 5: Navigate to PO Line tab and enter product
 		purchaseOrder.clickOnPOLineTab();
 		purchaseOrder.enterProdct();
