@@ -179,7 +179,6 @@ public class BaseTest {
 		workflowActivities = new WorkflowActivities(page);
 		hTMLPreview = new HTMLReportsPreview(page);
 		sopMaster = new SOPMaster(page);
-//		sopMaster = new SOPMaster(page, dashboard, workflowActivities);
 
 		loginPage.navigateToMainLoginPage();
 		loginPage.checkLogoOnLogin();

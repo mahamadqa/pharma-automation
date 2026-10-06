@@ -7,6 +7,8 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
+import utils.WaitUtils;
+
 public class Toolbar {
 
 	private static final Logger log = LogManager.getLogger(Toolbar.class);
@@ -51,6 +53,7 @@ public class Toolbar {
 		saveButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		saveButton.click();
 		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Record saved successfully.");
 	}
 

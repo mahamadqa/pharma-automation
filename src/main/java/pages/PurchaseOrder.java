@@ -10,6 +10,7 @@ import com.microsoft.playwright.options.WaitForSelectorState;
 
 import base.BaseTest;
 import utils.DataManager;
+import utils.WaitUtils;
 
 public class PurchaseOrder {
 
@@ -46,7 +47,8 @@ public class PurchaseOrder {
 		this.descriptionTextarea = page.locator("//textarea[@instancename='C_OrderLine0Description']");
 		this.poHeaderBreadcrumb = page.locator("//div[@instancename='breadcrumb']//a[text()='Purchase Order']");
 		this.poMenuSearchInput = page.locator("//input[@class='z-bandbox-input']");
-		this.searchPOWindowItem = page.locator("//td[@title='Manage Purchase Orders']//span[normalize-space()='Purchase Order']");
+		this.searchPOWindowItem = page
+				.locator("//td[@title='Manage Purchase Orders']/following-sibling::td//a[@title='New']");
 	}
 
 	/**
@@ -71,14 +73,16 @@ public class PurchaseOrder {
 					|| actualValue.toLowerCase().contains(expectedValue.toLowerCase())
 					|| expectedValue.toLowerCase().contains(actualValue.toLowerCase());
 			if (!matches) {
-				log.warn("⚠️ Field [{}] value [{}] does not strictly match expected [{}], but data is filled.", fieldName, actualValue.trim(), expectedValue);
+				log.warn("⚠️ Field [{}] value [{}] does not strictly match expected [{}], but data is filled.",
+						fieldName, actualValue.trim(), expectedValue);
 			}
 		}
 		return true;
 	}
 
 	/**
-	 * Verifies whether the specified field has data filled in it using a locator string.
+	 * Verifies whether the specified field has data filled in it using a locator
+	 * string.
 	 *
 	 * @param locatorString String locator of the field
 	 * @param fieldName     Descriptive name
@@ -136,13 +140,16 @@ public class PurchaseOrder {
 	public void navigateToPOWindow() {
 		page.waitForTimeout(1000);
 		log.info("Navigating to Purchase Order window...");
-		poMenuSearchInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		poMenuSearchInput
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poMenuSearchInput.fill("Purchase Order");
 		page.waitForTimeout(2000);
-
-		searchPOWindowItem.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(10000));
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		searchPOWindowItem
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(10000));
 		searchPOWindowItem.click();
 		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Opened Purchase Order window successfully.");
 	}
 
@@ -159,11 +166,13 @@ public class PurchaseOrder {
 
 	public void selectOrg() {
 		selectOrg(DataManager.getData("org"));
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 	}
 
 	public void selecTtargetDocType(String docType) {
 		log.info("Selecting Target Document Type: [{}]", docType);
-		targetDocTypeInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		targetDocTypeInput
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		targetDocTypeInput.fill(docType);
 		targetDocTypeInput.press("Tab");
 		page.waitForTimeout(2000);
@@ -187,6 +196,7 @@ public class PurchaseOrder {
 
 	public void selectBPartner() {
 		selectBPartner(DataManager.getData("bPartner"));
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 	}
 
 	public void selectSalesRep(String repName) {
@@ -228,13 +238,16 @@ public class PurchaseOrder {
 
 	public void enterProdct() {
 		enterProdct(DataManager.getData("product"));
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 	}
 
 	public void navigateBackOnPoHeader() {
 		log.info("Navigating back to Purchase Order header tab...");
-		poHeaderBreadcrumb.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		poHeaderBreadcrumb
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poHeaderBreadcrumb.click();
 		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Navigated back to Purchase Order header.");
 	}
 }

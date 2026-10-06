@@ -15,12 +15,20 @@ public class HTMLReportsPreview {
 	private static final Logger log = LogManager.getLogger(HTMLReportsPreview.class);
 	private final Page page;
 
+	protected Dashboard dashboard;
+
 	public HTMLReportsPreview(Page page) {
+		this(page, null);
+	}
+
+	public HTMLReportsPreview(Page page, Dashboard dashboard) {
 		this.page = page;
+		this.dashboard = dashboard;
 	}
 
 	/**
-	 * Verifies that header, content, and footer do not overlap across all pages of the HTML report preview.
+	 * Verifies that header, content, and footer do not overlap across all pages of
+	 * the HTML report preview.
 	 */
 	public void checkOverlapIssue() {
 		log.info("Checking for header/content/footer overlap issues in HTML Report Preview...");

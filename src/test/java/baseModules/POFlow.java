@@ -25,7 +25,7 @@ public class POFlow extends BaseTest {
 
 		// Step 3: Navigate to Purchase Order window and create a new record
 		purchaseOrder.navigateToPOWindow();
-		toolbar.createNewRecord();
+		//toolbar.createNewRecord();
 
 		// Step 4: Fill PO Header fields (Localization vs Non-Localization data based on -Dregion)
 		log.info("Filling PO Header fields using [{}] test data profile...", DataManager.getRegion());

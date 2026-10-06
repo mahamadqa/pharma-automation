@@ -6,7 +6,10 @@ import org.testng.Assert;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.PlaywrightException;
 import com.microsoft.playwright.options.WaitForSelectorState;
+
+import utils.WaitUtils;
 
 public class Dashboard {
 
@@ -26,13 +29,15 @@ public class Dashboard {
 		this.loginPage = loginPage;
 		this.clientAndRole = clientAndRole;
 		this.usernameLabel = page.locator("//span[@class='desktop-header-font desktop-header-username z-label']");
-		this.logoutButton = page.locator("//a[@class='desktop-header-font link z-toolbarbutton']//span[text()='Log Out']");
+		this.logoutButton = page
+				.locator("//a[@class='desktop-header-font link z-toolbarbutton']//span[text()='Log Out']");
 		this.windowCloseIcon = page.locator("//i[@class='z-icon-times z-tab-icon']");
 		this.menuSearchInput = page.locator("//input[@class='z-bandbox-input']");
 	}
 
 	/**
-	 * Validates that the desktop header displays the expected username, client, and role.
+	 * Validates that the desktop header displays the expected username, client, and
+	 * role.
 	 */
 	public void verifyLoginDetails() {
 		usernameLabel.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
@@ -41,15 +46,18 @@ public class Dashboard {
 
 		if (loginPage != null && loginPage.UserName != null) {
 			Assert.assertTrue(actualDetails.contains(loginPage.UserName),
-					"Header user details [" + actualDetails + "] does not contain expected username: " + loginPage.UserName);
+					"Header user details [" + actualDetails + "] does not contain expected username: "
+							+ loginPage.UserName);
 		}
 		if (clientAndRole != null && clientAndRole.clientName != null) {
 			Assert.assertTrue(actualDetails.contains(clientAndRole.clientName),
-					"Header user details [" + actualDetails + "] does not contain expected client: " + clientAndRole.clientName);
+					"Header user details [" + actualDetails + "] does not contain expected client: "
+							+ clientAndRole.clientName);
 		}
 		if (clientAndRole != null && clientAndRole.loginRole != null) {
 			Assert.assertTrue(actualDetails.contains(clientAndRole.loginRole),
-					"Header user details [" + actualDetails + "] does not contain expected role: " + clientAndRole.loginRole);
+					"Header user details [" + actualDetails + "] does not contain expected role: "
+							+ clientAndRole.loginRole);
 		}
 		log.info("Login details verified successfully on Dashboard.");
 	}
@@ -109,10 +117,4 @@ public class Dashboard {
 		log.info("Closed active window tab.");
 	}
 
-	/**
-	 * Pauses script execution for interactive debugging.
-	 */
-	public void pauseScript() {
-		page.pause();
-	}
 }

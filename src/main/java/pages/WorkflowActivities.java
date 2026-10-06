@@ -17,14 +17,23 @@ public class WorkflowActivities {
 	private final Locator zoomButton;
 	private final Locator listboxScrollBody;
 
+	protected Dashboard dashboard;
+
 	public WorkflowActivities(Page page) {
+		this(page, null);
+	}
+
+	public WorkflowActivities(Page page, Dashboard dashboard) {
 		this.page = page;
+		this.dashboard = dashboard;
 		this.zoomButton = page.locator("//button[@title='Zoom']");
-		this.listboxScrollBody = page.locator("//div[@class='z-north-body z-flex z-flex-column']//div[@class='z-listbox-body']");
+		this.listboxScrollBody = page
+				.locator("//div[@class='z-north-body z-flex z-flex-column']//div[@class='z-listbox-body']");
 	}
 
 	/**
-	 * Scrolls to and selects the assigned SOP record matching the given status and document number.
+	 * Scrolls to and selects the assigned SOP record matching the given status and
+	 * document number.
 	 *
 	 * @param nodeStatus Expected status (e.g. "Draft", "Approved")
 	 * @param docNo      Document Number (e.g. "SOP-001")
@@ -37,14 +46,16 @@ public class WorkflowActivities {
 			listboxScrollBody.first().evaluate("e => e.scrollTop = e.scrollHeight");
 		}
 
-		Locator statusCell = page.locator("//div[@class='z-listbox z-flex-item']//tbody/tr[last()]//td[2]//div[text()='" + nodeStatus + "']");
+		Locator statusCell = page.locator(
+				"//div[@class='z-listbox z-flex-item']//tbody/tr[last()]//td[2]//div[text()='" + nodeStatus + "']");
 		statusCell.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
 
 		String actualStatus = statusCell.innerText().trim();
 		Assert.assertTrue(actualStatus.equalsIgnoreCase(nodeStatus),
 				"Assigned record status mismatch. Expected: [" + nodeStatus + "], Found: [" + actualStatus + "]");
 
-		Locator sopCell = page.locator("//div[@class='z-listbox z-flex-item']//tbody/tr[last()]//td[3]//div[contains(text(),'SOP')]");
+		Locator sopCell = page
+				.locator("//div[@class='z-listbox z-flex-item']//tbody/tr[last()]//td[3]//div[contains(text(),'SOP')]");
 		sopCell.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 
 		String sopCellText = sopCell.innerText().trim();

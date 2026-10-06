@@ -16,8 +16,15 @@ public class SOPMaster {
 	private final Locator annexureTab;
 	private final Locator formatTab;
 
+	protected Dashboard dashboard;
+
 	public SOPMaster(Page page) {
+		this(page, null);
+	}
+
+	public SOPMaster(Page page, Dashboard dashboard) {
 		this.page = page;
+		this.dashboard = dashboard;
 		this.annexureTab = page.locator("//ul[@role='tablist']//span[text()='Annexure']");
 		this.formatTab = page.locator("//ul[@role='tablist']//span[text()='SOP Formats']");
 	}

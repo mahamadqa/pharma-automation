@@ -8,6 +8,8 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
+import utils.WaitUtils;
+
 public class LoginPage {
 
 	private static final Logger log = LogManager.getLogger(LoginPage.class);
@@ -38,14 +40,17 @@ public class LoginPage {
 	}
 
 	/**
-	 * Navigates to the main login dialog and waits for the username input field to be visible.
+	 * Navigates to the main login dialog and waits for the username input field to
+	 * be visible.
 	 */
 	public void navigateToMainLoginPage() {
 		log.info("Navigating to the main login dialog...");
-		navigateLoginButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		navigateLoginButton
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		navigateLoginButton.click();
 		usernameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		log.info("Login dialog opened successfully; username field is ready.");
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 	}
 
 	/**
@@ -72,8 +77,10 @@ public class LoginPage {
 	}
 
 	/**
-	 * Enters user credentials, checks the role checkbox if unchecked, clicks submit,
-	 * and validates synchronization and successful transition to the Client & Role selection screen.
+	 * Enters user credentials, checks the role checkbox if unchecked, clicks
+	 * submit,
+	 * and validates synchronization and successful transition to the Client & Role
+	 * selection screen.
 	 *
 	 * @param user Username
 	 * @param pass Password
@@ -93,7 +100,8 @@ public class LoginPage {
 		log.info("Entered password.");
 
 		// 3. Ensure role checkbox is selected
-		selectRoleCheckbox.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(5000));
+		selectRoleCheckbox
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(5000));
 		if (!selectRoleCheckbox.isChecked()) {
 			selectRoleCheckbox.check();
 			log.info("Checked 'Select Role' checkbox.");
@@ -103,10 +111,12 @@ public class LoginPage {
 		okButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		okButton.click();
 		log.info("Clicked login submit button (OK).");
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 
 		// 5. Synchronize and validate post-login transition
 		try {
-			nextScreenLogo.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
+			nextScreenLogo
+					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
 			Assert.assertTrue(nextScreenLogo.isVisible(), "Client/Role selection logo is not visible after login.");
 			log.info("Login successful for user: [{}], transitioned to Client & Role selection screen.", user);
 		} catch (Exception e) {

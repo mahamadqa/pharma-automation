@@ -8,6 +8,8 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
+import utils.WaitUtils;
+
 public class ClientAndRoleSelection {
 
 	private static final Logger log = LogManager.getLogger(ClientAndRoleSelection.class);
@@ -39,7 +41,8 @@ public class ClientAndRoleSelection {
 	}
 
 	/**
-	 * Checks and validates that the client logo is displayed on the Client & Role Selection page.
+	 * Checks and validates that the client logo is displayed on the Client & Role
+	 * Selection page.
 	 */
 	public void checkLogoOnClientandRoleSelectionPage() {
 		try {
@@ -53,7 +56,8 @@ public class ClientAndRoleSelection {
 	}
 
 	/**
-	 * Selects Client (Tenant) and Role, then clicks OK to navigate to the Dashboard.
+	 * Selects Client (Tenant) and Role, then clicks OK to navigate to the
+	 * Dashboard.
 	 *
 	 * @param client Client / Tenant name
 	 * @param role   Role name
@@ -78,7 +82,8 @@ public class ClientAndRoleSelection {
 
 		// 2. Fill and select Role (if not disabled)
 		if (!disabledRoleElement.isVisible()) {
-			roleInputField.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+			roleInputField
+					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 			roleInputField.fill(role);
 			roleInputField.press("Tab");
 			log.info("Selected Role: [{}]", role);
@@ -89,11 +94,13 @@ public class ClientAndRoleSelection {
 		// 3. Submit
 		okButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		okButton.click();
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Clicked OK button on Client & Role selection modal.");
 
 		// 4. Validate post-selection state
 		try {
-			desktopHeader.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
+			desktopHeader.first()
+					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
 			log.info("Login successful by selecting Client: [{}] & Role: [{}]", clientName, loginRole);
 		} catch (Exception e) {
 			if (errorMessage.isVisible()) {
@@ -119,7 +126,8 @@ public class ClientAndRoleSelection {
 		if (disabledRoleElement.isVisible()) {
 			log.info("Role selection disabled. Client: [{}], Default Role: [{}]", client, role);
 		} else {
-			roleInputField.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+			roleInputField
+					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 			roleInputField.fill(role);
 			roleInputField.press("Tab");
 			log.info("Selected Role: [{}]", role);
@@ -127,6 +135,7 @@ public class ClientAndRoleSelection {
 
 		okButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		okButton.click();
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Submitted role selection for [{}]", role);
 	}
 }
