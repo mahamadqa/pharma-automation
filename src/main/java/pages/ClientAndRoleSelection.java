@@ -27,6 +27,7 @@ public class ClientAndRoleSelection {
 	private final Locator disabledRoleElement;
 	private final Locator errorMessage;
 	private final Locator desktopHeader;
+	
 
 	public ClientAndRoleSelection(Page page) {
 		this.page = page;
@@ -38,6 +39,7 @@ public class ClientAndRoleSelection {
 		this.disabledRoleElement = page.locator("//tr[@id='rowRole']//span[@class='z-combobox z-combobox-disabled']");
 		this.errorMessage = page.locator("//div[contains(@class,'z-messagebox')]//span[contains(@class,'z-label')]");
 		this.desktopHeader = page.locator("//span[contains(@class,'desktop-header-username')]");
+		
 	}
 
 	/**

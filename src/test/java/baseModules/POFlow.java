@@ -31,21 +31,36 @@ public class POFlow extends BaseTest {
 		log.info("Filling PO Header fields using [{}] test data profile...", DataManager.getRegion());
 		purchaseOrder.selectOrg();
 		purchaseOrder.selecTtargetDocType();
+		purchaseOrder.fillDescription();
 		purchaseOrder.selectBPartner();
 		purchaseOrder.selectSalesRep();
 		toolbar.saveRecord();
-		
 		log.info("Purchase Order created with Doc No : " +purchaseOrder.getPODocNo());
+		
+		//Validations
 		purchaseOrder.verifyDateFields();
 		purchaseOrder.verifyDocStatus("Drafted");
+		purchaseOrder.verifyBPLocationfields();
+		purchaseOrder.verifyCurrency();
+		purchaseOrder.verifyAmtFieldsBeforeInvLines();
+		
 		
 		// Step 5: Navigate to PO Line tab and enter product
 		purchaseOrder.clickOnPOLineTab();
 		purchaseOrder.enterProdct();
 		toolbar.saveRecord();
 
-		// Step 6: Navigate back to PO Header
+		// Step 6: Navigate back to PO Header & complete doc action
 		purchaseOrder.navigateBackOnPoHeader();
+		//
+		toolbar.performDocAction("Prepare");
+		purchaseOrder.verifyDocStatus("In Progress");
+		
+		toolbar.performDocAction("Complete");
+		purchaseOrder.verifyDocStatus("Completed");
+		
 		log.info("========== Purchase Order Flow Completed Successfully ==========");
+		//INR, 
+		
 	}
 }

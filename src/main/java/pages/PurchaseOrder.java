@@ -20,38 +20,42 @@ public class PurchaseOrder {
 	private static final Logger log = LogManager.getLogger(PurchaseOrder.class);
 	private final Page page;
 
-	// Locators - clean single selectors without and/or/|
-	protected String org = "//span[@instancename='C_Order0AD_Org_ID']//input";
-	protected String targetDocType = "//span[@instancename='C_Order0C_DocTypeTarget_ID']//input";
-	protected String bPartner = "//div[@instancename='C_Order0C_BPartner_ID']//span//input";
-	protected String salesRep = "//span[@instancename='C_Order0SalesRep_ID']//input";
-	protected String POLineTab = "//span[text()='PO Line']";
-	protected String product = "//div[@instancename='C_OrderLine0M_Product_ID']//input";
-
 	private final Locator orgInput;
 	private final Locator targetDocTypeInput;
+	private final Locator DescInput;
 	private final Locator bPartnerInput;
 	private final Locator salesRepInput;
+	private final Locator currency;
 	private final Locator poLineTab;
 	private final Locator productInput;
 	private final Locator descriptionTextarea;
 	private final Locator poHeaderBreadcrumb;
 	private final Locator poMenuSearchInput;
 	private final Locator searchPOWindowItem;
+	private final Locator partnerLocation;
+	private final Locator invoiceLocation;
+	private final Locator TotalLinesAmt;
+	private final Locator GrandTotalAmt;
 
 	public PurchaseOrder(Page page) {
 		this.page = page;
-		this.orgInput = page.locator(org);
-		this.targetDocTypeInput = page.locator(targetDocType);
-		this.bPartnerInput = page.locator(bPartner);
-		this.salesRepInput = page.locator(salesRep);
-		this.poLineTab = page.locator(POLineTab);
-		this.productInput = page.locator(product);
+		this.orgInput = page.locator("//span[@instancename='C_Order0AD_Org_ID']//input");
+		this.targetDocTypeInput = page.locator("//span[@instancename='C_Order0C_DocTypeTarget_ID']//input");
+		this.DescInput = page.locator("//textarea[@instancename='C_Order0Description']");
+		this.bPartnerInput = page.locator("//div[@instancename='C_Order0C_BPartner_ID']//span//input");
+		this.salesRepInput = page.locator("//span[@instancename='C_Order0SalesRep_ID']//input");
+		this.currency = page.locator("//span[@instancename='C_Order0C_Currency_ID']//input");
+		this.poLineTab = page.locator("//span[text()='PO Line']");
+		this.productInput = page.locator("//div[@instancename='C_OrderLine0M_Product_ID']//input");
 		this.descriptionTextarea = page.locator("//textarea[@instancename='C_OrderLine0Description']");
 		this.poHeaderBreadcrumb = page.locator("//div[@instancename='breadcrumb']//a[text()='Purchase Order']");
 		this.poMenuSearchInput = page.locator("//input[@class='z-bandbox-input']");
 		this.searchPOWindowItem = page
 				.locator("//td[@title='Manage Purchase Orders']/following-sibling::td//a[@title='New']");
+		this.partnerLocation = page.locator("//span[@instancename='C_Order0C_BPartner_Location_ID']//input");
+		this.invoiceLocation = page.locator("//span[@instancename='C_Order0Bill_Location_ID']//input");
+		this.TotalLinesAmt = page.locator("//div[@instancename='C_Order0TotalLines']//input[contains(@class,'z-decimalbox-disabled')]");
+		this.GrandTotalAmt = page.locator("//div[@instancename='C_Order0GrandTotal']//input[contains(@class,'z-decimalbox-disabled')]");
 	}
 
 	/**
@@ -186,6 +190,12 @@ public class PurchaseOrder {
 	public void selecTtargetDocType() {
 		selecTtargetDocType(DataManager.getData("targetDocType"));
 	}
+	
+	public void fillDescription() {
+		DescInput.click();
+		DescInput.fill(DataManager.getData("description"));
+		log.info("Description filled : " +DataManager.getData("description"));
+	}
 
 	public void selectBPartner(String partnerName) {
 		log.info("Selecting Business Partner: [{}]", partnerName);
@@ -270,22 +280,40 @@ public class PurchaseOrder {
 		log.info("DateOrdered & DatePromised are Current Date");
 	}
 	
-	public void verifyDocStatus(String drafted) {
+	public void verifyDocStatus(String status) {
 		Locator DocStatus = page.locator("//span[@instancename='C_Order0DocStatus']//input");
-		String docStatus = DocStatus.inputValue();
-		if(DocStatus.inputValue().equalsIgnoreCase(drafted)) {;
-			log.info("docStatus : " +docStatus);
+		
+		if(DocStatus.inputValue().equalsIgnoreCase(status)) {;
+			log.info("docStatus : verified successfully " +DocStatus.inputValue());
 		}
 		else {
-			Assert.fail("docStatus Not Matching, Actual : " +docStatus+ "Expected : " +drafted);
-		}
-		
+			Assert.fail("docStatus Not Matching, Actual : " +DocStatus.inputValue()+ "Expected : " +status);
+		}	
+	}
+	
+	public void verifyBPLocationfields() {
+		String BPPartnerLocation = partnerLocation.inputValue();
+		String BPPartnerinvLocation = invoiceLocation.inputValue();
+		Assert.assertEquals(BPPartnerLocation, DataManager.getData("bPLocation"));
+		Assert.assertEquals(BPPartnerinvLocation, DataManager.getData("bpInvoiceLocation"));
+		log.info("Both locations are verified for the region " +DataManager.getRegion()+ " " +BPPartnerLocation);
 	}
 	
 	public String getPODocNo() {
 		Locator documentSequence = page.locator("//input[@title='Document sequence number of the document']");
 		String value = documentSequence.inputValue();
 		return value;
+	}
+
+	public void verifyAmtFieldsBeforeInvLines() {	
+		Assert.assertEquals(TotalLinesAmt.inputValue(), "0.00");
+		Assert.assertEquals(GrandTotalAmt.inputValue(), "0.00");
+	
+	}
+
+	public void verifyCurrency() {
+		Assert.assertEquals(currency.inputValue(), DataManager.getData("currency"));
+		log.info("Currency is verified for the region " +DataManager.getRegion()+ " : " +currency.inputValue());
 	}
 	
 }

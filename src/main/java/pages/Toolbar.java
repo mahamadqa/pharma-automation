@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.options.SelectOption;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
 import utils.WaitUtils;
@@ -14,7 +15,6 @@ public class Toolbar {
 	private static final Logger log = LogManager.getLogger(Toolbar.class);
 	private final Page page;
 
-	// Locators - clean single selectors without and/or/|
 	private final Locator createNewButton;
 	private final Locator saveButton;
 	private final Locator gridViewButton;
@@ -22,6 +22,8 @@ public class Toolbar {
 	private final Locator searchButton;
 	private final Locator docNoSearchInput;
 	private final Locator searchOkButton;
+	private final Locator docActionButton;
+	private final Locator docActionPopup;
 
 	public Toolbar(Page page) {
 		this.page = page;
@@ -32,6 +34,8 @@ public class Toolbar {
 		this.searchButton = page.locator("//a[@title='Lookup Record    Alt+F']");
 		this.docNoSearchInput = page.locator("//input[@instancename='DocumentNo']");
 		this.searchOkButton = page.locator("(//button[@title='OK'])[1]");
+		this.docActionButton = page.locator("//button[@instancename='C_Order0DocAction']");
+		this.docActionPopup = page.locator("//div[@instancename='documentAction']");
 	}
 
 	/**
@@ -97,4 +101,17 @@ public class Toolbar {
 		page.waitForTimeout(1000);
 		log.info("Lookup submitted for Document No: [{}]", docNo);
 	}
+	
+	public void performDocAction(String action) {
+		page.waitForTimeout(1000);
+		docActionButton.click();
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		docActionPopup.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+		Locator dropdown = page.locator("//div[@instancename='documentAction']//select");
+		dropdown.selectOption(new SelectOption().setLabel(action));
+		page.click("//div[@instancename='documentAction']//button[@title='OK']");
+		WaitUtils.waitForBigLoadingIndicatorToDisappear(page);
+		page.waitForTimeout(1000);
+	}
+	
 }

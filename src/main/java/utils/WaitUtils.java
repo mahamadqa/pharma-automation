@@ -20,7 +20,8 @@ public class WaitUtils {
 	}
 
 	/**
-	 * Waits for the application's loading indicator (ZK loader) to appear and then disappear.
+	 * Waits for the application's loading indicator (ZK loader) to appear and then
+	 * disappear.
 	 *
 	 * @param page Playwright Page instance
 	 */
@@ -37,9 +38,7 @@ public class WaitUtils {
 
 		try {
 			// Give the application a chance to display the loader
-			loader.waitFor(new Locator.WaitForOptions()
-					.setState(WaitForSelectorState.VISIBLE)
-					.setTimeout(1000));
+			loader.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(1000));
 			log.info("Loading indicator displayed, waiting for it to disappear...");
 		} catch (PlaywrightException e) {
 			// Loader did not appear - that's okay
@@ -47,16 +46,39 @@ public class WaitUtils {
 
 		try {
 			// If it appeared, wait until it disappears
-			loader.waitFor(new Locator.WaitForOptions()
-					.setState(WaitForSelectorState.HIDDEN)
-					.setTimeout(10000));
+			loader.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.HIDDEN).setTimeout(15000));
 			log.info("Loading indicator disappeared.");
 		} catch (PlaywrightException e) {
 			throw new RuntimeException("Loading indicator did not disappear within 10 seconds", e);
 		}
 	}
 
-	
+	public static void waitForBigLoadingIndicatorToDisappear(Page page) {
+		if (page == null) {
+			page = BaseTest.getPage();
+		}
+		if (page == null) {
+			log.warn("Cannot wait for loading indicator: Page instance is null.");
+			return;
+		}
 
-	
+		Locator loader1 = page.locator("//div[contains(@class,'busy-dialog-box')]");
+
+		try {
+			// Give the application a chance to display the loader
+			loader1.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(1000));
+			log.info("Loading indicator displayed, waiting for it to disappear...");
+		} catch (PlaywrightException e) {
+			// Loader did not appear - that's okay
+		}
+
+		try {
+			// If it appeared, wait until it disappears
+			loader1.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.HIDDEN).setTimeout(15000));
+			log.info("Loading indicator disappeared.");
+		} catch (PlaywrightException e) {
+			throw new RuntimeException("Loading indicator did not disappear within 10 seconds", e);
+		}
+	}
+
 }
