@@ -37,7 +37,7 @@ public class ClientAndRoleSelection {
 		this.tenantOption = page.locator("(//span[contains(text(),'PharmaVerge')])[2]");
 		this.disabledRoleElement = page.locator("//tr[@id='rowRole']//span[@class='z-combobox z-combobox-disabled']");
 		this.errorMessage = page.locator("//div[contains(@class,'z-messagebox')]//span[contains(@class,'z-label')]");
-		this.desktopHeader = page.locator("//span[@class='desktop-header-font desktop-header-username z-label']");
+		this.desktopHeader = page.locator("//span[contains(@class,'desktop-header-username')]");
 	}
 
 	/**
@@ -100,7 +100,7 @@ public class ClientAndRoleSelection {
 		// 4. Validate post-selection state
 		try {
 			page.waitForTimeout(2000);
-			desktopHeader.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(15000));
+			desktopHeader.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(25000));
 			log.info("Login successful by selecting Client: [{}] & Role: [{}]", clientName, loginRole);
 		} catch (Exception e) {	
 				log.warn("Dashboard header wait timed out, continuing execution: {}", e.getMessage());		
