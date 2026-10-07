@@ -1,8 +1,10 @@
 pipeline {
     agent any
 
-    /* 
-    // If you configure JDK & Maven in Jenkins "Global Tool Configuration", you can uncomment this:
+    /*
+    // If you configure JDK & Maven in Jenkins "Global Tool Configuration",
+    // you can uncomment this:
+
     tools {
         jdk 'JDK-17'
         maven 'Maven-3.9'
@@ -15,26 +17,36 @@ pipeline {
             choices: ['localization', 'non-localization'],
             description: 'Select Test Data Environment (localization: Local data, non-localization: Non-local/Export data)'
         )
+
         choice(
             name: 'MODULE',
             choices: ['all', 'basic', 'purchase_order', 'regression'],
             description: 'Select Test Suite / TestNG Group to execute'
         )
+
         choice(
             name: 'BROWSER',
             choices: ['chrome', 'firefox'],
             description: 'Select Browser to run tests'
         )
+
         booleanParam(
             name: 'HEADLESS',
             defaultValue: true,
             description: 'Run browser in headless mode (recommended for CI/Jenkins)'
         )
+
+        /*
+        // COMMENTED OUT FOR NOW
+        // Email recipient is now fixed to mmulla@logilite.com
+        // so users cannot change the recipient from Build with Parameters.
+
         string(
             name: 'RECIPIENT_EMAIL',
             defaultValue: 'mmulla@logilite.com',
             description: 'Recipient email address(es) for test reports (comma-separated, leave blank to skip)'
         )
+        */
     }
 
     options {
@@ -43,6 +55,7 @@ pipeline {
     }
 
     stages {
+
         stage('Environment Info') {
             steps {
                 script {
@@ -53,11 +66,18 @@ pipeline {
                     echo " Test Module / Groups       : ${params.MODULE}"
                     echo " Target Browser             : ${params.BROWSER}"
                     echo " Headless Mode              : ${params.HEADLESS}"
+
+                    /*
+                    // COMMENTED OUT FOR NOW
+                    // Email recipient is fixed in the emailext configuration.
+
                     echo " Recipient Email            : ${params.RECIPIENT_EMAIL}"
+                    */
+
                     echo " Build ID                   : ${env.BUILD_ID}"
                     echo " Git Branch                 : ${env.GIT_BRANCH ?: 'N/A'}"
                     echo "=================================================="
-                    
+
                     // Display Java & Maven version in build log
                     sh '''
                         if [ -d "/usr/lib/jvm/java-17-openjdk-amd64" ]; then
@@ -67,24 +87,32 @@ pipeline {
                             export JAVA_HOME="/usr/lib/jvm/java-1.17.0-openjdk-amd64"
                             export PATH="$JAVA_HOME/bin:$PATH"
                         fi
+
                         echo "JAVA_HOME is set to: $JAVA_HOME"
+
                         java -version
+
                         javac -version || echo "javac not in default PATH"
+
                         mvn -version
                     '''
                 }
             }
         }
 
+
         stage('Execute Automation Tests') {
             steps {
                 script {
+
                     def groupFlag = ""
+
                     if (params.MODULE != 'all') {
                         groupFlag = "-Dgroups=${params.MODULE}"
                     }
 
-                    // Execute Maven test (wraps with xvfb-run if headed mode is selected on headless Linux)
+                    // Execute Maven test
+                    // Wrap with xvfb-run if headed mode is selected on headless Linux
                     sh """
                         if [ -d "/usr/lib/jvm/java-17-openjdk-amd64" ]; then
                             export JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
@@ -95,10 +123,26 @@ pipeline {
                         fi
 
                         if [ "${params.HEADLESS}" = "false" ] && [ -z "\$DISPLAY" ] && which xvfb-run >/dev/null 2>&1; then
+
                             echo "Headed mode requested without active display: Running with xvfb-run virtual display..."
-                            xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" mvn clean test -Dregion=${params.REGION} ${groupFlag} -Dbrowser=${params.BROWSER} -Dheadless=${params.HEADLESS}
+
+                            xvfb-run \
+                                --auto-servernum \
+                                --server-args="-screen 0 1920x1080x24" \
+                                mvn clean test \
+                                -Dregion=${params.REGION} \
+                                ${groupFlag} \
+                                -Dbrowser=${params.BROWSER} \
+                                -Dheadless=${params.HEADLESS}
+
                         else
-                            mvn clean test -Dregion=${params.REGION} ${groupFlag} -Dbrowser=${params.BROWSER} -Dheadless=${params.HEADLESS}
+
+                            mvn clean test \
+                                -Dregion=${params.REGION} \
+                                ${groupFlag} \
+                                -Dbrowser=${params.BROWSER} \
+                                -Dheadless=${params.HEADLESS}
+
                         fi
                     """
                 }
@@ -106,9 +150,15 @@ pipeline {
         }
     }
 
+
     post {
+
         always {
-            // Publish Extent Reports (HTML)
+
+            // ==========================================================
+            // Publish Extent Reports
+            // ==========================================================
+
             publishHTML(target: [
                 allowMissing: true,
                 alwaysLinkToLastBuild: true,
@@ -118,79 +168,308 @@ pipeline {
                 reportName: 'Playwright Extent Report'
             ])
 
+
+            // ==========================================================
             // Publish TestNG / Surefire XML test results
-            junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+            // ==========================================================
 
+            junit allowEmptyResults: true,
+                testResults: '**/target/surefire-reports/*.xml'
+
+
+            // ==========================================================
             // Archive logs and test output artifacts
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'logs/**, test-output/**', fingerprint: true
+            // ==========================================================
 
-            // Send Email with Extent Report & Logs attached
+            archiveArtifacts(
+                allowEmptyArchive: true,
+                artifacts: 'logs/**, test-output/**',
+                fingerprint: true
+            )
+
+
+            // ==========================================================
+            // SEND EMAIL
+            // ==========================================================
+
             script {
+
+                /*
+                // ======================================================
+                // OLD RECIPIENT LOGIC - COMMENTED OUT FOR NOW
+                // ======================================================
+
                 if (params.RECIPIENT_EMAIL && params.RECIPIENT_EMAIL.trim() != '') {
-                    def buildStatus = currentBuild.currentResult ?: 'SUCCESS'
-                    def statusColor = (buildStatus == 'SUCCESS') ? '#28a745' : '#dc3545'
 
-                    try {
-                        emailext(
-                            to: params.RECIPIENT_EMAIL,
-                            subject: "[Jenkins] ${buildStatus}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER} [${params.REGION}]",
-                            attachmentsPattern: 'test-output/ExtentReport.html, logs/**',
-                            body: """
-                                <!DOCTYPE html>
-                                <html>
-                                <head>
-                                    <style>
-                                        body { font-family: Arial, sans-serif; color: #333; }
-                                        .container { padding: 20px; }
-                                        .header { font-size: 20px; font-weight: bold; color: ${statusColor}; }
-                                        table { border-collapse: collapse; width: 100%; max-width: 600px; margin-top: 15px; }
-                                        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-                                        th { background-color: #f8f9fa; }
-                                        .btn { display: inline-block; padding: 8px 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; margin-top: 15px; }
-                                    </style>
-                                </head>
-                                <body>
-                                    <div class="container">
-                                        <div class="header">Playwright Automation Test Execution: ${buildStatus}</div>
-                                        <p>Hello Team,</p>
-                                        <p>The test execution for <b>${env.JOB_NAME}</b> has completed. Below is the execution summary:</p>
-                                        
-                                        <table>
-                                            <tr><th>Build Number</th><td>#${env.BUILD_NUMBER}</td></tr>
-                                            <tr><th>Status</th><td><b style="color: ${statusColor};">${buildStatus}</b></td></tr>
-                                            <tr><th>Test Profile (Region)</th><td>${params.REGION}</td></tr>
-                                            <tr><th>Test Module / Suite</th><td>${params.MODULE}</td></tr>
-                                            <tr><th>Browser</th><td>${params.BROWSER}</td></tr>
-                                            <tr><th>Headless</th><td>${params.HEADLESS}</td></tr>
-                                            <tr><th>Executed On</th><td>${new Date().format("dd-MMM-yyyy HH:mm:ss")}</td></tr>
-                                        </table>
+                    ...
 
-                                        <p><b>Attached in this email:</b></p>
-                                        <ul>
-                                            <li><code>ExtentReport.html</code> - Interactive HTML Extent Report</li>
-                                            <li>Execution Logs (under <code>logs/</code>)</li>
-                                        </ul>
+                }
 
-                                        <a href="${env.BUILD_URL}" class="btn">View Jenkins Build &amp; Report</a>
-                                        <br/><br/>
-                                        <p>Regards,<br/><b>QA Automation Team</b></p>
+                // ======================================================
+                // END OLD RECIPIENT LOGIC
+                // ======================================================
+                */
+
+
+                // ======================================================
+                // NEW EMAIL CONFIGURATION
+                //
+                // Email will always go to:
+                // mmulla@logilite.com
+                //
+                // SMTP username/password are NOT stored here.
+                // Jenkins uses the global SMTP configuration.
+                // ======================================================
+
+                def buildStatus = currentBuild.currentResult ?: 'SUCCESS'
+
+                def statusColor = (buildStatus == 'SUCCESS')
+                    ? '#28a745'
+                    : '#dc3545'
+
+
+                try {
+
+                    emailext(
+
+                        // ------------------------------------------------
+                        // Fixed recipient
+                        // ------------------------------------------------
+                        to: 'mmulla@logilite.com',
+
+
+                        // ------------------------------------------------
+                        // Email subject
+                        // ------------------------------------------------
+                        subject: "[Jenkins] ${buildStatus}: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER} [${params.REGION}]",
+
+
+                        // ------------------------------------------------
+                        // Attach Extent Report and logs
+                        // ------------------------------------------------
+                        attachmentsPattern: 'test-output/ExtentReport.html, logs/**',
+
+
+                        // ------------------------------------------------
+                        // HTML Email Body
+                        // ------------------------------------------------
+                        body: """
+                            <!DOCTYPE html>
+
+                            <html>
+
+                            <head>
+
+                                <style>
+
+                                    body {
+                                        font-family: Arial, sans-serif;
+                                        color: #333;
+                                    }
+
+                                    .container {
+                                        padding: 20px;
+                                    }
+
+                                    .header {
+                                        font-size: 20px;
+                                        font-weight: bold;
+                                        color: ${statusColor};
+                                    }
+
+                                    table {
+                                        border-collapse: collapse;
+                                        width: 100%;
+                                        max-width: 600px;
+                                        margin-top: 15px;
+                                    }
+
+                                    th, td {
+                                        border: 1px solid #ddd;
+                                        padding: 10px;
+                                        text-align: left;
+                                    }
+
+                                    th {
+                                        background-color: #f8f9fa;
+                                    }
+
+                                    .btn {
+                                        display: inline-block;
+                                        padding: 8px 16px;
+                                        background-color: #007bff;
+                                        color: white;
+                                        text-decoration: none;
+                                        border-radius: 4px;
+                                        margin-top: 15px;
+                                    }
+
+                                </style>
+
+                            </head>
+
+
+                            <body>
+
+                                <div class="container">
+
+
+                                    <div class="header">
+                                        Playwright Automation Test Execution: ${buildStatus}
                                     </div>
-                                </body>
-                                </html>
-                            """,
-                            mimeType: 'text/html'
-                        )
-                    } catch (Exception e) {
-                        echo "Warning: Could not send email via emailext plugin (${e.getMessage()}). Make sure Email Extension Plugin and SMTP settings are configured in Jenkins."
-                    }
+
+
+                                    <p>
+                                        Hello Team,
+                                    </p>
+
+
+                                    <p>
+                                        The test execution for
+                                        <b>${env.JOB_NAME}</b>
+                                        has completed.
+                                        Below is the execution summary:
+                                    </p>
+
+
+                                    <table>
+
+                                        <tr>
+                                            <th>Build Number</th>
+                                            <td>#${env.BUILD_NUMBER}</td>
+                                        </tr>
+
+
+                                        <tr>
+                                            <th>Status</th>
+
+                                            <td>
+                                                <b style="color: ${statusColor};">
+                                                    ${buildStatus}
+                                                </b>
+                                            </td>
+                                        </tr>
+
+
+                                        <tr>
+                                            <th>Test Profile (Region)</th>
+                                            <td>${params.REGION}</td>
+                                        </tr>
+
+
+                                        <tr>
+                                            <th>Test Module / Suite</th>
+                                            <td>${params.MODULE}</td>
+                                        </tr>
+
+
+                                        <tr>
+                                            <th>Browser</th>
+                                            <td>${params.BROWSER}</td>
+                                        </tr>
+
+
+                                        <tr>
+                                            <th>Headless</th>
+                                            <td>${params.HEADLESS}</td>
+                                        </tr>
+
+
+                                        <tr>
+                                            <th>Executed On</th>
+
+                                            <td>
+                                                ${new Date().format("dd-MMM-yyyy HH:mm:ss")}
+                                            </td>
+                                        </tr>
+
+                                    </table>
+
+
+                                    <p>
+                                        <b>Attached in this email:</b>
+                                    </p>
+
+
+                                    <ul>
+
+                                        <li>
+                                            <code>ExtentReport.html</code>
+                                            - Interactive HTML Extent Report
+                                        </li>
+
+                                        <li>
+                                            Execution Logs under
+                                            <code>logs/</code>
+                                        </li>
+
+                                    </ul>
+
+
+                                    <a
+                                        href="${env.BUILD_URL}"
+                                        class="btn"
+                                    >
+                                        View Jenkins Build &amp; Report
+                                    </a>
+
+
+                                    <br/>
+                                    <br/>
+
+
+                                    <p>
+                                        Regards,
+                                        <br/>
+                                        <b>QA Automation Team</b>
+                                    </p>
+
+
+                                </div>
+
+                            </body>
+
+                            </html>
+                        """,
+
+
+                        // ------------------------------------------------
+                        // Tell Jenkins this is an HTML email
+                        // ------------------------------------------------
+                        mimeType: 'text/html'
+                    )
+
+
+                } catch (Exception e) {
+
+                    echo "Warning: Could not send email via emailext plugin (${e.getMessage()})."
+
+                    echo "Make sure Email Extension Plugin and SMTP settings are configured in Jenkins."
+
                 }
             }
         }
+
+
+        // ==============================================================
+        // SUCCESS
+        // ==============================================================
+
         success {
+
             echo "Automation Test Execution PASSED for [${params.REGION}] region!"
+
         }
+
+
+        // ==============================================================
+        // FAILURE
+        // ==============================================================
+
         failure {
+
             echo "Automation Test Execution FAILED for [${params.REGION}] region. Check reports for details."
+
         }
     }
 }

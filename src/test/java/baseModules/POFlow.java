@@ -37,7 +37,7 @@ public class POFlow extends BaseTest {
 		
 		log.info("Purchase Order created with Doc No : " +purchaseOrder.getPODocNo());
 		purchaseOrder.verifyDateFields();
-		
+		purchaseOrder.verifyDocStatus("Drafted");
 		
 		// Step 5: Navigate to PO Line tab and enter product
 		purchaseOrder.clickOnPOLineTab();

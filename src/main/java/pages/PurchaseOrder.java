@@ -270,6 +270,18 @@ public class PurchaseOrder {
 		log.info("DateOrdered & DatePromised are Current Date");
 	}
 	
+	public void verifyDocStatus(String drafted) {
+		Locator DocStatus = page.locator("//span[@instancename='C_Order0DocStatus']//input");
+		String docStatus = DocStatus.inputValue();
+		if(DocStatus.inputValue().equalsIgnoreCase(drafted)) {;
+			log.info("docStatus : " +docStatus);
+		}
+		else {
+			Assert.fail("docStatus Not Matching, Actual : " +docStatus+ "Expected : " +drafted);
+		}
+		
+	}
+	
 	public String getPODocNo() {
 		Locator documentSequence = page.locator("//input[@title='Document sequence number of the document']");
 		String value = documentSequence.inputValue();
