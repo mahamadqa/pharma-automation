@@ -35,13 +35,14 @@ public class BaseTest {
 
 	private static final Logger log = LogManager.getLogger(BaseTest.class);
 
-	// ThreadLocal holders — one instance per thread instead of one shared static instance.
+	// ThreadLocal holders — one instance per thread instead of one shared static
+	// instance.
 	private static final ThreadLocal<Playwright> playwrightTL = new ThreadLocal<>();
 	private static final ThreadLocal<Browser> browserTL = new ThreadLocal<>();
 	private static final ThreadLocal<BrowserContext> contextTL = new ThreadLocal<>();
 	private static final ThreadLocal<Page> pageTL = new ThreadLocal<>();
 
-	protected static Properties prop; 
+	protected static Properties prop;
 	protected static ConfigReader reader;
 
 	protected LoginPage loginPage;
@@ -52,11 +53,10 @@ public class BaseTest {
 	protected SOPMaster sopMaster;
 	protected WorkflowActivities workflowActivities;
 	protected PurchaseOrder purchaseOrder;
-	
+
 	protected static ExtentReports extent;
-    protected static ExtentSparkReporter sparkReporter;
-    public ExtentTest extentTest;
-    
+	protected static ExtentSparkReporter sparkReporter;
+	public ExtentTest extentTest;
 
 	public static Page getPage() {
 		return pageTL.get();
@@ -74,19 +74,20 @@ public class BaseTest {
 
 		Browser browser;
 		switch (browserName.toLowerCase()) {
-		case "chrome":
-		case "chromium":
-			browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-					.setHeadless(isHeadless).setArgs(Arrays.asList("--start-maximized", "--no-sandbox", "--disable-dev-shm-usage")));
-			break;
+			case "chrome":
+			case "chromium":
+				browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
+						.setHeadless(isHeadless)
+						.setArgs(Arrays.asList("--start-maximized", "--no-sandbox", "--disable-dev-shm-usage")));
+				break;
 
-		case "firefox":
-			browser = playwright.firefox().launch(new BrowserType.LaunchOptions()
-					.setHeadless(isHeadless).setArgs(Arrays.asList("--start-maximized")));
-			break;
+			case "firefox":
+				browser = playwright.firefox().launch(new BrowserType.LaunchOptions()
+						.setHeadless(isHeadless).setArgs(Arrays.asList("--start-maximized")));
+				break;
 
-		default:
-			throw new RuntimeException("Browser not supported: " + browserName);
+			default:
+				throw new RuntimeException("Browser not supported: " + browserName);
 		}
 		browserTL.set(browser);
 
@@ -106,10 +107,11 @@ public class BaseTest {
 		page.navigate(ConfigReader.get("url"));
 		page.bringToFront();
 		page.locator("body").click();
-		log.info("Launched " + browserName + " browser (headless=" + isHeadless + ") and navigated to URL: " + ConfigReader.get("url"));
+		log.info("Launched " + browserName + " browser (headless=" + isHeadless + ") and navigated to URL: "
+				+ ConfigReader.get("url"));
 		return page;
 	}
-	
+
 	public static void click(String locator) {
 		Page page = pageTL.get();
 		page.click(locator);
@@ -121,60 +123,69 @@ public class BaseTest {
 		page.fill(locator, value);
 
 	}
-	
-	@BeforeSuite
-    public void extentReportSetup() {
 
-        try {
+	@BeforeSuite(alwaysRun = true)
+	public void extentReportSetup() {
 
-            String reportFolder = System.getProperty("user.dir")
-                    + "/test-output";
+		try {
 
-            Files.createDirectories(Paths.get(reportFolder));
+			String reportFolder = System.getProperty("user.dir")
+					+ "/test-output";
 
-            String reportPath = reportFolder
-                    + "/ExtentReport.html";
+			Files.createDirectories(Paths.get(reportFolder));
 
-            sparkReporter = new ExtentSparkReporter(reportPath);
+			String reportPath = reportFolder
+					+ "/ExtentReport.html";
 
-            sparkReporter.config().setDocumentTitle("Automation Test Report");
-            sparkReporter.config().setReportName("Playwright Automation Report");
+			sparkReporter = new ExtentSparkReporter(reportPath);
 
-            extent = new ExtentReports();
+			sparkReporter.config().setDocumentTitle("Automation Test Report");
+			sparkReporter.config().setReportName("Playwright Automation Report");
 
-            extent.attachReporter(sparkReporter);
+			extent = new ExtentReports();
 
-            extent.setSystemInfo("OS",
-                    System.getProperty("os.name"));
+			extent.attachReporter(sparkReporter);
 
-            extent.setSystemInfo("Java Version",
-                    System.getProperty("java.version"));
+			extent.setSystemInfo("OS",
+					System.getProperty("os.name"));
 
-            extent.setSystemInfo("User",
-                    System.getProperty("user.name"));
+			extent.setSystemInfo("Java Version",
+					System.getProperty("java.version"));
 
-            log.info("ExtentReports initialized successfully → " + reportPath);
+			extent.setSystemInfo("User",
+					System.getProperty("user.name"));
 
-        } catch (Exception e) {
+			log.info("ExtentReports initialized successfully → " + reportPath);
 
-            log.error("FAILED to initialize ExtentReports in @BeforeSuite: " + e.getMessage(), e);
-            throw new RuntimeException("ExtentReports setup failed — aborting suite.", e);
-        }
-    }
+		} catch (Exception e) {
+
+			// Log the real cause but do NOT rethrow — rethrowing from @BeforeSuite
+			// causes cascade failures: @BeforeMethod still runs (alwaysRun=true)
+			// but extent stays null, producing confusing NPEs downstream.
+			log.error("FAILED to initialize ExtentReports in @BeforeSuite: " + e.getMessage(), e);
+			extent = null; // explicit — stays null, loginSetUp null-guard will retry
+		}
+	}
 
 	@BeforeMethod(alwaysRun = true)
 	public void loginSetUp(ITestResult result) {
 
 		// Safety guard: re-initialize if @BeforeSuite failed to set up extent
 		if (extent == null) {
-			log.warn("extent is null in @BeforeMethod — @BeforeSuite may have failed. Re-initializing...");
-			extentReportSetup();
+			log.warn("extent is null — attempting re-initialization before test starts...");
+			try {
+				extentReportSetup();
+			} catch (Exception ex) {
+				log.error("ExtentReports re-initialization also failed: " + ex.getMessage(), ex);
+			}
 		}
 
-		extentTest = extent.createTest(
-                result.getMethod().getMethodName()
-        );
-		
+		if (extent != null) {
+			extentTest = extent.createTest(result.getMethod().getMethodName());
+		} else {
+			log.warn("ExtentReports unavailable — test will run without HTML reporting.");
+		}
+
 		Page page = initBrowser();
 
 		loginPage = new LoginPage(page);
@@ -193,24 +204,23 @@ public class BaseTest {
 		loginPage.checkLogoOnLogin();
 	}
 
-
 	@AfterMethod(alwaysRun = true)
 	public void tearDown(ITestResult result) {
-		
-		if (result.getStatus() == ITestResult.FAILURE) {
 
-            extentTest.fail("Test Failed");
-            extentTest.fail(result.getThrowable());
+		if (extentTest != null) {
+			if (result.getStatus() == ITestResult.FAILURE) {
+				extentTest.fail("Test Failed");
+				extentTest.fail(result.getThrowable());
+			} else if (result.getStatus() == ITestResult.SUCCESS) {
+				extentTest.pass("Test Passed");
+			} else if (result.getStatus() == ITestResult.SKIP) {
+				extentTest.skip("Test Skipped");
+			}
+		} else {
+			log.warn("extentTest is null in tearDown — skipping report logging for: "
+					+ result.getMethod().getMethodName());
+		}
 
-        } else if (result.getStatus() == ITestResult.SUCCESS) {
-
-            extentTest.pass("Test Passed");
-
-        } else if (result.getStatus() == ITestResult.SKIP) {
-
-            extentTest.skip("Test Skipped");
-        }
-		
 		BrowserContext context = contextTL.get();
 		Browser browser = browserTL.get();
 		Playwright playwright = playwrightTL.get();
@@ -228,13 +238,13 @@ public class BaseTest {
 		playwrightTL.remove();
 
 	}
-	
-	@AfterSuite
-    public void flushReport() {
 
-        if (extent != null) {
-            extent.flush();
-        }
-    }
+	@AfterSuite
+	public void flushReport() {
+
+		if (extent != null) {
+			extent.flush();
+		}
+	}
 
 }
