@@ -14,8 +14,8 @@ pipeline {
     parameters {
         choice(
             name: 'REGION',
-            choices: ['localization', 'non-localization'],
-            description: 'Select Test Data Environment (localization: Local data, non-localization: Non-local/Export data)'
+            choices: ['Localization', 'Non-Localization'],
+            description: 'Select Test Data Environment (Localization: Local data, Non-Localization: Non-local/Export data)'
         )
 
         choice(
@@ -26,7 +26,7 @@ pipeline {
 
         choice(
             name: 'BROWSER',
-            choices: ['chrome', 'firefox'],
+            choices: ['Chrome', 'Firefox'],
             description: 'Select Browser to run tests'
         )
 
@@ -136,17 +136,17 @@ pipeline {
                                 --auto-servernum \
                                 --server-args="-screen 0 1920x1080x24" \
                                 mvn clean test \
-                                -Dregion=${params.REGION} \
+                                -Dregion=${params.REGION.toLowerCase()} \
                                 ${groupFlag} \
-                                -Dbrowser=${params.BROWSER} \
+                                -Dbrowser=${params.BROWSER.toLowerCase()} \
                                 -Dheadless=${params.HEADLESS}
 
                         else
 
                             mvn clean test \
-                                -Dregion=${params.REGION} \
+                                -Dregion=${params.REGION.toLowerCase()} \
                                 ${groupFlag} \
-                                -Dbrowser=${params.BROWSER} \
+                                -Dbrowser=${params.BROWSER.toLowerCase()} \
                                 -Dheadless=${params.HEADLESS}
 
                         fi

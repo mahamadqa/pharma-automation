@@ -13,14 +13,6 @@
 
     <test name="Pharma Modules Test">
 
-        <!-- Define which groups are eligible to run in this suite -->
-        <groups>
-            <run>
-                <include name="basic"/>
-                <include name="advance"/>
-            </run>
-        </groups>
-
         <packages>
             <package name="baseModules.*"/>
         </packages>
