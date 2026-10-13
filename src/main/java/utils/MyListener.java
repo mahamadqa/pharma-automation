@@ -1,6 +1,8 @@
 package utils;
 
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Base64;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,22 +58,19 @@ public class MyListener implements ITestListener {
 
 				String testName = result.getName();
 
-				String filePath = System.getProperty("user.dir") + "/screenshots/" + testName + "_"
-						+ System.currentTimeMillis() + ".png";
+				// ── Save screenshot to file ──────────────────────────────
+				String screenshotDir = System.getProperty("user.dir") + "/screenshots";
+				Files.createDirectories(Paths.get(screenshotDir));
+				String filePath = screenshotDir + "/" + testName + "_" + System.currentTimeMillis() + ".png";
+				byte[] screenshotBytes = page.screenshot(
+						new Page.ScreenshotOptions().setPath(Paths.get(filePath)).setFullPage(true));
 
-				page.screenshot(new Page.ScreenshotOptions().setPath(Paths.get(filePath)).setFullPage(true));
+				// ── Embed as Base64 in ExtentReport (self-contained HTML) ─
+				String base64Screenshot = Base64.getEncoder().encodeToString(screenshotBytes);
+				test.get().fail("<b>Screenshot on Failure:</b>")
+						.addScreenCaptureFromBase64String(base64Screenshot, testName + " - Failure Screenshot");
 
-				test.get().addScreenCaptureFromPath(filePath);
-
-				log.error("TEST FAILED : " + result.getName());
-
-				log.error(result.getThrowable());
-
-				log.info("📸 Screenshot saved: " + filePath);
-				
-				
-				
-				
+				log.info("📸 Screenshot saved & embedded in report: " + filePath);
 			}
 
 		} catch (Exception e) {

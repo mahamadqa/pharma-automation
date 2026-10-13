@@ -8,8 +8,25 @@
     MODULE = Advance →  -Dgroups=advance
     MODULE = Both    →  -Dgroups=basic,advance   (default — runs all)
     ─────────────────────────────────────────────────────────────────────
+
+    Listeners:
+    ─────────────────────────────────────────────────────────────────────
+    MyListener     → Screenshots on failure + ExtentReports logging
+    RetryListener  → Auto-wires RetryAnalyzer to every @Test (max 2 retries)
+    ─────────────────────────────────────────────────────────────────────
 -->
 <suite name="Pharma Automation Test Suite" verbose="1" thread-count="1">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         LISTENERS
+         • MyListener    : Captures screenshot + logs to ExtentReport on failure
+         • RetryListener : IAnnotationTransformer — applies RetryAnalyzer (2 retries)
+                           to every @Test automatically, no code changes needed
+         ═══════════════════════════════════════════════════════════ -->
+    <listeners>
+        <listener class-name="utils.MyListener"/>
+        <listener class-name="utils.RetryListener"/>
+    </listeners>
 
     <test name="Pharma Modules Test">
 
