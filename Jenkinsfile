@@ -20,8 +20,8 @@ pipeline {
 
         choice(
             name: 'MODULE',
-            choices: ['all', 'basic', 'purchase_order', 'regression'],
-            description: 'Select Test Suite / TestNG Group to execute'
+            choices: ['Basic', 'Advance', 'Both'],
+            description: 'Select which test group to execute (Basic, Advance, or Both)'
         )
 
         choice(
@@ -63,7 +63,7 @@ pipeline {
                     echo " Pharma Automation Test Execution Pipeline"
                     echo "=================================================="
                     echo " Test Data Profile (Region) : ${params.REGION}"
-                    echo " Test Module / Groups       : ${params.MODULE}"
+                    echo " Module                 : ${params.MODULE}"
                     echo " Target Browser             : ${params.BROWSER}"
                     echo " Headless Mode              : ${params.HEADLESS}"
 
@@ -105,11 +105,17 @@ pipeline {
             steps {
                 script {
 
-                    def groupFlag = ""
-
-                    if (params.MODULE != 'all') {
-                        groupFlag = "-Dgroups=${params.MODULE}"
+                    // Map Jenkins MODULE selection → Maven -Dgroups value
+                    def groupsValue = ""
+                    if (params.MODULE == 'Basic') {
+                        groupsValue = 'basic'
+                    } else if (params.MODULE == 'Advance') {
+                        groupsValue = 'advance'
+                    } else {
+                        // Both
+                        groupsValue = 'basic,advance'
                     }
+                    def groupFlag = "-Dgroups=${groupsValue}"
 
                     // Execute Maven test
                     // Wrap with xvfb-run if headed mode is selected on headless Linux
@@ -358,7 +364,7 @@ pipeline {
 
 
                                         <tr>
-                                            <th>Test Module / Suite</th>
+                                            <th>Module</th>
                                             <td>${params.MODULE}</td>
                                         </tr>
 

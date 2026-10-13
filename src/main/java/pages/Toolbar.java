@@ -101,7 +101,7 @@ public class Toolbar {
 		page.waitForTimeout(1000);
 		log.info("Lookup submitted for Document No: [{}]", docNo);
 	}
-	
+
 	public void performDocAction(String action) {
 		page.waitForTimeout(1000);
 		docActionButton.click();
@@ -113,5 +113,5 @@ public class Toolbar {
 		WaitUtils.waitForBigLoadingIndicatorToDisappear(page);
 		page.waitForTimeout(1000);
 	}
-	
+
 }

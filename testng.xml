@@ -1,10 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="Pharma Automation Test Suite" verbose="1">
+
+<!--
+    Group Selection (controlled via Jenkins → -Dgroups Maven property):
+    ─────────────────────────────────────────────────────────────────────
+    MODULE = Basic   →  -Dgroups=basic
+    MODULE = Advance →  -Dgroups=advance
+    MODULE = Both    →  -Dgroups=basic,advance   (default — runs all)
+    ─────────────────────────────────────────────────────────────────────
+-->
+<suite name="Pharma Automation Test Suite" verbose="1" thread-count="1">
+
     <test name="Pharma Modules Test">
+
+        <!-- Define which groups are eligible to run in this suite -->
+        <groups>
+            <run>
+                <include name="basic"/>
+                <include name="advance"/>
+            </run>
+        </groups>
+
         <packages>
             <package name="baseModules.*"/>
-            
         </packages>
+
     </test>
+
 </suite>

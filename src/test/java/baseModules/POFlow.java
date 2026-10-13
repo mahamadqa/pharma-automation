@@ -3,7 +3,6 @@ package baseModules;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.annotations.Test;
-
 import base.BaseTest;
 import utils.ConfigReader;
 import utils.DataManager;
@@ -12,8 +11,8 @@ public class POFlow extends BaseTest {
 
 	private static final Logger log = LogManager.getLogger(POFlow.class);
 
-	@Test(groups = { "basic", "purchase_order", "regression" },
-		  description = "End-to-end Purchase Order creation flow: Login → Select Client/Role → Create PO Header → Add PO Line → Save")
+	@Test(groups = { "basic", "purchase_order",
+			"regression" }, description = "End-to-end Purchase Order creation flow: Login → Select Client/Role → Create PO Header → Add PO Line → Save")
 	public void verificationOFPurchaseOrderFlow() {
 
 		// Step 1: Login with users credentials
@@ -25,9 +24,10 @@ public class POFlow extends BaseTest {
 
 		// Step 3: Navigate to Purchase Order window and create a new record
 		purchaseOrder.navigateToPOWindow();
-		//toolbar.createNewRecord();
+		// toolbar.createNewRecord();
 
-		// Step 4: Fill PO Header fields (Localization vs Non-Localization data based on -Dregion)
+		// Step 4: Fill PO Header fields (Localization vs Non-Localization data based on
+		// -Dregion)
 		log.info("Filling PO Header fields using [{}] test data profile...", DataManager.getRegion());
 		purchaseOrder.selectOrg();
 		purchaseOrder.selecTtargetDocType();
@@ -35,16 +35,15 @@ public class POFlow extends BaseTest {
 		purchaseOrder.selectBPartner();
 		purchaseOrder.selectSalesRep();
 		toolbar.saveRecord();
-		log.info("Purchase Order created with Doc No : " +purchaseOrder.getPODocNo());
-		
-		//Validations
+		log.info("Purchase Order created with Doc No : " + purchaseOrder.getPODocNo());
+
+		// Validations
 		purchaseOrder.verifyDateFields();
 		purchaseOrder.verifyDocStatus("Drafted");
 		purchaseOrder.verifyBPLocationfields();
 		purchaseOrder.verifyCurrency();
 		purchaseOrder.verifyAmtFieldsBeforeInvLines();
-		
-		
+
 		// Step 5: Navigate to PO Line tab and enter product
 		purchaseOrder.clickOnPOLineTab();
 		purchaseOrder.enterProdct();
@@ -55,12 +54,12 @@ public class POFlow extends BaseTest {
 		//
 		toolbar.performDocAction("Prepare");
 		purchaseOrder.verifyDocStatus("In Progress");
-		
+
 		toolbar.performDocAction("Complete");
 		purchaseOrder.verifyDocStatus("Completed");
-		
+
 		log.info("========== Purchase Order Flow Completed Successfully ==========");
-		//INR, 
-		
+		// Warehouse ?
+
 	}
 }
