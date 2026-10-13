@@ -153,15 +153,24 @@ public class BaseTest {
             extent.setSystemInfo("User",
                     System.getProperty("user.name"));
 
+            log.info("ExtentReports initialized successfully → " + reportPath);
+
         } catch (Exception e) {
 
-            e.printStackTrace();
+            log.error("FAILED to initialize ExtentReports in @BeforeSuite: " + e.getMessage(), e);
+            throw new RuntimeException("ExtentReports setup failed — aborting suite.", e);
         }
     }
 
 	@BeforeMethod(alwaysRun = true)
 	public void loginSetUp(ITestResult result) {
-		
+
+		// Safety guard: re-initialize if @BeforeSuite failed to set up extent
+		if (extent == null) {
+			log.warn("extent is null in @BeforeMethod — @BeforeSuite may have failed. Re-initializing...");
+			extentReportSetup();
+		}
+
 		extentTest = extent.createTest(
                 result.getMethod().getMethodName()
         );
