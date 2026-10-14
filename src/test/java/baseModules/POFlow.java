@@ -11,8 +11,7 @@ public class POFlow extends BaseTest {
 
 	private static final Logger log = LogManager.getLogger(POFlow.class);
 
-	@Test(groups = { "basic", "purchase_order",
-			"regression" }, description = "End-to-end Purchase Order creation flow: Login → Select Client/Role → Create PO Header → Add PO Line → Save")
+	@Test(groups = { "basic" }, description = "End-to-end Purchase Order creation flow: Login → Select Client/Role → Create PO Header → Add PO Line → Save")
 	public void verificationOFPurchaseOrderFlow() {
 
 		// Step 1: Login with users credentials
@@ -34,6 +33,7 @@ public class POFlow extends BaseTest {
 		purchaseOrder.fillDescription();
 		purchaseOrder.selectBPartner();
 		purchaseOrder.selectSalesRep();
+		purchaseOrder.selectWarehouse();
 		toolbar.saveRecord();
 		log.info("Purchase Order created with Doc No : " + purchaseOrder.getPODocNo());
 
@@ -47,10 +47,20 @@ public class POFlow extends BaseTest {
 		// Step 5: Navigate to PO Line tab and enter product
 		purchaseOrder.clickOnPOLineTab();
 		purchaseOrder.enterProdct();
+		purchaseOrder.enterQtyEntered();
+		purchaseOrder.verifyPOQty();
+		purchaseOrder.verifyPriceEntered();
+		purchaseOrder.selectTax();
+		purchaseOrder.verifyPriceList();
+		purchaseOrder.verifyLineNetAmt();
+
+		// BaseTest.getPage().pause();
 		toolbar.saveRecord();
 
 		// Step 6: Navigate back to PO Header & complete doc action
 		purchaseOrder.navigateBackOnPoHeader();
+		purchaseOrder.verifyHeaderTotalLineAmt();
+		purchaseOrder.verifyHeaderGrandTotalAmt();
 		//
 		toolbar.performDocAction("Prepare");
 		purchaseOrder.verifyDocStatus("In Progress");
@@ -59,7 +69,5 @@ public class POFlow extends BaseTest {
 		purchaseOrder.verifyDocStatus("Completed");
 
 		log.info("========== Purchase Order Flow Completed Successfully ==========");
-		// Warehouse ?
-
 	}
 }
