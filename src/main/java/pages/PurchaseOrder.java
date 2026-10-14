@@ -46,6 +46,7 @@ public class PurchaseOrder {
 	private final Locator lineNetAmtInput;
 
 	private double lastLineNetAmt = 0.0;
+	private static String lastPODocNo = "";
 
 	public PurchaseOrder(Page page) {
 		this.page = page;
@@ -605,7 +606,18 @@ public class PurchaseOrder {
 	public String getPODocNo() {
 		Locator documentSequence = page.locator("//input[@title='Document sequence number of the document']");
 		String value = documentSequence.inputValue();
+		if (value != null && !value.trim().isEmpty()) {
+			lastPODocNo = value.trim();
+		}
 		return value;
+	}
+
+	public static String getLastPODocNo() {
+		return lastPODocNo;
+	}
+
+	public static void setLastPODocNo(String docNo) {
+		lastPODocNo = docNo;
 	}
 
 	public void verifyAmtFieldsBeforeInvLines() {

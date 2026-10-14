@@ -26,6 +26,7 @@ import com.microsoft.playwright.Playwright;
 
 import pages.ClientAndRoleSelection;
 import pages.Dashboard;
+import pages.GoodsReceiptNote;
 import pages.HTMLReportsPreview;
 import pages.LoginPage;
 import pages.PurchaseOrder;
@@ -67,6 +68,7 @@ public class BaseTest {
 	protected SOPMaster sopMaster;
 	protected WorkflowActivities workflowActivities;
 	protected PurchaseOrder purchaseOrder;
+	protected GoodsReceiptNote goodsReceiptNote;
 
 	protected static ExtentReports extent;
 	protected static ExtentSparkReporter sparkReporter;
@@ -186,6 +188,7 @@ public class BaseTest {
 
 		dashboard = new Dashboard(page, loginPage, clientAndRole);
 		purchaseOrder = new PurchaseOrder(page);
+		goodsReceiptNote = new GoodsReceiptNote(page);
 		workflowActivities = new WorkflowActivities(page);
 		hTMLPreview = new HTMLReportsPreview(page);
 		sopMaster = new SOPMaster(page);

@@ -27,3 +27,8 @@ ExtentReport.html
 *.tmp
 
 bin/.factorypath
+
+# Media & YAML files
+*.yml
+*.yaml
+*.png
