@@ -17,13 +17,15 @@ public class MyListener implements ITestListener {
 
 	@Override
 	public void onTestStart(ITestResult result) {
-		if (result.getMethod().getCurrentInvocationCount() == 0) {
-			ExtentTest currentTest = ExtentManager.getTest();
-			if (currentTest == null) {
-				ExtentManager.createTest(result.getMethod().getMethodName(), result.getMethod().getDescription());
+		int invocation = result.getMethod().getCurrentInvocationCount();
+		ExtentTest currentTest = ExtentManager.getTest();
+		if (currentTest == null) {
+			currentTest = ExtentManager.createTest(result.getMethod().getMethodName(), result.getMethod().getDescription());
+			if (invocation > 0) {
+				currentTest.info("🔄 Retrying test execution (Attempt " + (invocation + 1) + ")");
 			}
 		}
-		log.info("Test Started: " + result.getName());
+		log.info("Test Started: " + result.getName() + (invocation > 0 ? " (Retry Attempt " + (invocation + 1) + ")" : ""));
 	}
 
 	@Override
@@ -55,8 +57,18 @@ public class MyListener implements ITestListener {
 
 	@Override
 	public void onTestSkipped(ITestResult result) {
-		log.warn("⚠️ Test Skipped: " + result.getName());
+		boolean isRetrying = RetryAnalyzer.isRetrying(result);
 		ExtentTest test = ExtentManager.getTest();
+
+		if (isRetrying) {
+			log.warn("🔄 Test failed and is being retried, discarding prior attempt from ExtentReport: " + result.getName());
+			if (test != null) {
+				ExtentManager.removeTest(test);
+			}
+			return;
+		}
+
+		log.warn("⚠️ Test Skipped: " + result.getName());
 		if (test != null) {
 			test.skip("Test Skipped");
 			if (result.getThrowable() != null) {
@@ -67,6 +79,15 @@ public class MyListener implements ITestListener {
 
 	@Override
 	public void onFinish(ITestContext context) {
+		// Clean up TestNG context so retried tests that later passed are not counted as skipped in TestNG reports
+		java.util.Iterator<ITestResult> skippedTests = context.getSkippedTests().getAllResults().iterator();
+		while (skippedTests.hasNext()) {
+			ITestResult skippedTest = skippedTests.next();
+			if (context.getPassedTests().getResults(skippedTest.getMethod()).size() > 0
+					|| context.getFailedTests().getResults(skippedTest.getMethod()).size() > 0) {
+				skippedTests.remove();
+			}
+		}
 		ExtentManager.flush();
 	}
 

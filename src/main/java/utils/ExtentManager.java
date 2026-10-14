@@ -45,6 +45,7 @@ public class ExtentManager {
 
 				extent = new ExtentReports();
 				extent.attachReporter(sparkReporter);
+				extent.keepLastRetryOnly(true);
 
 				extent.setSystemInfo("OS", System.getProperty("os.name"));
 				extent.setSystemInfo("Java Version", System.getProperty("java.version"));
@@ -114,6 +115,21 @@ public class ExtentManager {
 	 * Removes the ExtentTest instance for the current thread.
 	 */
 	public static void removeTest() {
+		testTL.remove();
+	}
+
+	/**
+	 * Removes the ExtentTest instance from ExtentReports and clears ThreadLocal.
+	 */
+	public static synchronized void removeTest(ExtentTest test) {
+		if (extent != null && test != null) {
+			try {
+				extent.removeTest(test);
+				log.info("Removed retried test from ExtentReports: {}", test.getModel().getName());
+			} catch (Exception e) {
+				log.warn("Failed to remove test from ExtentReports: {}", e.getMessage());
+			}
+		}
 		testTL.remove();
 	}
 

@@ -169,6 +169,10 @@ public class BaseTest {
 			currentTest = ExtentManager.createTest(
 					result.getMethod().getMethodName(),
 					result.getMethod().getDescription());
+			if (result.getMethod().getCurrentInvocationCount() > 0) {
+				currentTest.info("🔄 Retrying test execution (Attempt "
+						+ (result.getMethod().getCurrentInvocationCount() + 1) + ")");
+			}
 		}
 		this.extentTest = currentTest;
 
@@ -208,7 +212,6 @@ public class BaseTest {
 		// 2. Capture screenshot & log status if test failed
 		if (result.getStatus() == ITestResult.FAILURE) {
 			Throwable t = result.getThrowable();
-			ExtentTest test = ExtentManager.getTest();
 
 			// If it's a hard assertion failure
 			if (t instanceof AssertionError && !hasSoftFailures) {
@@ -219,17 +222,6 @@ public class BaseTest {
 			// Capture final screenshot while browser page is still open (if not already captured by soft asserts)
 			if (!hasSoftFailures) {
 				captureFailureScreenshot(result.getMethod().getMethodName());
-			}
-
-		} else if (result.getStatus() == ITestResult.SUCCESS) {
-			ExtentTest test = ExtentManager.getTest();
-			if (test != null && !hasSoftFailures) {
-				test.pass("Test Passed");
-			}
-		} else if (result.getStatus() == ITestResult.SKIP) {
-			ExtentTest test = ExtentManager.getTest();
-			if (test != null) {
-				test.skip("Test Skipped");
 			}
 		}
 
