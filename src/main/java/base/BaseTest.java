@@ -3,7 +3,9 @@ package base;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Properties;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.ITestResult;
@@ -11,10 +13,11 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
-import org.testng.asserts.SoftAssert;
+import org.testng.annotations.Listeners;
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
+import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
@@ -31,23 +34,25 @@ import pages.SOPMaster;
 import pages.Toolbar;
 import pages.WorkflowActivities;
 import utils.ConfigReader;
+import utils.CustomSoftAssert;
+import utils.ExtentManager;
 
+@Listeners({ utils.MyListener.class, utils.RetryListener.class })
 public class BaseTest {
 
 	private static final Logger log = LogManager.getLogger(BaseTest.class);
 
-	// ThreadLocal holders — one instance per thread instead of one shared static
-	// instance.
+	// ThreadLocal holders — one instance per thread instead of one shared static instance
 	private static final ThreadLocal<Playwright> playwrightTL = new ThreadLocal<>();
 	private static final ThreadLocal<Browser> browserTL = new ThreadLocal<>();
 	private static final ThreadLocal<BrowserContext> contextTL = new ThreadLocal<>();
 	private static final ThreadLocal<Page> pageTL = new ThreadLocal<>();
 
-	// One SoftAssert per test thread — assertAll() is called in @AfterMethod
-	private static final ThreadLocal<SoftAssert> softAssertTL = new ThreadLocal<>();
+	// One CustomSoftAssert per test thread — collects failures and asserts in tearDown
+	private static final ThreadLocal<CustomSoftAssert> softAssertTL = new ThreadLocal<>();
 
-	/** Returns the SoftAssert for the current test thread. */
-	public static SoftAssert getSoftAssert() {
+	/** Returns the CustomSoftAssert for the current test thread. */
+	public static CustomSoftAssert getSoftAssert() {
 		return softAssertTL.get();
 	}
 
@@ -66,6 +71,10 @@ public class BaseTest {
 	protected static ExtentReports extent;
 	protected static ExtentSparkReporter sparkReporter;
 	public ExtentTest extentTest;
+
+	public static ExtentTest getExtentTest() {
+		return ExtentManager.getTest();
+	}
 
 	public static Page getPage() {
 		return pageTL.get();
@@ -123,80 +132,42 @@ public class BaseTest {
 
 	public static void click(String locator) {
 		Page page = pageTL.get();
-		page.click(locator);
-
+		if (page != null) {
+			page.click(locator);
+		}
 	}
 
 	public static void fill(String locator, String value) {
 		Page page = pageTL.get();
-		page.fill(locator, value);
-
+		if (page != null) {
+			page.fill(locator, value);
+		}
 	}
 
 	@BeforeSuite(alwaysRun = true)
 	public void extentReportSetup() {
-
 		try {
-
-			String reportFolder = System.getProperty("user.dir")
-					+ "/test-output";
-
-			Files.createDirectories(Paths.get(reportFolder));
-
-			String reportPath = reportFolder
-					+ "/ExtentReport.html";
-
-			sparkReporter = new ExtentSparkReporter(reportPath);
-
-			sparkReporter.config().setDocumentTitle("Automation Test Report");
-			sparkReporter.config().setReportName("Playwright Automation Report");
-
-			extent = new ExtentReports();
-
-			extent.attachReporter(sparkReporter);
-
-			extent.setSystemInfo("OS",
-					System.getProperty("os.name"));
-
-			extent.setSystemInfo("Java Version",
-					System.getProperty("java.version"));
-
-			extent.setSystemInfo("User",
-					System.getProperty("user.name"));
-
-			log.info("ExtentReports initialized successfully → " + reportPath);
-
+			extent = ExtentManager.getInstance();
+			log.info("ExtentReports initialized successfully via ExtentManager.");
 		} catch (Exception e) {
-
-			// Log the real cause but do NOT rethrow — rethrowing from @BeforeSuite
-			// causes cascade failures: @BeforeMethod still runs (alwaysRun=true)
-			// but extent stays null, producing confusing NPEs downstream.
 			log.error("FAILED to initialize ExtentReports in @BeforeSuite: " + e.getMessage(), e);
-			extent = null; // explicit — stays null, loginSetUp null-guard will retry
 		}
 	}
 
 	@BeforeMethod(alwaysRun = true)
 	public void loginSetUp(ITestResult result) {
 
-		// Fresh SoftAssert for every test — assertAll() called in tearDown
-		softAssertTL.set(new SoftAssert());
+		// Fresh CustomSoftAssert for every test thread — collects all failed assertions
+		softAssertTL.set(new CustomSoftAssert());
 
-		// Safety guard: re-initialize if @BeforeSuite failed to set up extent
-		if (extent == null) {
-			log.warn("extent is null — attempting re-initialization before test starts...");
-			try {
-				extentReportSetup();
-			} catch (Exception ex) {
-				log.error("ExtentReports re-initialization also failed: " + ex.getMessage(), ex);
-			}
+		// Initialize ExtentTest via ExtentManager
+		ExtentTest currentTest = ExtentManager.getTest();
+		if (currentTest == null) {
+			currentTest = ExtentManager.createTest(
+					result.getMethod().getMethodName(),
+					result.getMethod().getDescription());
 		}
-
-		if (extent != null) {
-			extentTest = extent.createTest(result.getMethod().getMethodName());
-		} else {
-			log.warn("ExtentReports unavailable — test will run without HTML reporting.");
-		}
+		this.extentTest = currentTest;
 
 		Page page = initBrowser();
 
@@ -219,61 +190,139 @@ public class BaseTest {
 	@AfterMethod(alwaysRun = true)
 	public void tearDown(ITestResult result) {
 
-		// Flush all accumulated soft assertion failures before marking test status
-		SoftAssert sa = softAssertTL.get();
+		CustomSoftAssert sa = softAssertTL.get();
+		boolean hasSoftFailures = (sa != null && sa.hasFailures());
+
+		// 1. If soft assertion failures occurred, attach all of them to Extent Report
+		// while the browser/page is still active!
+		if (hasSoftFailures) {
+			log.error("Soft assertion failure(s) detected in [{}] (Total: {})",
+					result.getMethod().getMethodName(), sa.getFailureCount());
+			sa.attachAllFailuresToReport();
+			result.setStatus(ITestResult.FAILURE);
+		}
+
+		// 2. Capture screenshot & log status if test failed
+		if (result.getStatus() == ITestResult.FAILURE) {
+			Throwable t = result.getThrowable();
+			ExtentTest test = ExtentManager.getTest();
+
+			// If it's a hard assertion failure
+			if (t instanceof AssertionError && !hasSoftFailures) {
+				log.error("Hard assertion failure in [{}]: {}", result.getMethod().getMethodName(), t.getMessage());
+				attachHardAssertionFailureToReport(t);
+			}
+
+			// Capture final screenshot while browser page is still open
+			captureFailureScreenshot(result.getMethod().getMethodName());
+
+		} else if (result.getStatus() == ITestResult.SUCCESS) {
+			ExtentTest test = ExtentManager.getTest();
+			if (test != null && !hasSoftFailures) {
+				test.pass("Test Passed");
+			}
+		} else if (result.getStatus() == ITestResult.SKIP) {
+			ExtentTest test = ExtentManager.getTest();
+			if (test != null) {
+				test.skip("Test Skipped");
+			}
+		}
+
+		// 3. Close browser resources safely
+		try {
+			BrowserContext context = contextTL.get();
+			Browser browser = browserTL.get();
+			Playwright playwright = playwrightTL.get();
+
+			if (context != null)
+				context.close();
+			if (browser != null)
+				browser.close();
+			if (playwright != null)
+				playwright.close();
+		} catch (Exception e) {
+			log.warn("Error closing browser resources: {}", e.getMessage());
+		} finally {
+			pageTL.remove();
+			contextTL.remove();
+			browserTL.remove();
+			playwrightTL.remove();
+		}
+
+		// 4. Finally call sa.assertAll() if there were soft assertion failures
+		// This ensures TestNG records the test as failed with full assertion details!
 		if (sa != null) {
-			try {
-				sa.assertAll();
-			} catch (AssertionError ae) {
-				log.error("Soft assertion failures in [{}]: {}", result.getMethod().getMethodName(), ae.getMessage());
-				if (extentTest != null) {
-					extentTest.fail("Soft assertion failure(s): " + ae.getMessage());
-				}
-				result.setThrowable(ae);
-				result.setStatus(ITestResult.FAILURE);
-			}
 			softAssertTL.remove();
-		}
-
-		if (extentTest != null) {
-			if (result.getStatus() == ITestResult.FAILURE) {
-				extentTest.fail("Test Failed");
-				if (result.getThrowable() != null) {
-					extentTest.fail(result.getThrowable());
-				}
-			} else if (result.getStatus() == ITestResult.SUCCESS) {
-				extentTest.pass("Test Passed");
-			} else if (result.getStatus() == ITestResult.SKIP) {
-				extentTest.skip("Test Skipped");
+			if (hasSoftFailures) {
+				sa.assertAll();
 			}
-		} else {
-			log.warn("extentTest is null in tearDown — skipping report logging for: "
-					+ result.getMethod().getMethodName());
 		}
-
-		BrowserContext context = contextTL.get();
-		Browser browser = browserTL.get();
-		Playwright playwright = playwrightTL.get();
-
-		if (context != null)
-			context.close();
-		if (browser != null)
-			browser.close();
-		if (playwright != null)
-			playwright.close();
-
-		pageTL.remove();
-		contextTL.remove();
-		browserTL.remove();
-		playwrightTL.remove();
 	}
 
-	@AfterSuite
-	public void flushReport() {
-
-		if (extent != null) {
-			extent.flush();
+	private void attachHardAssertionFailureToReport(Throwable t) {
+		ExtentTest test = ExtentManager.getTest();
+		if (test == null) {
+			return;
 		}
+
+		String message = t.getMessage() != null ? t.getMessage() : "Hard assertion failed";
+		String location = "Unknown";
+		for (StackTraceElement elem : t.getStackTrace()) {
+			String cls = elem.getClassName();
+			if (!cls.startsWith("org.testng.") && !cls.startsWith("java.lang.") && !cls.startsWith("base.BaseTest")) {
+				location = elem.getFileName() + ":" + elem.getLineNumber() + " (" + elem.getMethodName() + ")";
+				break;
+			}
+		}
+
+		StringBuilder html = new StringBuilder();
+		html.append("<div style='background-color:#fff5f5; border:1px solid #feb2b2; border-left:4px solid #e53e3e; padding:10px 14px; border-radius:4px; margin:6px 0; font-family:sans-serif;'>");
+		html.append("  <span style='color:#c53030; font-weight:bold;'>❌ Hard Assertion Failure</span><br/>");
+		html.append("  <div style='margin-top:4px;'><b>Details:</b> ").append(escapeHtml(message)).append("</div>");
+		html.append("  <div style='margin-top:4px; font-size:11px; color:#718096;'><b>Location:</b> ").append(escapeHtml(location)).append("</div>");
+		html.append("</div>");
+
+		test.fail(html.toString());
+	}
+
+	private void captureFailureScreenshot(String testName) {
+		try {
+			Page page = pageTL.get();
+			if (page != null && !page.isClosed()) {
+				String screenshotDir = System.getProperty("user.dir") + "/screenshots";
+				Files.createDirectories(Paths.get(screenshotDir));
+				String filePath = screenshotDir + "/" + testName + "_" + System.currentTimeMillis() + ".png";
+				byte[] screenshotBytes = page.screenshot(
+						new Page.ScreenshotOptions().setPath(Paths.get(filePath)).setFullPage(true));
+
+				String base64Screenshot = Base64.getEncoder().encodeToString(screenshotBytes);
+				ExtentTest test = ExtentManager.getTest();
+				if (test != null) {
+					test.fail("<b>Screenshot on Failure:</b>",
+							MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot,
+									testName + " - Failure Screenshot").build());
+				}
+				log.info("📸 Screenshot saved & embedded in report: {}", filePath);
+			}
+		} catch (Exception e) {
+			log.warn("Screenshot capture in tearDown failed: {}", e.getMessage());
+		}
+	}
+
+	private static String escapeHtml(String text) {
+		if (text == null) {
+			return "";
+		}
+		return text.replace("&", "&amp;")
+				.replace("<", "&lt;")
+				.replace(">", "&gt;")
+				.replace("\"", "&quot;")
+				.replace("'", "&#39;");
+	}
+
+	@AfterSuite(alwaysRun = true)
+	public void flushReport() {
+		ExtentManager.flush();
 	}
 
 }
