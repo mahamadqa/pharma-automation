@@ -3,6 +3,7 @@ package pages;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
+import org.testng.asserts.SoftAssert;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
@@ -44,13 +45,25 @@ public class ClientAndRoleSelection {
 
 	/**
 	 * Checks and validates that the client logo is displayed on the Client & Role
-	 * Selection page.
+	 * Selection page. Uses SoftAssert so test continues if logo is missing.
 	 */
 	public void checkLogoOnClientandRoleSelectionPage() {
 		try {
 			logo.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-			Assert.assertTrue(logo.isVisible(), "Client logo is not displaying on Client & Role Selection page.");
-			log.info("Client & Role Selection page logo validated successfully.");
+			SoftAssert sa = base.BaseTest.getSoftAssert();
+			boolean logoVisible = logo.isVisible();
+			if (sa != null) {
+				sa.assertTrue(logoVisible,
+						"[Client & Role Selection] Logo is NOT visible on Client & Role Selection page.");
+			} else {
+				Assert.assertTrue(logoVisible,
+						"[Client & Role Selection] Logo is NOT visible on Client & Role Selection page.");
+			}
+			if (logoVisible) {
+				log.info("Client & Role Selection page logo validated successfully.");
+			} else {
+				log.warn("Client & Role Selection page logo NOT visible — soft assertion recorded.");
+			}
 		} catch (Exception e) {
 			log.error("Failed waiting for Client & Role selection logo: {}", e.getMessage());
 			throw e;
@@ -103,9 +116,19 @@ public class ClientAndRoleSelection {
 		try {
 			page.waitForTimeout(2000);
 			desktopHeader.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(25000));
+			SoftAssert sa = base.BaseTest.getSoftAssert();
+			boolean headerVisible = desktopHeader.isVisible();
+			if (sa != null) {
+				sa.assertTrue(headerVisible,
+						"[Client & Role Selection] Desktop header is NOT visible after selecting Client: ["
+								+ clientName + "] & Role: [" + loginRole + "]");
+			} else {
+				Assert.assertTrue(headerVisible,
+						"[Client & Role Selection] Desktop header is NOT visible after selection.");
+			}
 			log.info("Login successful by selecting Client: [{}] & Role: [{}]", clientName, loginRole);
-		} catch (Exception e) {	
-				log.warn("Dashboard header wait timed out, continuing execution: {}", e.getMessage());		
+		} catch (Exception e) {
+			log.warn("Dashboard header wait timed out, continuing execution: {}", e.getMessage());
 		}
 	}
 

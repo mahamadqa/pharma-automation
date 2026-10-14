@@ -2,7 +2,7 @@ package pages;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.testng.Assert;
+import org.testng.asserts.SoftAssert;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
@@ -18,7 +18,8 @@ public class LoginPage {
 	public String UserName;
 
 	// Locators - clean, exact selectors without and/or/|
-	private final Locator navigateLoginButton;
+	private final Locator navigateLoginButton1;
+	private final Locator navigateLoginButton2;
 	private final Locator usernameInput;
 	private final Locator passwordInput;
 	private final Locator selectRoleCheckbox;
@@ -30,7 +31,8 @@ public class LoginPage {
 
 	public LoginPage(Page page) {
 		this.page = page;
-		this.navigateLoginButton = page.locator("//li[@id='main-requestBtns-btnLogin']");
+		this.navigateLoginButton1 = page.locator("//li[@id='main-requestBtns-btnLogin']");
+		this.navigateLoginButton2 = page.locator("//a[contains(@class,'main-button')]");
 		this.usernameInput = page.locator("//td[@class='login-field']//input[@autocomplete='username']");
 		this.passwordInput = page.locator("//td[@class='login-field']//input[@autocomplete='current-password']");
 		this.selectRoleCheckbox = page.locator("//tr[@id='rowSelectRole']//label[text()='Select Role']");
@@ -46,11 +48,35 @@ public class LoginPage {
 	 * be visible.
 	 */
 	public void navigateToMainLoginPage() {
-		log.info("Navigating to the main login dialog...");
-		navigateLoginButton
-				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		navigateLoginButton.click();
-		usernameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		log.info("Navigating to the main login dialog... Current URL: [{}]", page.url());
+
+		// 1. If username input is already visible (e.g. navigated directly to /webui/),
+		// no need to click
+		try {
+			if (usernameInput.isVisible()) {
+				log.info("Username field is already visible; login dialog is already open.");
+				return;
+			}
+		} catch (Exception ignored) {
+		}
+
+		// 2. Locate and click the login navigation button
+		Locator loginButton;
+		try {
+			navigateLoginButton1.waitFor(
+					new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+			loginButton = navigateLoginButton1;
+			log.info("Login button found via Button-1 (#main-requestBtns-btnLogin a).");
+		} catch (Exception e) {
+			log.info("Button-1 not visible — trying Button-2 (#main-requestBtns-btnLogin)...");
+			navigateLoginButton2.waitFor(
+					new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(3000));
+			loginButton = navigateLoginButton2;
+			log.info("Login button found via Button-2 (#main-requestBtns-btnLogin).");
+		}
+
+		loginButton.click();
+		usernameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
 		log.info("Login dialog opened successfully; username field is ready.");
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 	}
@@ -72,10 +98,19 @@ public class LoginPage {
 
 	/**
 	 * Validates that the client logo is displayed on the login screen.
+	 * Uses SoftAssert — test continues even if logo is missing.
 	 */
 	public void checkLogoOnLogin() {
-		Assert.assertTrue(isLogoDisplayed(), "Client logo is not displaying on the login screen.");
-		log.info("Client logo validated successfully on login screen.");
+		SoftAssert sa = base.BaseTest.getSoftAssert();
+		boolean logoVisible = isLogoDisplayed();
+		if (sa != null) {
+			sa.assertTrue(logoVisible, "[Login Page] Client logo is NOT visible on the login screen.");
+		}
+		if (logoVisible) {
+			log.info("Client logo validated successfully on login screen.");
+		} else {
+			log.warn("Client logo NOT visible on login screen — soft assertion recorded.");
+		}
 	}
 
 	/**
@@ -108,8 +143,9 @@ public class LoginPage {
 			selectRoleCheckbox.check();
 			log.info("Checked 'Select Role' checkbox.");
 		}
-		
-		rememberMeCheckbox.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(5000));
+
+		rememberMeCheckbox
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(5000));
 		if (!rememberMeCheckbox.isChecked()) {
 			rememberMeCheckbox.check();
 			log.info("Checked 'Remember Me' checkbox.");
@@ -122,19 +158,32 @@ public class LoginPage {
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 
 		// 5. Synchronize and validate post-login transition
+		SoftAssert sa = base.BaseTest.getSoftAssert();
 		try {
 			nextScreenLogo
 					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
-			Assert.assertTrue(nextScreenLogo.isVisible(), "Client/Role selection logo is not visible after login.");
-			log.info("Login successful for user: [{}], transitioned to Client & Role selection screen.", user);
+			boolean logoVisible = nextScreenLogo.isVisible();
+			if (sa != null) {
+				sa.assertTrue(logoVisible,
+						"[Login] Client/Role selection logo is NOT visible after login for user: [" + user + "]");
+			}
+			if (logoVisible) {
+				log.info("Login successful for user: [{}], transitioned to Client & Role selection screen.", user);
+			} else {
+				log.warn("[Login] Post-login logo NOT visible for user: [{}] — soft assertion recorded.", user);
+			}
 		} catch (Exception e) {
 			if (errorMessage.isVisible()) {
 				String errText = errorMessage.innerText().trim();
 				log.error("Login failed for user [{}] with application error: [{}]", user, errText);
-				Assert.fail("Login failed for user [" + user + "] with application error: " + errText);
+				if (sa != null) {
+					sa.fail("[Login] Application error for user [" + user + "]: " + errText);
+				}
 			} else {
-				log.error("Login failed or timed out waiting for next screen: {}", e.getMessage());
-				throw e;
+				log.error("Login timed out waiting for post-login screen for user [{}]: {}", user, e.getMessage());
+				if (sa != null) {
+					sa.fail("[Login] Timed out waiting for post-login screen for user: [" + user + "]");
+				}
 			}
 		}
 	}

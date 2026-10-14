@@ -11,6 +11,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
+import org.testng.asserts.SoftAssert;
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
@@ -41,6 +42,14 @@ public class BaseTest {
 	private static final ThreadLocal<Browser> browserTL = new ThreadLocal<>();
 	private static final ThreadLocal<BrowserContext> contextTL = new ThreadLocal<>();
 	private static final ThreadLocal<Page> pageTL = new ThreadLocal<>();
+
+	// One SoftAssert per test thread — assertAll() is called in @AfterMethod
+	private static final ThreadLocal<SoftAssert> softAssertTL = new ThreadLocal<>();
+
+	/** Returns the SoftAssert for the current test thread. */
+	public static SoftAssert getSoftAssert() {
+		return softAssertTL.get();
+	}
 
 	protected static Properties prop;
 	protected static ConfigReader reader;
@@ -170,6 +179,9 @@ public class BaseTest {
 	@BeforeMethod(alwaysRun = true)
 	public void loginSetUp(ITestResult result) {
 
+		// Fresh SoftAssert for every test — assertAll() called in tearDown
+		softAssertTL.set(new SoftAssert());
+
 		// Safety guard: re-initialize if @BeforeSuite failed to set up extent
 		if (extent == null) {
 			log.warn("extent is null — attempting re-initialization before test starts...");
@@ -207,10 +219,28 @@ public class BaseTest {
 	@AfterMethod(alwaysRun = true)
 	public void tearDown(ITestResult result) {
 
+		// Flush all accumulated soft assertion failures before marking test status
+		SoftAssert sa = softAssertTL.get();
+		if (sa != null) {
+			try {
+				sa.assertAll();
+			} catch (AssertionError ae) {
+				log.error("Soft assertion failures in [{}]: {}", result.getMethod().getMethodName(), ae.getMessage());
+				if (extentTest != null) {
+					extentTest.fail("Soft assertion failure(s): " + ae.getMessage());
+				}
+				result.setThrowable(ae);
+				result.setStatus(ITestResult.FAILURE);
+			}
+			softAssertTL.remove();
+		}
+
 		if (extentTest != null) {
 			if (result.getStatus() == ITestResult.FAILURE) {
 				extentTest.fail("Test Failed");
-				extentTest.fail(result.getThrowable());
+				if (result.getThrowable() != null) {
+					extentTest.fail(result.getThrowable());
+				}
 			} else if (result.getStatus() == ITestResult.SUCCESS) {
 				extentTest.pass("Test Passed");
 			} else if (result.getStatus() == ITestResult.SKIP) {
@@ -236,7 +266,6 @@ public class BaseTest {
 		contextTL.remove();
 		browserTL.remove();
 		playwrightTL.remove();
-
 	}
 
 	@AfterSuite
