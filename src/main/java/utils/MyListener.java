@@ -52,10 +52,10 @@ public class MyListener implements ITestListener {
 				test.fail(result.getThrowable());
 			}
 
-			// If browser page is still open, capture failure screenshot
+			// If browser page is still open and no screenshot has been captured yet, capture failure screenshot
 			try {
 				Page page = BaseTest.getPage();
-				if (page != null && !page.isClosed()) {
+				if (page != null && !page.isClosed() && (test.getModel().getMedia() == null || test.getModel().getMedia().isEmpty())) {
 					byte[] screenshotBytes = page.screenshot(new Page.ScreenshotOptions().setFullPage(true));
 					String base64Screenshot = Base64.getEncoder().encodeToString(screenshotBytes);
 					test.fail("<b>Screenshot on Failure:</b>",
@@ -64,7 +64,7 @@ public class MyListener implements ITestListener {
 					log.info("📸 Screenshot captured & embedded in ExtentReport.");
 				}
 			} catch (Exception e) {
-				log.debug("Screenshot in listener skipped (browser already closed): {}", e.getMessage());
+				log.debug("Screenshot in listener skipped: {}", e.getMessage());
 			}
 		}
 	}

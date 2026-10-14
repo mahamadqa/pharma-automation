@@ -213,8 +213,10 @@ public class BaseTest {
 				attachHardAssertionFailureToReport(t);
 			}
 
-			// Capture final screenshot while browser page is still open
-			captureFailureScreenshot(result.getMethod().getMethodName());
+			// Capture final screenshot while browser page is still open (if not already captured by soft asserts)
+			if (!hasSoftFailures) {
+				captureFailureScreenshot(result.getMethod().getMethodName());
+			}
 
 		} else if (result.getStatus() == ITestResult.SUCCESS) {
 			ExtentTest test = ExtentManager.getTest();

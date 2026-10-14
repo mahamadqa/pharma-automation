@@ -63,14 +63,13 @@ public class CustomSoftAssert extends SoftAssert {
 
 	@Override
 	public void onAssertSuccess(IAssert<?> assertCommand) {
+		// Only log to debug console if needed, NOT into Extent Reports.
+		// The test assertions use failure descriptions (e.g. "[PO] DocStatus mismatch - Expected: ..."),
+		// so logging them as "Assertion Passed" creates confusing and contradictory report entries.
+		// As requested, only failed assertions are collected and attached to Extent Reports.
 		String msg = assertCommand.getMessage();
 		if (msg != null && !msg.trim().isEmpty()) {
-			log.info("✔ Assertion Passed: {}", msg.trim());
-			ExtentTest test = ExtentManager.getTest();
-			if (test != null) {
-				test.info("<span style='color:#2e7d32; font-weight:bold;'>✔</span> <b>Assertion Passed:</b> "
-						+ escapeHtml(msg.trim()));
-			}
+			log.debug("Assertion passed: {}", msg.trim());
 		}
 	}
 
