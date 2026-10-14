@@ -17,7 +17,6 @@ import org.testng.annotations.Listeners;
 
 import com.aventstack.extentreports.ExtentReports;
 import com.aventstack.extentreports.ExtentTest;
-import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
@@ -47,6 +46,7 @@ public class BaseTest {
 	private static final ThreadLocal<Browser> browserTL = new ThreadLocal<>();
 	private static final ThreadLocal<BrowserContext> contextTL = new ThreadLocal<>();
 	private static final ThreadLocal<Page> pageTL = new ThreadLocal<>();
+	private static final ThreadLocal<Boolean> failureScreenshotCapturedTL = ThreadLocal.withInitial(() -> false);
 
 	// One CustomSoftAssert per test thread — collects failures and asserts in tearDown
 	private static final ThreadLocal<CustomSoftAssert> softAssertTL = new ThreadLocal<>();
@@ -157,6 +157,9 @@ public class BaseTest {
 	@BeforeMethod(alwaysRun = true)
 	public void loginSetUp(ITestResult result) {
 
+		// Reset screenshot capture flag for this test thread
+		failureScreenshotCapturedTL.set(false);
+
 		// Fresh CustomSoftAssert for every test thread — collects all failed assertions
 		softAssertTL.set(new CustomSoftAssert());
 
@@ -245,6 +248,7 @@ public class BaseTest {
 		} catch (Exception e) {
 			log.warn("Error closing browser resources: {}", e.getMessage());
 		} finally {
+			failureScreenshotCapturedTL.remove();
 			pageTL.remove();
 			contextTL.remove();
 			browserTL.remove();
@@ -287,10 +291,14 @@ public class BaseTest {
 		test.fail(html.toString());
 	}
 
-	private void captureFailureScreenshot(String testName) {
+	public static void captureFailureScreenshot(String testName) {
+		if (Boolean.TRUE.equals(failureScreenshotCapturedTL.get())) {
+			return;
+		}
 		try {
 			Page page = pageTL.get();
 			if (page != null && !page.isClosed()) {
+				failureScreenshotCapturedTL.set(true);
 				String screenshotDir = System.getProperty("user.dir") + "/screenshots";
 				Files.createDirectories(Paths.get(screenshotDir));
 				String filePath = screenshotDir + "/" + testName + "_" + System.currentTimeMillis() + ".png";
@@ -300,14 +308,24 @@ public class BaseTest {
 				String base64Screenshot = Base64.getEncoder().encodeToString(screenshotBytes);
 				ExtentTest test = ExtentManager.getTest();
 				if (test != null) {
-					test.fail("<b>Screenshot on Failure:</b>",
-							MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot,
-									testName + " - Failure Screenshot").build());
+					StringBuilder html = new StringBuilder();
+					html.append("<div style='margin-top:10px;'>");
+					html.append("  <b style='color:#e53e3e; font-size:13px;'>📸 Screenshot on Failure:</b>");
+					html.append("  <div style='font-size:11px; color:#718096; margin-top:2px; margin-bottom:6px;'>Saved to: ")
+							.append(escapeHtml(filePath)).append("</div>");
+					html.append("  <a href='data:image/png;base64,").append(base64Screenshot)
+							.append("' target='_blank' title='Click to view full screenshot in a new tab'>");
+					html.append("    <img src='data:image/png;base64,").append(base64Screenshot)
+							.append("' style='width:100%; max-width:750px; height:auto; border:1px solid #cbd5e0; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.15); display:block; cursor:pointer;' alt='Failure Screenshot' />");
+					html.append("  </a>");
+					html.append("</div>");
+
+					test.fail(html.toString());
 				}
 				log.info("📸 Screenshot saved & embedded in report: {}", filePath);
 			}
 		} catch (Exception e) {
-			log.warn("Screenshot capture in tearDown failed: {}", e.getMessage());
+			log.warn("Screenshot capture failed: {}", e.getMessage());
 		}
 	}
 

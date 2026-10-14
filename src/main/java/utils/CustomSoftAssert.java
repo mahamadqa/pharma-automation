@@ -15,7 +15,6 @@ import org.testng.asserts.IAssert;
 import org.testng.asserts.SoftAssert;
 
 import com.aventstack.extentreports.ExtentTest;
-import com.aventstack.extentreports.MediaEntityBuilder;
 import com.microsoft.playwright.Page;
 
 import base.BaseTest;
@@ -145,15 +144,21 @@ public class CustomSoftAssert extends SoftAssert {
 			html.append("    <b>Location:</b> ").append(escapeHtml(failure.getLocation()))
 					.append(" &nbsp;|&nbsp; <b>Time:</b> ").append(failure.getTimestamp());
 			html.append("  </div>");
-			html.append("</div>");
 
 			if (failure.getScreenshotBase64() != null) {
-				test.fail(html.toString(),
-						MediaEntityBuilder.createScreenCaptureFromBase64String(failure.getScreenshotBase64(),
-								"Failed Assertion #" + failure.getIndex()).build());
-			} else {
-				test.fail(html.toString());
+				html.append("  <div style='margin-top:10px;'>");
+				html.append("    <b style='color:#c53030;'>📸 Failure Screenshot:</b><br/>");
+				html.append("    <a href='data:image/png;base64,").append(failure.getScreenshotBase64())
+						.append("' target='_blank' title='Click to view full screenshot in a new tab'>");
+				html.append("      <img src='data:image/png;base64,").append(failure.getScreenshotBase64())
+						.append("' style='width:100%; max-width:650px; height:auto; border:1px solid #feb2b2; border-radius:6px; margin-top:6px; box-shadow:0 2px 6px rgba(0,0,0,0.15); display:block; cursor:pointer;' alt='Failed Assertion Screenshot' />");
+				html.append("    </a>");
+				html.append("  </div>");
 			}
+
+			html.append("</div>");
+
+			test.fail(html.toString());
 		}
 	}
 
@@ -195,7 +200,12 @@ public class CustomSoftAssert extends SoftAssert {
 				html.append("        <td style='padding: 8px 10px; border: 1px solid #e2e8f0; font-weight: bold; text-align: center; color: #e53e3e;'>")
 						.append(f.getIndex()).append("</td>");
 				html.append("        <td style='padding: 8px 10px; border: 1px solid #e2e8f0; color: #2d3748;'><b>")
-						.append(escapeHtml(f.getMessage())).append("</b></td>");
+						.append(escapeHtml(f.getMessage())).append("</b>");
+				if (f.getScreenshotBase64() != null) {
+					html.append("<br/><a href='data:image/png;base64,").append(f.getScreenshotBase64())
+							.append("' target='_blank' style='display:inline-block; margin-top:4px; font-size:11px; color:#c53030; text-decoration:underline;'>🖼️ View Screenshot</a>");
+				}
+				html.append("</td>");
 				html.append("        <td style='padding: 8px 10px; border: 1px solid #e2e8f0; color: #2b6cb0; font-family: monospace; word-break: break-all;'>")
 						.append(escapeHtml(String.valueOf(f.getExpected()))).append("</td>");
 				html.append("        <td style='padding: 8px 10px; border: 1px solid #e2e8f0; color: #c53030; font-family: monospace; word-break: break-all;'>")

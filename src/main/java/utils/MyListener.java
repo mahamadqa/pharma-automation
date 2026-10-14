@@ -1,7 +1,5 @@
 package utils;
 
-import java.util.Base64;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.ITestContext;
@@ -9,9 +7,7 @@ import org.testng.ITestListener;
 import org.testng.ITestResult;
 
 import com.aventstack.extentreports.ExtentTest;
-import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.Status;
-import com.microsoft.playwright.Page;
 
 import base.BaseTest;
 
@@ -52,20 +48,8 @@ public class MyListener implements ITestListener {
 				test.fail(result.getThrowable());
 			}
 
-			// If browser page is still open and no screenshot has been captured yet, capture failure screenshot
-			try {
-				Page page = BaseTest.getPage();
-				if (page != null && !page.isClosed() && (test.getModel().getMedia() == null || test.getModel().getMedia().isEmpty())) {
-					byte[] screenshotBytes = page.screenshot(new Page.ScreenshotOptions().setFullPage(true));
-					String base64Screenshot = Base64.getEncoder().encodeToString(screenshotBytes);
-					test.fail("<b>Screenshot on Failure:</b>",
-							MediaEntityBuilder.createScreenCaptureFromBase64String(base64Screenshot,
-									result.getName() + " - Failure Screenshot").build());
-					log.info("📸 Screenshot captured & embedded in ExtentReport.");
-				}
-			} catch (Exception e) {
-				log.debug("Screenshot in listener skipped: {}", e.getMessage());
-			}
+			// Capture failure screenshot (delegates to BaseTest for deduplication & visible <img> rendering)
+			BaseTest.captureFailureScreenshot(result.getName());
 		}
 	}
 
