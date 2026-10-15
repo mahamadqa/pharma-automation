@@ -59,11 +59,13 @@ pipeline {
         stage('Environment Info') {
             steps {
                 script {
+                    def buildUser = getBuildUser()
                     echo "=================================================="
                     echo " Pharma Automation Test Execution Pipeline"
                     echo "=================================================="
+                    echo " Executed / Triggered By    : ${buildUser}"
                     echo " Test Data Profile (Region) : ${params.REGION}"
-                    echo " Module                 : ${params.MODULE}"
+                    echo " Module                     : ${params.MODULE}"
                     echo " Target Browser             : ${params.BROWSER}"
                     echo " Headless Mode              : ${params.HEADLESS}"
 
@@ -104,6 +106,8 @@ pipeline {
         stage('Execute Automation Tests') {
             steps {
                 script {
+                    def buildUser = getBuildUser()
+                    def userFlag = buildUser ? "-Djenkins.user=\"${buildUser}\" -DbuildUser=\"${buildUser}\"" : ""
 
                     // Map Jenkins MODULE selection → Maven -Dgroups value
                     def groupsValue = ""
@@ -139,7 +143,8 @@ pipeline {
                                 -Dregion=${params.REGION.toLowerCase()} \
                                 ${groupFlag} \
                                 -Dbrowser=${params.BROWSER.toLowerCase()} \
-                                -Dheadless=${params.HEADLESS}
+                                -Dheadless=${params.HEADLESS} \
+                                ${userFlag}
 
                         else
 
@@ -147,7 +152,8 @@ pipeline {
                                 -Dregion=${params.REGION.toLowerCase()} \
                                 ${groupFlag} \
                                 -Dbrowser=${params.BROWSER.toLowerCase()} \
-                                -Dheadless=${params.HEADLESS}
+                                -Dheadless=${params.HEADLESS} \
+                                ${userFlag}
 
                         fi
                     """
@@ -228,6 +234,7 @@ pipeline {
                 // ======================================================
 
                 def buildStatus = currentBuild.currentResult ?: 'SUCCESS'
+                def buildUser = getBuildUser()
 
                 def statusColor = (buildStatus == 'SUCCESS')
                     ? '#28a745'
@@ -358,6 +365,12 @@ pipeline {
 
 
                                         <tr>
+                                            <th>Executed By</th>
+                                            <td><b>${buildUser}</b></td>
+                                        </tr>
+
+
+                                        <tr>
                                             <th>Test Profile (Region)</th>
                                             <td>${params.REGION}</td>
                                         </tr>
@@ -478,4 +491,39 @@ pipeline {
 
         }
     }
+}
+
+// ==============================================================
+// Helper method to resolve Jenkins User details
+// ==============================================================
+def getBuildUser() {
+    def user = ""
+    try {
+        wrap([$class: 'BuildUser']) {
+            user = env.BUILD_USER ?: env.BUILD_USER_ID ?: ""
+        }
+    } catch (Exception ignored) {}
+
+    if (!user || user.trim() == '') {
+        try {
+            def causes = currentBuild.rawBuild.getCauses()
+            for (cause in causes) {
+                if (cause.getClass().getName().contains("UserIdCause")) {
+                    user = cause.getUserName() ?: cause.getUserId() ?: ""
+                    if (user) break
+                } else if (cause.getClass().getName().contains("UserCause")) {
+                    user = cause.getUserName() ?: ""
+                    if (user) break
+                } else if (cause.getShortDescription().contains("Started by user")) {
+                    user = cause.getShortDescription().replace("Started by user", "").trim()
+                    if (user) break
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    if (!user || user.trim() == '') {
+        user = env.CHANGE_AUTHOR_DISPLAY_NAME ?: env.CHANGE_AUTHOR ?: env.GIT_AUTHOR_NAME ?: env.BUILD_USER ?: ""
+    }
+    return user ? user.trim() : "Jenkins User"
 }

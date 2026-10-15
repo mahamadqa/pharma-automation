@@ -12,7 +12,7 @@ public class GRNFlow extends BaseTest {
 
 	private static final Logger log = LogManager.getLogger(GRNFlow.class);
 
-	@Test(groups = {"basic" }, description = "Goods Receipt Note Flow: Login → Role Selection → Search GRN & Click New Record → Fill Header → Add Receipt Line → Save & Verify")
+	@Test(groups = {"test" }, description = "Goods Receipt Note Flow: Login → Role Selection → Search GRN & Click New Record → Fill Header → Add Receipt Line → Save & Verify")
 	public void verificationOfGoodsReceiptNoteFlow() {
 
 		// Step 1: Login with credentials

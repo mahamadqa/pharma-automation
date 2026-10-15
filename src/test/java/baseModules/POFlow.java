@@ -11,7 +11,7 @@ public class POFlow extends BaseTest {
 
 	private static final Logger log = LogManager.getLogger(POFlow.class);
 
-	@Test(groups = { "basic" }, description = "End-to-end Purchase Order creation flow: Login → Select Client/Role → Create PO Header → Add PO Line → Save")
+	@Test(groups = { "test" }, description = "End-to-end Purchase Order creation flow: Login → Select Client/Role → Create PO Header → Add PO Line → Save")
 	public void verificationOFPurchaseOrderFlow() {
 
 		// Step 1: Login with users credentials

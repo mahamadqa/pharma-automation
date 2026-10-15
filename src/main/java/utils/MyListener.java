@@ -21,6 +21,9 @@ public class MyListener implements ITestListener {
 		ExtentTest currentTest = ExtentManager.getTest();
 		if (currentTest == null) {
 			currentTest = ExtentManager.createTest(result.getMethod().getMethodName(), result.getMethod().getDescription());
+			if (currentTest != null) {
+				currentTest.assignAuthor(ExtentManager.getReportUser());
+			}
 			if (invocation > 0) {
 				currentTest.info("🔄 Retrying test execution (Attempt " + (invocation + 1) + ")");
 			}

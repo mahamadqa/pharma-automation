@@ -49,7 +49,15 @@ public class ExtentManager {
 
 				extent.setSystemInfo("OS", System.getProperty("os.name"));
 				extent.setSystemInfo("Java Version", System.getProperty("java.version"));
-				extent.setSystemInfo("User", System.getProperty("user.name"));
+				extent.setSystemInfo("User", getReportUser());
+
+				try {
+					String jenkinsBuild = System.getenv("BUILD_NUMBER");
+					if (jenkinsBuild != null && !jenkinsBuild.trim().isEmpty()) {
+						extent.setSystemInfo("Jenkins Build", "#" + jenkinsBuild.trim());
+					}
+				} catch (Exception ignored) {
+				}
 
 				try {
 					String browser = ConfigReader.get("browser");
@@ -145,5 +153,96 @@ public class ExtentManager {
 				log.error("Error flushing ExtentReports: {}", e.getMessage(), e);
 			}
 		}
+	}
+
+	/**
+	 * Resolves the user name to display in Extent Report.
+	 * When running from Jenkins, retrieves the Jenkins user detail name from
+	 * system properties (-Djenkins.user, -DbuildUser) or Jenkins environment variables
+	 * (BUILD_USER, BUILD_USER_ID, JENKINS_USER, CHANGE_AUTHOR_DISPLAY_NAME, etc.)
+	 * instead of displaying generic 'jenkins'.
+	 *
+	 * @return resolved user display name
+	 */
+	public static String getReportUser() {
+		// 1. System properties passed from command line or Jenkinsfile (-Djenkins.user, -DbuildUser, -Duser)
+		String user = System.getProperty("jenkins.user");
+		if (isValidUser(user)) {
+			return user.trim();
+		}
+
+		user = System.getProperty("buildUser");
+		if (isValidUser(user)) {
+			return user.trim();
+		}
+
+		user = System.getProperty("user");
+		if (isValidUser(user) && !user.equalsIgnoreCase("jenkins")) {
+			return user.trim();
+		}
+
+		// 2. Jenkins environment variables (e.g. from Build User Vars plugin)
+		user = System.getenv("BUILD_USER");
+		if (isValidUser(user)) {
+			return user.trim();
+		}
+
+		user = System.getenv("BUILD_USER_ID");
+		if (isValidUser(user)) {
+			return user.trim();
+		}
+
+		user = System.getenv("JENKINS_USER");
+		if (isValidUser(user)) {
+			return user.trim();
+		}
+
+		user = System.getenv("CHANGE_AUTHOR_DISPLAY_NAME");
+		if (isValidUser(user)) {
+			return user.trim();
+		}
+
+		user = System.getenv("CHANGE_AUTHOR");
+		if (isValidUser(user)) {
+			return user.trim();
+		}
+
+		user = System.getenv("GIT_AUTHOR_NAME");
+		if (isValidUser(user)) {
+			return user.trim();
+		}
+
+		// 3. Local OS user (if not generic 'jenkins')
+		String osUser = System.getProperty("user.name");
+		if (isValidUser(osUser) && !osUser.equalsIgnoreCase("jenkins")) {
+			return osUser.trim();
+		}
+
+		// 4. OS environment variables (USER, LOGNAME) if not generic 'jenkins'
+		user = System.getenv("USER");
+		if (isValidUser(user) && !user.equalsIgnoreCase("jenkins")) {
+			return user.trim();
+		}
+
+		user = System.getenv("LOGNAME");
+		if (isValidUser(user) && !user.equalsIgnoreCase("jenkins")) {
+			return user.trim();
+		}
+
+		// 5. If running under Jenkins and user is literally "jenkins", provide descriptive info
+		if (System.getenv("JENKINS_HOME") != null || System.getenv("JENKINS_URL") != null) {
+			String jobName = System.getenv("JOB_NAME");
+			String buildNumber = System.getenv("BUILD_NUMBER");
+			if (jobName != null && !jobName.trim().isEmpty()) {
+				return "Jenkins User (" + jobName + (buildNumber != null ? " #" + buildNumber : "") + ")";
+			}
+			return "Jenkins User";
+		}
+
+		return isValidUser(osUser) ? osUser.trim() : "Automation User";
+	}
+
+	private static boolean isValidUser(String name) {
+		return name != null && !name.trim().isEmpty() && !name.equalsIgnoreCase("null");
 	}
 }
