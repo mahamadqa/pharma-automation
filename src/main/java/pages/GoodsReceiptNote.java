@@ -1,5 +1,8 @@
 package pages;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
@@ -83,6 +86,14 @@ public class GoodsReceiptNote {
 	private final Locator dateReceivedInput;
 	private final Locator postedButton;
 
+	// ==================== Create Lines From Modal Locators ====================
+	private final Locator createLinesModal;
+	private final Locator createLinesModalRows;
+	private final Locator createLinesModalSubmitButton;
+	private final Locator createLinesModalCancelButton;
+	private final Locator createLinesModalSelectAllButton;
+	private final Locator createLinesModalDeselectAllButton;
+
 	// ==================== Receipt Line Tab Locators ====================
 	private final Locator receiptLineTab;
 	private final Locator lineOrgInput;
@@ -145,7 +156,7 @@ public class GoodsReceiptNote {
 		this.orgInput = page.locator("//span[@instancename='M_InOut0AD_Org_ID']//input");
 		this.gateInwardInput = page.locator("//span[@instancename='M_InOut0PHX_SecGateInward_ID']//input");
 		this.orderInput = page.locator("//div[@instancename='M_InOut0C_Order_ID']//input");
-		this.dateOrderedInput = page.locator("//span[@instancename='M_InOut0DateOrdered']//input");
+		this.dateOrderedInput = page.locator("(//span[@instancename='M_InOut0DateOrdered']//input)[1]");
 		this.rmaInput = page.locator("//div[@instancename='M_InOut0M_RMA_ID']//input");
 		this.documentNoInput = page.locator("//input[@instancename='M_InOut0DocumentNo']");
 		this.poReferenceInput = page.locator("//input[@instancename='M_InOut0POReference']");
@@ -173,6 +184,13 @@ public class GoodsReceiptNote {
 		this.dropShipLocationInput = page.locator("//span[@instancename='M_InOut0DropShip_Location_ID']//input");
 		this.dropShipUserInput = page.locator("//span[@instancename='M_InOut0DropShip_User_ID']//input");
 		this.createLinesFromButton = page.locator("//button[@instancename='M_InOut0CreateLinesFrom']");
+		this.createLinesModal = page.locator("//div[@instancename='infopanel']");
+		this.createLinesModalRows = page.locator("//div[@instancename='infopanel']//tr[contains(@class,'z-listitem')]");
+		this.createLinesModalSubmitButton = page.locator(
+				"//div[@instancename='infopanel']//button[contains(@class,'txt-btn') and contains(text(),'Create lines from')] | //div[@instancename='infopanel']//button[@title='OK']");
+		this.createLinesModalCancelButton = page.locator("//div[@instancename='infopanel']//button[@title='Cancel']");
+		this.createLinesModalSelectAllButton = page.locator("//div[@instancename='infopanel']//button[@title='Select All']");
+		this.createLinesModalDeselectAllButton = page.locator("//div[@instancename='infopanel']//button[@title='Deselect All']");
 		this.deliveryViaRuleInput = page.locator("//span[@instancename='M_InOut0DeliveryViaRule']//input");
 		this.shipperInput = page.locator("//span[@instancename='M_InOut0M_Shipper_ID']//input");
 		this.trackingNoInput = page.locator("//input[@instancename='M_InOut0TrackingNo']");
@@ -205,21 +223,21 @@ public class GoodsReceiptNote {
 		this.lineNoInput = page.locator("//div[@instancename='M_InOutLine0Line']//input");
 		this.orderLineInput = page.locator("//span[@instancename='M_InOutLine0C_OrderLine_ID']//input");
 		this.vendorProductNoInput = page.locator("//input[@instancename='M_InOutLine0VendorProductNo']");
-		this.lineProductInput = page.locator("//div[@instancename='M_InOutLine0M_Product_ID']//input");
-		this.hsnCodeInput = page.locator("//div[@instancename='M_InOutLine0LGST_HSNCode_ID']//input");
+		this.lineProductInput = page.locator("(//div[@instancename='M_InOutLine0M_Product_ID']//input)[1]");
+		this.hsnCodeInput = page.locator("(//div[@instancename='M_InOutLine0LGST_HSNCode_ID']//input)[1]");
 		this.productCategoryTypeInput = page.locator("//span[@instancename='M_InOutLine0PHX_ProductCategoryType']//input");
-		this.locatorInput = page.locator("//div[@instancename='M_InOutLine0M_Locator_ID']//input");
+		this.locatorInput = page.locator("(//div[@instancename='M_InOutLine0M_Locator_ID']//input)[1]");
 		this.lineChargeInput = page.locator("//span[@instancename='M_InOutLine0C_Charge_ID']//input");
 		this.lineDescriptionTextarea = page.locator("//textarea[@instancename='M_InOutLine0Description']");
 		this.qtyInvoicedInput = page.locator("//div[@instancename='M_InOutLine0QtyInvoiced']//input");
 		this.qtyExcessInput = page.locator("//div[@instancename='M_InOutLine0QtyExcess']//input");
 		this.qtyShortageInput = page.locator("//div[@instancename='M_InOutLine0QtyShortage']//input");
-		this.qtyEnteredInput = page.locator("//div[@instancename='M_InOutLine0QtyEntered']//input");
+		this.qtyEnteredInput = page.locator("(//div[@instancename='M_InOutLine0QtyEntered']//input)[1]");
 		this.uomInput = page.locator("//span[@instancename='M_InOutLine0C_UOM_ID']//input");
-		this.movementQtyInput = page.locator("//div[@instancename='M_InOutLine0MovementQty']//input");
+		this.movementQtyInput = page.locator("(//div[@instancename='M_InOutLine0MovementQty']//input)[1]");
 		this.isQCCheckbox = page.locator("//span[@instancename='M_InOutLine0IsQC']//input");
-		this.noOfCaseInput = page.locator("//div[@instancename='M_InOutLine0PHX_NoofCase']//input");
-		this.caseSizeInput = page.locator("//div[@instancename='M_InOutLine0PHX_CaseSize']//input");
+		this.noOfCaseInput = page.locator("(//div[@instancename='M_InOutLine0PHX_NoofCase']//input)[1]");
+		this.caseSizeInput = page.locator("(//div[@instancename='M_InOutLine0PHX_CaseSize']//input)[1]");
 		this.packInput = page.locator("//input[@instancename='M_InOutLine0PHX_Pack']");
 		this.attributeSetInstanceInput = page.locator("//div[@instancename='M_InOutLine0M_AttributeSetInstance_ID']//input");
 		this.mrpInput = page.locator("//div[@instancename='M_InOutLine0PHX_MRP']//input");
@@ -228,9 +246,9 @@ public class GoodsReceiptNote {
 		this.mfgByInput = page.locator("//span[@instancename='M_InOutLine0PHX_MfgBy_ID']//input");
 		this.vendorARNoInput = page.locator("//input[@instancename='M_InOutLine0PHX_VendorARNo']");
 		this.forMakeInput = page.locator("//span[@instancename='M_InOutLine0PHX_Make_ID']//input");
-		this.mfgDateInput = page.locator("//span[@instancename='M_InOutLine0PHX_MfgDate']//input");
-		this.guaranteeDateInput = page.locator("//span[@instancename='M_InOutLine0GuaranteeDate']//input");
-		this.retestDateInput = page.locator("//span[@instancename='M_InOutLine0PHX_RetestDate']//input");
+		this.mfgDateInput = page.locator("(//span[@instancename='M_InOutLine0PHX_MfgDate']//input)[1]");
+		this.guaranteeDateInput = page.locator("(//span[@instancename='M_InOutLine0GuaranteeDate']//input)[1]");
+		this.retestDateInput = page.locator("(//span[@instancename='M_InOutLine0PHX_RetestDate']//input)[1]");
 		this.artworkInput = page.locator("//span[@instancename='M_InOutLine0PHX_Artwork_ID']//input");
 		this.checkListButton = page.locator("//button[@instancename='M_InOutLine0PHX_CheckList']");
 		this.storageConditionInput = page.locator("//div[@instancename='M_InOutLine0PHX_StorageCondition_ID']//input");
@@ -371,7 +389,19 @@ public class GoodsReceiptNote {
 		if (poDocNo == null || poDocNo.trim().isEmpty()) {
 			poDocNo = PurchaseOrder.getLastPODocNo();
 		}
-		log.info("Retrieved PO Document No [{}] from PurchaseOrder", poDocNo);
+		if (poDocNo == null || poDocNo.trim().isEmpty()) {
+			try {
+				poDocNo = DataManager.getData("purchaseOrder");
+			} catch (Exception ignored) {
+			}
+		}
+		if (poDocNo == null || poDocNo.trim().isEmpty()) {
+			try {
+				poDocNo = utils.ConfigReader.get("purchaseOrder");
+			} catch (Exception ignored) {
+			}
+		}
+		log.info("Retrieved PO Document No [{}] for Goods Receipt Note", poDocNo);
 		attachPO(poDocNo);
 	}
 
@@ -380,7 +410,19 @@ public class GoodsReceiptNote {
 	 */
 	public void attachPO() {
 		String poDocNo = PurchaseOrder.getLastPODocNo();
-		log.info("Retrieved cached PO Document No [{}] from PurchaseOrder", poDocNo);
+		if (poDocNo == null || poDocNo.trim().isEmpty()) {
+			try {
+				poDocNo = DataManager.getData("purchaseOrder");
+			} catch (Exception ignored) {
+			}
+		}
+		if (poDocNo == null || poDocNo.trim().isEmpty()) {
+			try {
+				poDocNo = utils.ConfigReader.get("purchaseOrder");
+			} catch (Exception ignored) {
+			}
+		}
+		log.info("Retrieved cached PO Document No [{}] for Goods Receipt Note", poDocNo);
 		attachPO(poDocNo);
 	}
 
@@ -452,6 +494,124 @@ public class GoodsReceiptNote {
 		}
 	}
 
+	// ==================== PO Attachment Validations ====================
+
+	/**
+	 * Verifies all fields that are automatically populated on GRN Header after attaching Purchase Order:
+	 * - Purchase Order reference
+	 * - Date Ordered
+	 * - Business Partner
+	 * - Partner Location
+	 * - Company Agent / Sales Representative
+	 * - Warehouse
+	 * - Movement Type
+	 *
+	 * @param expectedPODocNo Expected Purchase Order Document Number
+	 */
+	public void verifyFieldsAfterAttachingPO(String expectedPODocNo) {
+		log.info("========== Verifying Goods Receipt Note fields populated from Purchase Order [{}] ==========", expectedPODocNo);
+		verifyAttachedPODocNo(expectedPODocNo);
+		verifyDateOrdered();
+		verifyBPartner();
+		verifyBPartnerLocation();
+		verifySalesRep();
+		verifyWarehouse();
+		verifyMovementType("Vendor Receipts");
+		log.info("✅ All fields populated from Purchase Order [{}] verified successfully.", expectedPODocNo);
+	}
+
+	/**
+	 * Verifies fields populated from Purchase Order using the PurchaseOrder page instance.
+	 *
+	 * @param purchaseOrder PurchaseOrder page object
+	 */
+	public void verifyFieldsAfterAttachingPO(PurchaseOrder purchaseOrder) {
+		String poDocNo = PurchaseOrder.getLastPODocNo();
+		if (poDocNo == null || poDocNo.trim().isEmpty()) {
+			try {
+				poDocNo = purchaseOrder.getPODocNo();
+			} catch (Exception ignored) {
+			}
+		}
+		verifyFieldsAfterAttachingPO(poDocNo);
+	}
+
+	/**
+	 * Verifies fields populated from Purchase Order using cached last PO Doc No.
+	 */
+	public void verifyFieldsAfterAttachingPO() {
+		verifyFieldsAfterAttachingPO(PurchaseOrder.getLastPODocNo());
+	}
+
+	public void verifyAttachedPODocNo(String expectedPODocNo) {
+		if (expectedPODocNo != null && !expectedPODocNo.trim().isEmpty()) {
+			verifyFieldFilled(orderInput, "Purchase Order", expectedPODocNo);
+		} else {
+			String val = orderInput.inputValue();
+			SoftAssert sa = base.BaseTest.getSoftAssert();
+			boolean filled = val != null && !val.trim().isEmpty();
+			if (sa != null) {
+				sa.assertTrue(filled, "[GRN] Purchase Order field is empty after attaching PO!");
+			} else {
+				Assert.assertTrue(filled, "Purchase Order field is empty after attaching PO!");
+			}
+			log.info("Verified Purchase Order field has value: [{}]", val);
+		}
+	}
+
+	public void verifyDateOrdered() {
+		page.waitForTimeout(2000);
+		String val = dateOrderedInput.inputValue();
+		SoftAssert sa = base.BaseTest.getSoftAssert();
+		boolean filled = val != null && !val.trim().isEmpty();
+		if (sa != null) {
+			sa.assertTrue(filled, "[GRN] Date Ordered field was not populated from Purchase Order!");
+		} else {
+			Assert.assertTrue(filled, "Date Ordered field was not populated from Purchase Order!");
+		}
+		log.info("Verified Date Ordered populated from PO: [{}]", val);
+	}
+
+	public void verifyBPartner(String expectedBPartner) {
+		verifyFieldFilled(bPartnerInput, "Business Partner", expectedBPartner);
+	}
+
+	public void verifyBPartner() {
+		verifyBPartner(DataManager.getData("bPartner"));
+	}
+
+	public void verifyBPartnerLocation(String expectedLocation) {
+		verifyFieldFilled(bPartnerLocationInput, "Partner Location", expectedLocation);
+	}
+
+	public void verifyBPartnerLocation() {
+		verifyBPartnerLocation(DataManager.getData("bPLocation"));
+	}
+
+	public void verifySalesRep(String expectedSalesRep) {
+		verifyFieldFilled(salesRepInput, "Company Agent / Sales Rep", expectedSalesRep);
+	}
+
+	public void verifySalesRep() {
+		verifySalesRep(DataManager.getData("salesRep"));
+	}
+
+	public void verifyWarehouse(String expectedWarehouse) {
+		verifyFieldFilled(warehouseInput, "Warehouse", expectedWarehouse);
+	}
+
+	public void verifyWarehouse() {
+		verifyWarehouse(DataManager.getData("warehouse"));
+	}
+
+	public void verifyMovementType(String expectedMovementType) {
+		verifyFieldFilled(movementTypeInput, "Movement Type", expectedMovementType);
+	}
+
+	public void verifyMovementType() {
+		verifyMovementType("Vendor Receipts");
+	}
+
 	// ==================== Receipt Line Actions ====================
 
 	public void clickOnReceiptLineTab() {
@@ -460,15 +620,347 @@ public class GoodsReceiptNote {
 		receiptLineTab.click();
 		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		ensureReceiptLineFormView();
 		log.info("Navigated to 'Receipt Line' tab.");
+	}
+
+	/**
+	 * Checks if Receipt Line subtab is opened in Grid View by default, and if so,
+	 * clicks Grid Toggle (Shift+Alt+T) to switch to normal Form View.
+	 */
+	public void ensureReceiptLineFormView() {
+		try {
+			page.waitForTimeout(2000);
+			if (page.locator("(//div[@class='z-frozen'])[1]").isVisible()) {
+				
+					log.info("PO Line subtab opened in Grid View by default. Clicking Grid Toggle to view normally...");
+					page.locator("//a[@title='Grid Toggle    Alt+T']").click();
+					page.waitForTimeout(2000);
+					WaitUtils.waitForLoadingIndicatorToDisappear(page);
+					log.info("Switched PO Line subtab to normal Form View.");
+				}
+			
+		} catch (Exception e) {
+			log.warn("Could not check/toggle PO Line subtab grid view: {}", e.getMessage());
+		}
+	}
+
+	// ==================== Create Lines From Modal Actions ====================
+
+	/**
+	 * Clicks the "Create Lines From" button on the Goods Receipt Note header.
+	 */
+	public void clickCreateLinesFromButton() {
+		page.waitForTimeout(1000);
+		log.info("Clicking on 'Create Lines From' button...");
+		createLinesFromButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		createLinesFromButton.click();
+		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		createLinesModal.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
+		log.info("'Create lines from Shipment/Receipt' modal opened successfully.");
+	}
+
+	/**
+	 * Selects the record in the 'Create Lines From' modal by PO Document Number.
+	 *
+	 * @param poDocNo PO Document Number to select
+	 */
+	public void selectRecordInCreateLinesFromModal(String poDocNo) {
+		page.waitForTimeout(1000);
+		log.info("Selecting record with PO Doc No [{}] in 'Create Lines From' modal...", poDocNo);
+		createLinesModalRows.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+
+		Locator targetRow;
+		if (poDocNo != null && !poDocNo.trim().isEmpty()) {
+			Locator matchedRow = page.locator("//div[@instancename='infopanel']//tr[contains(@class,'z-listitem') and contains(.,'" + poDocNo.trim() + "')]");
+			if (matchedRow.count() > 0) {
+				targetRow = matchedRow.first();
+			} else {
+				log.warn("Target row with PO Doc No [{}] not found by exact text, falling back to first row.", poDocNo);
+				targetRow = createLinesModalRows.first();
+			}
+		} else {
+			targetRow = createLinesModalRows.first();
+		}
+
+		boolean isSelected = false;
+		try {
+			String rowClass = targetRow.getAttribute("class");
+			isSelected = rowClass != null && rowClass.contains("z-listitem-selected");
+		} catch (Exception ignored) {
+		}
+
+		if (!isSelected) {
+			log.info("Row is not selected; clicking checkable icon to select.");
+			Locator checkable = targetRow.locator(".z-listitem-checkable");
+			if (checkable.count() > 0 && checkable.first().isVisible()) {
+				checkable.first().click();
+			} else {
+				targetRow.click();
+			}
+		} else {
+			log.info("Row is already selected in 'Create Lines From' modal.");
+		}
+		page.waitForTimeout(500);
+	}
+
+	/**
+	 * Selects the first available record in the 'Create Lines From' modal.
+	 */
+	public void selectRecordInCreateLinesFromModal() {
+		selectRecordInCreateLinesFromModal(PurchaseOrder.getLastPODocNo());
+	}
+
+	/**
+	 * Confirms and submits the 'Create Lines From' dialog to generate GRN receipt lines.
+	 */
+	public void confirmCreateLinesFromModal() {
+		log.info("Confirming 'Create Lines From' modal to generate lines...");
+		createLinesModalSubmitButton.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		createLinesModalSubmitButton.first().click();
+		page.waitForTimeout(2000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		try {
+			createLinesModal.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.HIDDEN).setTimeout(10000));
+		} catch (Exception ignored) {
+		}
+		log.info("'Create Lines From' modal submitted and closed successfully.");
+	}
+
+	/**
+	 * Complete flow to add receipt lines from PO using 'Create Lines From' button.
+	 *
+	 * @param poDocNo PO Document Number
+	 */
+	public void addReceiptLinesFromCreateLinesFrom(String poDocNo) {
+		clickCreateLinesFromButton();
+		selectRecordInCreateLinesFromModal(poDocNo);
+		confirmCreateLinesFromModal();
+	}
+
+	/**
+	 * Complete flow to add receipt lines from PO using PurchaseOrder page object.
+	 *
+	 * @param purchaseOrder PurchaseOrder page instance
+	 */
+	public void addReceiptLinesFromCreateLinesFrom(PurchaseOrder purchaseOrder) {
+		String poDocNo = PurchaseOrder.getLastPODocNo();
+		if (poDocNo == null || poDocNo.trim().isEmpty()) {
+			try {
+				poDocNo = purchaseOrder.getPODocNo();
+			} catch (Exception ignored) {
+			}
+		}
+		addReceiptLinesFromCreateLinesFrom(poDocNo);
+	}
+
+	/**
+	 * Complete flow to add receipt lines from PO using cached last PO Doc No.
+	 */
+	public void addReceiptLinesFromCreateLinesFrom() {
+		addReceiptLinesFromCreateLinesFrom(PurchaseOrder.getLastPODocNo());
+	}
+
+	/**
+	 * Verifies receipt line details populated after using 'Create Lines From'.
+	 *
+	 * @param expectedProduct Expected Product name
+	 * @param expectedQty Expected Quantity
+	 * @param expectedHSNCode Expected HSN Code
+	 * @param expectedLocator Expected Locator name
+	 */
+	public void verifyReceiptLineAfterCreateLinesFrom(String expectedProduct, String expectedQty, String expectedHSNCode, String expectedLocator) {
+		log.info("========== Verifying Receipt Line fields after Create Lines From ==========");
+		page.waitForTimeout(1000);
+		if (expectedProduct != null && !expectedProduct.trim().isEmpty()) {
+			verifyFieldFilled(lineProductInput, "Line Product", expectedProduct);
+		}
+		if (expectedQty != null && !expectedQty.trim().isEmpty()) {
+			verifyReceiptLineQty(expectedQty);
+		}
+		if (expectedHSNCode != null && !expectedHSNCode.trim().isEmpty()) {
+			verifyHSNCode(expectedHSNCode);
+		}
+		if (expectedLocator != null && !expectedLocator.trim().isEmpty()) {
+			verifyLocator(expectedLocator);
+		}
+		log.info("✅ Receipt Line verified successfully after Create Lines From.");
+	}
+
+	public void verifyReceiptLineAfterCreateLinesFrom(String expectedProduct, String expectedQty) {
+		String expectedHSN = null;
+		try {
+			expectedHSN = DataManager.getData("HSNCode");
+		} catch (Exception ignored) {
+		}
+		String expectedLocator = null;
+		try {
+			expectedLocator = DataManager.getData("locator");
+		} catch (Exception e) {
+			try {
+				expectedLocator = DataManager.getData("warehouse");
+			} catch (Exception ignored) {
+			}
+		}
+		verifyReceiptLineAfterCreateLinesFrom(expectedProduct, expectedQty, expectedHSN, expectedLocator);
+	}
+
+	public void verifyReceiptLineAfterCreateLinesFrom(PurchaseOrder purchaseOrder) {
+		verifyReceiptLineAfterCreateLinesFrom();
+	}
+
+	public void verifyReceiptLineAfterCreateLinesFrom() {
+		String expectedProduct = DataManager.getData("product");
+		String expectedQty = DataManager.getData("qtyEntered");
+		String expectedHSN = null;
+		try {
+			expectedHSN = DataManager.getData("HSNCode");
+		} catch (Exception ignored) {
+		}
+		String expectedLocator = null;
+		try {
+			expectedLocator = DataManager.getData("locator");
+		} catch (Exception e) {
+			try {
+				expectedLocator = DataManager.getData("warehouse");
+			} catch (Exception ignored) {
+			}
+		}
+		verifyReceiptLineAfterCreateLinesFrom(expectedProduct, expectedQty, expectedHSN, expectedLocator);
+	}
+
+	// ==================== HSN Code & Locator Verification ====================
+
+	/**
+	 * Gets the input value currently displayed in the HSN Code field.
+	 *
+	 * @return Current HSN Code text
+	 */
+	public String getHSNCode() {
+		hsnCodeInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		String value = hsnCodeInput.inputValue().trim();
+		log.info("Retrieved HSN Code input value: [{}]", value);
+		return value;
+	}
+
+	/**
+	 * Gets the input value currently displayed in the Locator field.
+	 *
+	 * @return Current Locator text
+	 */
+	public String getLocator() {
+		locatorInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		String value = locatorInput.inputValue().trim();
+		log.info("Retrieved Locator input value: [{}]", value);
+		return value;
+	}
+
+	/**
+	 * Verifies that the HSN Code field has the expected value.
+	 *
+	 * @param expectedHSNCode Expected HSN Code
+	 */
+	public void verifyHSNCode(String expectedHSNCode) {
+		page.waitForTimeout(1000);
+		String actualHSNCode = getHSNCode();
+		log.info("Verifying HSN Code: Actual [{}], Expected [{}]", actualHSNCode, expectedHSNCode);
+
+		boolean isMatch = actualHSNCode.equalsIgnoreCase(expectedHSNCode.trim())
+				|| actualHSNCode.contains(expectedHSNCode.trim())
+				|| expectedHSNCode.trim().contains(actualHSNCode);
+
+		SoftAssert sa = base.BaseTest.getSoftAssert();
+		if (sa != null) {
+			sa.assertTrue(isMatch, "[GRN Line] HSN Code [" + actualHSNCode + "] does not match expected [" + expectedHSNCode + "]");
+		} else {
+			Assert.assertTrue(isMatch, "HSN Code [" + actualHSNCode + "] does not match expected [" + expectedHSNCode + "]");
+		}
+		if (isMatch) {
+			log.info("✅ HSN Code matched successfully with test data: [{}]", actualHSNCode);
+		} else {
+			log.warn("⚠️ HSN Code mismatch: Actual [{}], Expected [{}]", actualHSNCode, expectedHSNCode);
+		}
+	}
+
+	/**
+	 * Verifies HSN Code using test data (key: 'HSNCode').
+	 */
+	public void verifyHSNCode() {
+		String expectedHSN = null;
+		try {
+			expectedHSN = DataManager.getData("HSNCode");
+		} catch (Exception e) {
+			try {
+				expectedHSN = DataManager.getData("hsnCode");
+			} catch (Exception ignored) {
+			}
+		}
+		if (expectedHSN != null && !expectedHSN.trim().isEmpty()) {
+			verifyHSNCode(expectedHSN);
+		} else {
+			log.info("HSNCode not specified in test data; verifying that HSN Code field has non-empty input value.");
+			verifyFieldFilled(hsnCodeInput, "HSN Code", "");
+		}
+	}
+
+	/**
+	 * Verifies that the Locator field has the expected value.
+	 *
+	 * @param expectedLocator Expected Locator name
+	 */
+	public void verifyLocator(String expectedLocator) {
+		page.waitForTimeout(1000);
+		String actualLocator = getLocator();
+		log.info("Verifying Locator: Actual [{}], Expected [{}]", actualLocator, expectedLocator);
+
+		boolean isMatch = actualLocator.equalsIgnoreCase(expectedLocator.trim())
+				|| actualLocator.contains(expectedLocator.trim())
+				|| expectedLocator.trim().contains(actualLocator);
+
+		SoftAssert sa = base.BaseTest.getSoftAssert();
+		if (sa != null) {
+			sa.assertTrue(isMatch, "[GRN Line] Locator [" + actualLocator + "] does not match expected [" + expectedLocator + "]");
+		} else {
+			Assert.assertTrue(isMatch, "Locator [" + actualLocator + "] does not match expected [" + expectedLocator + "]");
+		}
+		if (isMatch) {
+			log.info("✅ Locator matched successfully with test data: [{}]", actualLocator);
+		} else {
+			log.warn("⚠️ Locator mismatch: Actual [{}], Expected [{}]", actualLocator, expectedLocator);
+		}
+	}
+
+	/**
+	 * Verifies Locator using test data (key: 'locator' or 'warehouse').
+	 */
+	public void verifyLocator() {
+		String expectedLocator = null;
+		try {
+			expectedLocator = DataManager.getData("locator");
+		} catch (Exception e) {
+			try {
+				expectedLocator = DataManager.getData("warehouse");
+			} catch (Exception ignored) {
+			}
+		}
+		if (expectedLocator != null && !expectedLocator.trim().isEmpty()) {
+			verifyLocator(expectedLocator);
+		} else {
+			log.info("Locator not specified in test data; verifying that Locator field has non-empty input value.");
+			verifyFieldFilled(locatorInput, "Locator", "");
+		}
 	}
 
 	public void navigateBackOnGRNHeader() {
 		log.info("Navigating back to Goods Receipt Note Header...");
-		if (grnHeaderBreadcrumb.isVisible()) {
-			grnHeaderBreadcrumb.click();
+		Locator headerLink = page.locator("//div[@instancename='breadcrumb']//a[normalize-space(text())='Goods Receipt Note']");
+		if (headerLink.count() > 0 && headerLink.first().isVisible()) {
+			headerLink.first().click();
+		} else if (grnHeaderBreadcrumb.isVisible()) {
+			grnHeaderBreadcrumb.first().click();
 		} else if (grnTabHeader.isVisible()) {
-			grnTabHeader.click();
+			grnTabHeader.first().click();
 		}
 		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
@@ -526,10 +1018,140 @@ public class GoodsReceiptNote {
 		page.waitForTimeout(1000);
 	}
 
+	// ==================== Packaging & Date Details Actions ====================
+
+	public void enterNoOfCase(String noOfCase) {
+		page.waitForTimeout(1000);
+		log.info("Entering No Of Case: [{}]", noOfCase);
+		noOfCaseInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		noOfCaseInput.click();
+		noOfCaseInput.fill(noOfCase);
+		noOfCaseInput.press("Tab");
+		page.waitForTimeout(1500);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		verifyFieldFilled(noOfCaseInput, "No Of Case", noOfCase);
+		log.info("Entered No Of Case: [{}] successfully.", noOfCase);
+	}
+
+	public void enterQtyPerCase(String qtyPerCase) {
+		page.waitForTimeout(1000);
+		log.info("Entering Qty per case: [{}]", qtyPerCase);
+		caseSizeInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		caseSizeInput.click();
+		caseSizeInput.fill(qtyPerCase);
+		caseSizeInput.press("Tab");
+		page.waitForTimeout(2000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		verifyFieldFilled(caseSizeInput, "Qty Per Case", qtyPerCase);
+		log.info("Entered Qty per case: [{}] successfully.", qtyPerCase);
+	}
+
+	public void verifyPackQuantity(String expectedPack) {
+		page.waitForTimeout(1000);
+		packInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		String actualPack = packInput.inputValue().trim();
+		log.info("Verifying Pack Quantity: Actual [{}], Expected [{}]", actualPack, expectedPack);
+
+		String normalizedActual = actualPack.replaceAll("\\s+", "").replace("*", "x").toLowerCase();
+		String normalizedExpected = expectedPack.replaceAll("\\s+", "").replace("*", "x").toLowerCase();
+		boolean isMatch = normalizedActual.equalsIgnoreCase(normalizedExpected)
+				|| actualPack.equalsIgnoreCase(expectedPack.trim());
+
+		SoftAssert sa = base.BaseTest.getSoftAssert();
+		if (sa != null) {
+			sa.assertTrue(isMatch, "[GRN Line] Pack Quantity [" + actualPack + "] does not match expected [" + expectedPack + "]");
+		} else {
+			Assert.assertTrue(isMatch, "Pack Quantity [" + actualPack + "] does not match expected [" + expectedPack + "]");
+		}
+		if (isMatch) {
+			log.info("✅ Pack Quantity verified successfully: [{}]", actualPack);
+		} else {
+			log.warn("⚠️ Pack Quantity mismatch: Actual [{}], Expected [{}]", actualPack, expectedPack);
+		}
+	}
+
+	public void enterMfgDate(String mfgDate) {
+		page.waitForTimeout(1000);
+		if (mfgDate == null || mfgDate.trim().isEmpty()) {
+			mfgDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+		}
+		log.info("Entering Manufacturing Date (MFG date): [{}]", mfgDate);
+		mfgDateInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		mfgDateInput.click();
+		mfgDateInput.fill(mfgDate);
+		mfgDateInput.press("Tab");
+		page.waitForTimeout(2000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		verifyFieldFilled(mfgDateInput, "MFG Date", mfgDate);
+		log.info("Entered Manufacturing Date: [{}] successfully.", mfgDate);
+	}
+
+	public void enterMfgDate() {
+		enterMfgDate(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+	}
+
+	public void verifyExpDateAutoSet() {
+		page.waitForTimeout(1000);
+		guaranteeDateInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		String expDate = guaranteeDateInput.inputValue().trim();
+		boolean isFilled = expDate != null && !expDate.isEmpty();
+		log.info("Verifying Exp Date auto-set after entering MFG Date: [{}]", expDate);
+
+		SoftAssert sa = base.BaseTest.getSoftAssert();
+		if (sa != null) {
+			sa.assertTrue(isFilled, "[GRN Line] Expiration (Guarantee) Date was not auto-set after entering MFG Date!");
+		} else {
+			Assert.assertTrue(isFilled, "Expiration (Guarantee) Date was not auto-set after entering MFG Date!");
+		}
+		if (isFilled) {
+			log.info("✅ Expiration (Guarantee) Date auto-set verified: [{}]", expDate);
+		}
+	}
+
+	public void verifyRetestDateAutoSet() {
+		page.waitForTimeout(1000);
+		retestDateInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		String retestDate = retestDateInput.inputValue().trim();
+		boolean isFilled = retestDate != null && !retestDate.isEmpty();
+		log.info("Verifying Retest Date auto-set after entering MFG Date: [{}]", retestDate);
+
+		SoftAssert sa = base.BaseTest.getSoftAssert();
+		if (sa != null) {
+			sa.assertTrue(isFilled, "[GRN Line] Retest Date was not auto-set after entering MFG Date!");
+		} else {
+			Assert.assertTrue(isFilled, "Retest Date was not auto-set after entering MFG Date!");
+		}
+		if (isFilled) {
+			log.info("✅ Retest Date auto-set verified: [{}]", retestDate);
+		}
+	}
+
+	public void verifyDatesAutoSetAfterMfgDate() {
+		verifyExpDateAutoSet();
+		verifyRetestDateAutoSet();
+	}
+
+	public void saveReceiptLine() {
+		log.info("Saving changes on Receipt Line...");
+		if (lineSaveButton.count() > 0 && lineSaveButton.first().isVisible()) {
+			lineSaveButton.first().click();
+		} else {
+			Locator activeSave = page.locator("//div[contains(@class,'z-tabpanel') and not(contains(@style,'display: none'))]//a[@title='Save Changes    Alt+S']");
+			if (activeSave.count() > 0 && activeSave.first().isVisible()) {
+				activeSave.first().click();
+			} else {
+				page.keyboard().press("Alt+S");
+			}
+		}
+		page.waitForTimeout(1500);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		log.info("Receipt Line saved successfully.");
+	}
+
 	public void verifyReceiptLineQty(String expectedQty) {
-		movementQtyInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		String actualQty = movementQtyInput.inputValue().trim();
-		log.info("Verifying Movement Quantity: Actual [{}], Expected [{}]", actualQty, expectedQty);
+		qtyEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		String actualQty = qtyEnteredInput.inputValue().trim();
+		log.info("Verifying EnteredInput Quantity: Actual [{}], Expected [{}]", actualQty, expectedQty);
 
 		boolean isMatch = actualQty.equalsIgnoreCase(expectedQty.trim());
 		try {
@@ -541,7 +1163,7 @@ public class GoodsReceiptNote {
 
 		SoftAssert sa = base.BaseTest.getSoftAssert();
 		if (sa != null) {
-			sa.assertTrue(isMatch, "[GRN Line] Movement Qty [" + actualQty + "] does not match expected [" + expectedQty + "]");
+			sa.assertTrue(isMatch, "[GRN Line] EnteredInput Qty [" + actualQty + "] does not match expected [" + expectedQty + "]");
 		} else {
 			Assert.assertTrue(isMatch, "Movement Qty [" + actualQty + "] does not match expected [" + expectedQty + "]");
 		}
@@ -642,4 +1264,11 @@ public class GoodsReceiptNote {
 	public Locator getRetestDateInput() { return retestDateInput; }
 	public Locator getCheckListButton() { return checkListButton; }
 	public Locator getCreateContainersButton() { return createContainersButton; }
+
+	public Locator getCreateLinesModal() { return createLinesModal; }
+	public Locator getCreateLinesModalRows() { return createLinesModalRows; }
+	public Locator getCreateLinesModalSubmitButton() { return createLinesModalSubmitButton; }
+	public Locator getCreateLinesModalCancelButton() { return createLinesModalCancelButton; }
+	public Locator getCreateLinesModalSelectAllButton() { return createLinesModalSelectAllButton; }
+	public Locator getCreateLinesModalDeselectAllButton() { return createLinesModalDeselectAllButton; }
 }

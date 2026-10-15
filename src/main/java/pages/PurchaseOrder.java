@@ -274,7 +274,30 @@ public class PurchaseOrder {
 		poLineTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poLineTab.click();
 		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		ensurePOLineFormView();
 		log.info("Navigated to 'PO Line' tab.");
+	}
+
+	/**
+	 * Checks if PO Line subtab is opened in Grid View by default, and if so,
+	 * clicks Grid Toggle (Shift+Alt+T) to switch to normal Form View.
+	 */
+	public void ensurePOLineFormView() {
+		try {
+			page.waitForTimeout(2000);
+			if (page.locator("(//div[@class='z-frozen'])[1]").isVisible()) {
+				
+					log.info("PO Line subtab opened in Grid View by default. Clicking Grid Toggle to view normally...");
+					page.locator("//a[@title='Grid Toggle    Alt+T']").click();
+					page.waitForTimeout(2000);
+					WaitUtils.waitForLoadingIndicatorToDisappear(page);
+					log.info("Switched PO Line subtab to normal Form View.");
+				}
+			
+		} catch (Exception e) {
+			log.warn("Could not check/toggle PO Line subtab grid view: {}", e.getMessage());
+		}
 	}
 
 	public void enterProdct(String productName) {
@@ -564,25 +587,7 @@ public class PurchaseOrder {
 		log.info("DateOrdered & DatePromised verified — both should be [{}]", currentDate);
 	}
 	
-	public void verifyDocStatus(String status) {
-		Locator DocStatus = page.locator("//span[@instancename='C_Order0DocStatus']//input");
-		String actualStatus = DocStatus.inputValue();
-
-		SoftAssert sa = base.BaseTest.getSoftAssert();
-		if (sa != null) {
-			sa.assertTrue(actualStatus.equalsIgnoreCase(status),
-					"[PO] DocStatus mismatch — Expected: [" + status + "] Actual: [" + actualStatus + "]");
-		} else {
-			if (!actualStatus.equalsIgnoreCase(status)) {
-				Assert.fail("docStatus Not Matching, Actual: " + actualStatus + " Expected: " + status);
-			}
-		}
-		if (actualStatus.equalsIgnoreCase(status)) {
-			log.info("DocStatus verified successfully: [{}]", actualStatus);
-		} else {
-			log.warn("DocStatus mismatch — Expected: [{}] Actual: [{}] — soft assertion recorded.", status, actualStatus);
-		}
-	}
+	
 	
 	public void verifyBPLocationfields() {
 		String bpLocation = partnerLocation.inputValue();

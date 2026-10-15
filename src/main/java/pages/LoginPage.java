@@ -17,9 +17,8 @@ public class LoginPage {
 
 	public String UserName;
 
-	// Locators - clean, exact selectors without and/or/|
-	private final Locator navigateLoginButton1;
-	private final Locator navigateLoginButton2;
+	// Locators
+	private final Locator navigateLoginButton;
 	private final Locator usernameInput;
 	private final Locator passwordInput;
 	private final Locator selectRoleCheckbox;
@@ -31,8 +30,8 @@ public class LoginPage {
 
 	public LoginPage(Page page) {
 		this.page = page;
-		this.navigateLoginButton1 = page.locator("//li[@id='main-requestBtns-btnLogin']");
-		this.navigateLoginButton2 = page.locator("//a[contains(@class,'main-button')]");
+		this.navigateLoginButton = page.locator(
+				"//li[@id='main-requestBtns-btnLogin'] | //a[contains(@class,'main-button')]");
 		this.usernameInput = page.locator("//td[@class='login-field']//input[@autocomplete='username']");
 		this.passwordInput = page.locator("//td[@class='login-field']//input[@autocomplete='current-password']");
 		this.selectRoleCheckbox = page.locator("//tr[@id='rowSelectRole']//label[text()='Select Role']");
@@ -61,21 +60,11 @@ public class LoginPage {
 		}
 
 		// 2. Locate and click the login navigation button
-		Locator loginButton;
-		try {
-			navigateLoginButton1.waitFor(
-					new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
-			loginButton = navigateLoginButton1;
-			log.info("Login button found via Button-1 (#main-requestBtns-btnLogin a).");
-		} catch (Exception e) {
-			log.info("Button-1 not visible — trying Button-2 (#main-requestBtns-btnLogin)...");
-			navigateLoginButton2.waitFor(
-					new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(3000));
-			loginButton = navigateLoginButton2;
-			log.info("Login button found via Button-2 (#main-requestBtns-btnLogin).");
-		}
+		navigateLoginButton.waitFor(
+				new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		navigateLoginButton.click();
+		log.info("Login navigation button clicked.");
 
-		loginButton.click();
 		usernameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
 		log.info("Login dialog opened successfully; username field is ready.");
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);

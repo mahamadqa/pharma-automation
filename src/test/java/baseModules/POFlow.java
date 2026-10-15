@@ -39,7 +39,7 @@ public class POFlow extends BaseTest {
 
 		// Validations
 		purchaseOrder.verifyDateFields();
-		purchaseOrder.verifyDocStatus("Drafted");
+		toolbar.verifyDocStatus("Drafted");
 		purchaseOrder.verifyBPLocationfields();
 		purchaseOrder.verifyCurrency();
 		purchaseOrder.verifyAmtFieldsBeforeInvLines();
@@ -63,10 +63,10 @@ public class POFlow extends BaseTest {
 		purchaseOrder.verifyHeaderGrandTotalAmt();
 		//
 		toolbar.performDocAction("Prepare");
-		purchaseOrder.verifyDocStatus("In Progress");
+		toolbar.verifyDocStatus("In Progress");
 
 		toolbar.performDocAction("Complete");
-		purchaseOrder.verifyDocStatus("Completed");
+		toolbar.verifyDocStatus("Completed");
 
 		log.info("========== Purchase Order Flow Completed Successfully ==========");
 	}

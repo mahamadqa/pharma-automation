@@ -19,16 +19,15 @@ public class ClientAndRoleSelection {
 	public String clientName;
 	public String loginRole;
 
-	// Locators - clean single selectors without and/or/|
+	// Locators
 	private final Locator logo;
 	private final Locator tenantInputField;
 	private final Locator roleInputField;
 	private final Locator okButton;
-	private final Locator tenantOption;
+	private final Locator disabledTenantElement;
 	private final Locator disabledRoleElement;
 	private final Locator errorMessage;
 	private final Locator desktopHeader;
-	
 
 	public ClientAndRoleSelection(Page page) {
 		this.page = page;
@@ -36,11 +35,11 @@ public class ClientAndRoleSelection {
 		this.tenantInputField = page.locator("(//input[@class='z-combobox-input'])[1]");
 		this.roleInputField = page.locator("(//input[@class='z-combobox-input'])[2]");
 		this.okButton = page.locator("//button[@class='login-btn z-button']//i[@class='z-icon-Ok']");
-		this.tenantOption = page.locator("(//span[contains(text(),'PharmaVerge')])[2]");
+		this.disabledTenantElement = page.locator(
+				"//tr[@id='rowClient']//span[contains(@class,'z-combobox-disabled')] | //tr[contains(@id,'Client') or contains(@id,'Tenant')]//span[contains(@class,'z-combobox-disabled')]");
 		this.disabledRoleElement = page.locator("//tr[@id='rowRole']//span[@class='z-combobox z-combobox-disabled']");
 		this.errorMessage = page.locator("//div[contains(@class,'z-messagebox')]//span[contains(@class,'z-label')]");
 		this.desktopHeader = page.locator("//span[contains(@class,'desktop-header-username')]");
-		
 	}
 
 	/**
@@ -71,8 +70,9 @@ public class ClientAndRoleSelection {
 	}
 
 	/**
-	 * Selects Client (Tenant) and Role, then clicks OK to navigate to the
-	 * Dashboard.
+	 * Dynamically selects Client (Tenant) and Role based on field availability, then clicks OK
+	 * to navigate to the Dashboard.
+	 * Handles both selectable and disabled/pre-set Client and Role fields seamlessly.
 	 *
 	 * @param client Client / Tenant name
 	 * @param role   Role name
@@ -82,28 +82,70 @@ public class ClientAndRoleSelection {
 		this.loginRole = role;
 
 		checkLogoOnClientandRoleSelectionPage();
-		log.info("Selecting Client: [{}] and Role: [{}]", client, role);
+		log.info("Starting dynamic Client & Role selection. Target Client: [{}], Target Role: [{}]", client, role);
 
-		// 1. Fill and select Client / Tenant
-		tenantInputField.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		tenantInputField.fill(client);
-
-		if (tenantOption.count() > 0 && tenantOption.first().isVisible()) {
-			tenantOption.first().click();
-		} else {
-			tenantInputField.press("Tab");
+		// 1. Fill and select Client / Tenant (if provided and field is enabled)
+		boolean isClientDisabled = false;
+		try {
+			isClientDisabled = disabledTenantElement.isVisible() || tenantInputField.isDisabled();
+		} catch (Exception ignored) {
 		}
-		log.info("Selected Client: [{}]", client);
 
-		// 2. Fill and select Role (if not disabled)
-		if (!disabledRoleElement.isVisible()) {
-			roleInputField
-					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
-			roleInputField.fill(role);
-			roleInputField.press("Tab");
-			log.info("Selected Role: [{}]", role);
+		if (client != null && !client.trim().isEmpty() && !isClientDisabled) {
+			try {
+				tenantInputField.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+				tenantInputField.fill(client);
+
+				Locator dynamicTenantOption = page.locator(String.format(
+						"//div[contains(@class,'z-combobox-popup')]//span[contains(text(),'%s')] | //span[contains(@class,'z-comboitem-text') and contains(text(),'%s')]",
+						client, client));
+				if (dynamicTenantOption.count() > 0 && dynamicTenantOption.first().isVisible()) {
+					dynamicTenantOption.first().click();
+				} else {
+					tenantInputField.press("Tab");
+				}
+				log.info("Selected Client: [{}]", client);
+			} catch (Exception e) {
+				log.warn("Exception during client selection: {}, attempting Tab fallback", e.getMessage());
+				try {
+					tenantInputField.press("Tab");
+				} catch (Exception ignored) {
+				}
+			}
 		} else {
-			log.info("Role dropdown is pre-set or disabled for Client [{}]", client);
+			log.info("Client selection skipped or disabled for Client [{}]. Disabled flag: [{}]", client, isClientDisabled);
+		}
+
+		// 2. Fill and select Role (if provided and field is not disabled)
+		boolean isRoleDisabled = false;
+		try {
+			isRoleDisabled = disabledRoleElement.isVisible() || roleInputField.isDisabled();
+		} catch (Exception ignored) {
+		}
+
+		if (role != null && !role.trim().isEmpty() && !isRoleDisabled) {
+			try {
+				roleInputField.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+				roleInputField.fill(role);
+
+				Locator dynamicRoleOption = page.locator(String.format(
+						"//div[contains(@class,'z-combobox-popup')]//span[contains(text(),'%s')] | //span[contains(@class,'z-comboitem-text') and contains(text(),'%s')]",
+						role, role));
+				if (dynamicRoleOption.count() > 0 && dynamicRoleOption.first().isVisible()) {
+					dynamicRoleOption.first().click();
+				} else {
+					roleInputField.press("Tab");
+				}
+				log.info("Selected Role: [{}]", role);
+			} catch (Exception e) {
+				log.warn("Exception during role selection: {}, attempting Tab fallback", e.getMessage());
+				try {
+					roleInputField.press("Tab");
+				} catch (Exception ignored) {
+				}
+			}
+		} else {
+			log.info("Role dropdown is pre-set or disabled for Role: [{}]. Disabled flag: [{}]", role, isRoleDisabled);
 		}
 
 		// 3. Submit
@@ -130,31 +172,5 @@ public class ClientAndRoleSelection {
 		} catch (Exception e) {
 			log.warn("Dashboard header wait timed out, continuing execution: {}", e.getMessage());
 		}
-	}
-
-	/**
-	 * Selects role when client is already chosen or conditionally disabled.
-	 *
-	 * @param client Client name
-	 * @param role   Role name
-	 */
-	public void selectRoleOfUser(String client, String role) {
-		this.clientName = client;
-		this.loginRole = role;
-
-		if (disabledRoleElement.isVisible()) {
-			log.info("Role selection disabled. Client: [{}], Default Role: [{}]", client, role);
-		} else {
-			roleInputField
-					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
-			roleInputField.fill(role);
-			roleInputField.press("Tab");
-			log.info("Selected Role: [{}]", role);
-		}
-
-		okButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
-		okButton.click();
-		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-		log.info("Submitted role selection for [{}]", role);
 	}
 }

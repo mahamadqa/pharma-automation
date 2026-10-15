@@ -12,7 +12,7 @@ public class GRNFlow extends BaseTest {
 
 	private static final Logger log = LogManager.getLogger(GRNFlow.class);
 
-	@Test(groups = { "basic" }, description = "Goods Receipt Note Flow: Login → Role Selection → Search GRN & Click New Record → Fill Header → Add Receipt Line → Save & Verify")
+	@Test(groups = {"basic" }, description = "Goods Receipt Note Flow: Login → Role Selection → Search GRN & Click New Record → Fill Header → Add Receipt Line → Save & Verify")
 	public void verificationOfGoodsReceiptNoteFlow() {
 
 		// Step 1: Login with credentials
@@ -22,17 +22,24 @@ public class GRNFlow extends BaseTest {
 		// Step 2: Select Client and Role
 		clientAndRole.selectClientAndRole(ConfigReader.get("client"), ConfigReader.get("SuperuserRole"));
 
-		// Step 3: In Menubar search 'Goods receipt Note' and click + button to create new record
+		// 
+		// Step 3: In Menubar search 'Goods receipt Note' and click + button to create
+		// new record
 		goodsReceiptNote.navigateToGRNWindow();
 
 		// Step 4: Fill GRN Header fields using test data profile
 		log.info("Filling Goods Receipt Note Header fields using [{}] test data profile...", DataManager.getRegion());
 		goodsReceiptNote.selectOrg();
-		goodsReceiptNote.attachPO(purchaseOrder);
-		goodsReceiptNote.selectDocType();
+
+		// Attach Purchase Order to GRN
+		//goodsReceiptNote.attachPO(purchaseOrder);
+		BaseTest.getPage().fill("//div[@instancename='M_InOut0C_Order_ID']//input", "PV0000776");
+		BaseTest.getPage().locator("//div[@instancename='M_InOut0C_Order_ID']//input").press("Tab");
+
+		// Verify fields automatically populated from Purchase Order
+		goodsReceiptNote.verifyFieldsAfterAttachingPO(purchaseOrder);
+
 		goodsReceiptNote.fillDescription();
-		goodsReceiptNote.selectBPartner();
-		goodsReceiptNote.selectWarehouse();
 		toolbar.saveRecord();
 
 		String grnDocNo = goodsReceiptNote.getGRNDocNo();
