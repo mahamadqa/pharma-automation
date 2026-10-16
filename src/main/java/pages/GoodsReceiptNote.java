@@ -284,7 +284,6 @@ public class GoodsReceiptNote {
 		try {
 			targetItem.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 			targetItem.click();
-			log.info("Clicked on '+' on searched Goods Receipt Note option.");
 		} catch (Exception e) {
 			log.warn("Searched GRN item not visible after wait, pressing Enter: {}", e.getMessage());
 			grnMenuSearchInput.press("Enter");
@@ -303,13 +302,11 @@ public class GoodsReceiptNote {
 
 	public void selectOrg(String orgName) {
 		page.waitForTimeout(1000);
-		log.info("Selecting Organization: [{}]", orgName);
 		orgInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		orgInput.fill(orgName);
 		orgInput.press("Tab");
 		page.waitForTimeout(2000);
 		verifyFieldFilled(orgInput, "Organization", orgName);
-		log.info("Selected Organization: [{}]", orgName);
 	}
 
 	public void selectOrg() {
@@ -318,13 +315,11 @@ public class GoodsReceiptNote {
 	}
 
 	public void selectDocType(String docType) {
-		log.info("Selecting Document Type: [{}]", docType);
 		docTypeInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		docTypeInput.fill(docType);
 		docTypeInput.press("Tab");
 		page.waitForTimeout(2000);
 		verifyFieldFilled(docTypeInput, "Document Type", docType);
-		log.info("Selected Document Type: [{}]", docType);
 	}
 
 	public void selectDocType() {
@@ -335,7 +330,6 @@ public class GoodsReceiptNote {
 		descriptionInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		descriptionInput.click();
 		descriptionInput.fill(desc);
-		log.info("Description filled: [{}]", desc);
 	}
 
 	public void fillDescription() {
@@ -343,13 +337,11 @@ public class GoodsReceiptNote {
 	}
 
 	public void selectBPartner(String partnerName) {
-		log.info("Selecting Business Partner: [{}]", partnerName);
 		bPartnerInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		bPartnerInput.fill(partnerName);
 		bPartnerInput.press("Tab");
 		page.waitForTimeout(2000);
 		verifyFieldFilled(bPartnerInput, "Business Partner", partnerName);
-		log.info("Selected Business Partner: [{}]", partnerName);
 	}
 
 	public void selectBPartner() {
@@ -359,13 +351,11 @@ public class GoodsReceiptNote {
 
 	public void selectWarehouse(String warehouseName) {
 		page.waitForTimeout(1000);
-		log.info("Selecting Warehouse: [{}]", warehouseName);
 		warehouseInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		warehouseInput.fill(warehouseName);
 		warehouseInput.press("Tab");
 		page.waitForTimeout(2000);
 		verifyFieldFilled(warehouseInput, "Warehouse", warehouseName);
-		log.info("Selected Warehouse: [{}]", warehouseName);
 	}
 
 	public void selectWarehouse() {
@@ -374,7 +364,6 @@ public class GoodsReceiptNote {
 	}
 
 	public void selectGateInward(String gateInward) {
-		log.info("Selecting Gate Inward: [{}]", gateInward);
 		gateInwardInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		gateInwardInput.fill(gateInward);
 		gateInwardInput.press("Tab");
@@ -408,7 +397,6 @@ public class GoodsReceiptNote {
 			} catch (Exception ignored) {
 			}
 		}
-		log.info("Retrieved PO Document No [{}] for Goods Receipt Note", poDocNo);
 		attachPO(poDocNo);
 	}
 
@@ -429,7 +417,6 @@ public class GoodsReceiptNote {
 			} catch (Exception ignored) {
 			}
 		}
-		log.info("Retrieved cached PO Document No [{}] for Goods Receipt Note", poDocNo);
 		attachPO(poDocNo);
 	}
 
@@ -440,7 +427,6 @@ public class GoodsReceiptNote {
 	 */
 	public void attachPO(String poDocNo) {
 		page.waitForTimeout(1000);
-		log.info("Filling Purchase Order Doc No [{}] into orderInput...", poDocNo);
 		orderInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		orderInput.click();
 		orderInput.fill(poDocNo);
@@ -490,7 +476,6 @@ public class GoodsReceiptNote {
 		page.waitForTimeout(1000);
 		docStatusInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualStatus = docStatusInput.inputValue().trim();
-		log.info("Verifying Document Status: Actual [{}], Expected [{}]", actualStatus, expectedStatus);
 
 		boolean isMatch = actualStatus.equalsIgnoreCase(expectedStatus.trim());
 		SoftAssert sa = base.BaseTest.getSoftAssert();
@@ -622,7 +607,6 @@ public class GoodsReceiptNote {
 	// ==================== Receipt Line Actions ====================
 
 	public void clickOnReceiptLineTab() {
-		log.info("Clicking on 'Receipt Line' tab...");
 		receiptLineTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		receiptLineTab.click();
 		page.waitForTimeout(3000);
@@ -639,14 +623,10 @@ public class GoodsReceiptNote {
 		try {
 			page.waitForTimeout(2000);
 			if (page.locator("(//div[@class='z-frozen'])[1]").isVisible()) {
-				
-					log.info("PO Line subtab opened in Grid View by default. Clicking Grid Toggle to view normally...");
-					page.locator("//a[@title='Grid Toggle    Alt+T']").click();
-					page.waitForTimeout(2000);
-					WaitUtils.waitForLoadingIndicatorToDisappear(page);
-					log.info("Switched PO Line subtab to normal Form View.");
-				}
-			
+				page.locator("//a[@title='Grid Toggle    Alt+T']").click();
+				page.waitForTimeout(2000);
+				WaitUtils.waitForLoadingIndicatorToDisappear(page);
+			}
 		} catch (Exception e) {
 			log.warn("Could not check/toggle PO Line subtab grid view: {}", e.getMessage());
 		}
@@ -659,7 +639,6 @@ public class GoodsReceiptNote {
 	 */
 	public void clickCreateLinesFromButton() {
 		page.waitForTimeout(1000);
-		log.info("Clicking on 'Create Lines From' button...");
 		createLinesFromButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		createLinesFromButton.click();
 		page.waitForTimeout(1000);
@@ -675,7 +654,6 @@ public class GoodsReceiptNote {
 	 */
 	public void selectRecordInCreateLinesFromModal(String poDocNo) {
 		page.waitForTimeout(1000);
-		log.info("Selecting record with PO Doc No [{}] in 'Create Lines From' modal...", poDocNo);
 		createLinesModalRows.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 
 		Locator targetRow;
@@ -699,15 +677,12 @@ public class GoodsReceiptNote {
 		}
 
 		if (!isSelected) {
-			log.info("Row is not selected; clicking checkable icon to select.");
 			Locator checkable = targetRow.locator(".z-listitem-checkable");
 			if (checkable.count() > 0 && checkable.first().isVisible()) {
 				checkable.first().click();
 			} else {
 				targetRow.click();
 			}
-		} else {
-			log.info("Row is already selected in 'Create Lines From' modal.");
 		}
 		page.waitForTimeout(500);
 	}
@@ -723,7 +698,6 @@ public class GoodsReceiptNote {
 	 * Confirms and submits the 'Create Lines From' dialog to generate GRN receipt lines.
 	 */
 	public void confirmCreateLinesFromModal() {
-		log.info("Confirming 'Create Lines From' modal to generate lines...");
 		createLinesModalSubmitButton.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		createLinesModalSubmitButton.first().click();
 		page.waitForTimeout(2000);
@@ -847,7 +821,6 @@ public class GoodsReceiptNote {
 	public String getHSNCode() {
 		hsnCodeInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String value = hsnCodeInput.inputValue().trim();
-		log.info("Retrieved HSN Code input value: [{}]", value);
 		return value;
 	}
 
@@ -859,7 +832,6 @@ public class GoodsReceiptNote {
 	public String getLocator() {
 		locatorInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String value = locatorInput.inputValue().trim();
-		log.info("Retrieved Locator input value: [{}]", value);
 		return value;
 	}
 
@@ -871,7 +843,6 @@ public class GoodsReceiptNote {
 	public void verifyHSNCode(String expectedHSNCode) {
 		page.waitForTimeout(1000);
 		String actualHSNCode = getHSNCode();
-		log.info("Verifying HSN Code: Actual [{}], Expected [{}]", actualHSNCode, expectedHSNCode);
 
 		boolean isMatch = actualHSNCode.equalsIgnoreCase(expectedHSNCode.trim())
 				|| actualHSNCode.contains(expectedHSNCode.trim())
@@ -906,7 +877,6 @@ public class GoodsReceiptNote {
 		if (expectedHSN != null && !expectedHSN.trim().isEmpty()) {
 			verifyHSNCode(expectedHSN);
 		} else {
-			log.info("HSNCode not specified in test data for region [{}]; checking actual value in field...", DataManager.getRegion());
 			String actual = getHSNCode();
 			if (actual != null && !actual.trim().isEmpty()) {
 				log.info("HSN Code field is populated with: [{}]", actual);
@@ -924,7 +894,6 @@ public class GoodsReceiptNote {
 	public void verifyLocator(String expectedLocator) {
 		page.waitForTimeout(1000);
 		String actualLocator = getLocator();
-		log.info("Verifying Locator: Actual [{}], Expected [{}]", actualLocator, expectedLocator);
 
 		boolean isMatch = actualLocator.equalsIgnoreCase(expectedLocator.trim())
 				|| actualLocator.contains(expectedLocator.trim())
@@ -959,13 +928,11 @@ public class GoodsReceiptNote {
 		if (expectedLocator != null && !expectedLocator.trim().isEmpty()) {
 			verifyLocator(expectedLocator);
 		} else {
-			log.info("Locator not specified in test data; verifying that Locator field has non-empty input value.");
 			verifyFieldFilled(locatorInput, "Locator", "");
 		}
 	}
 
 	public void navigateBackOnGRNHeader() {
-		log.info("Navigating back to Goods Receipt Note Header...");
 		Locator headerLink = page.locator("//div[@instancename='breadcrumb']//a[normalize-space(text())='Goods Receipt Note']");
 		if (headerLink.count() > 0 && headerLink.first().isVisible()) {
 			headerLink.first().click();
@@ -981,13 +948,11 @@ public class GoodsReceiptNote {
 
 	public void enterProduct(String productName) {
 		page.waitForTimeout(1000);
-		log.info("Entering Line Product: [{}]", productName);
 		lineProductInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		lineProductInput.fill(productName);
 		lineProductInput.press("Tab");
 		page.waitForTimeout(2000);
 		verifyFieldFilled(lineProductInput, "Product", productName);
-		log.info("Entered Line Product: [{}] successfully.", productName);
 	}
 
 	public void enterProduct() {
@@ -997,7 +962,6 @@ public class GoodsReceiptNote {
 
 	public void enterQtyEntered(String qty) {
 		page.waitForTimeout(1000);
-		log.info("Entering QtyEntered: [{}]", qty);
 		qtyEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		qtyEnteredInput.click();
 		qtyEnteredInput.fill(qty);
@@ -1005,7 +969,6 @@ public class GoodsReceiptNote {
 		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(qtyEnteredInput, "QtyEntered", qty);
-		log.info("Entered QtyEntered: [{}] successfully.", qty);
 	}
 
 	public void enterQtyEntered() {
@@ -1014,7 +977,6 @@ public class GoodsReceiptNote {
 
 	public void selectLocator(String locatorName) {
 		page.waitForTimeout(1000);
-		log.info("Selecting Locator: [{}]", locatorName);
 		locatorInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		locatorInput.fill(locatorName);
 		locatorInput.press("Tab");
@@ -1023,7 +985,6 @@ public class GoodsReceiptNote {
 
 	public void selectUOM(String uomName) {
 		page.waitForTimeout(1000);
-		log.info("Selecting UOM: [{}]", uomName);
 		uomInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		uomInput.fill(uomName);
 		uomInput.press("Tab");
@@ -1034,7 +995,6 @@ public class GoodsReceiptNote {
 
 	public void enterNoOfCase(String noOfCase) {
 		page.waitForTimeout(1000);
-		log.info("Entering No Of Case: [{}]", noOfCase);
 		noOfCaseInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		noOfCaseInput.click();
 		noOfCaseInput.fill(noOfCase);
@@ -1042,12 +1002,10 @@ public class GoodsReceiptNote {
 		page.waitForTimeout(1500);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(noOfCaseInput, "No Of Case", noOfCase);
-		log.info("Entered No Of Case: [{}] successfully.", noOfCase);
 	}
 
 	public void enterQtyPerCase(String qtyPerCase) {
 		page.waitForTimeout(1000);
-		log.info("Entering Qty per case: [{}]", qtyPerCase);
 		caseSizeInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		caseSizeInput.click();
 		caseSizeInput.fill(qtyPerCase);
@@ -1055,14 +1013,12 @@ public class GoodsReceiptNote {
 		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(caseSizeInput, "Qty Per Case", qtyPerCase);
-		log.info("Entered Qty per case: [{}] successfully.", qtyPerCase);
 	}
 
 	public void verifyPackQuantity(String expectedPack) {
 		page.waitForTimeout(1000);
 		packInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualPack = packInput.inputValue().trim();
-		log.info("Verifying Pack Quantity: Actual [{}], Expected [{}]", actualPack, expectedPack);
 
 		String normalizedActual = actualPack.replaceAll("\\s+", "").replace("*", "x").toLowerCase();
 		String normalizedExpected = expectedPack.replaceAll("\\s+", "").replace("*", "x").toLowerCase();
@@ -1087,7 +1043,6 @@ public class GoodsReceiptNote {
 		if (mfgDate == null || mfgDate.trim().isEmpty()) {
 			mfgDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 		}
-		log.info("Entering Manufacturing Date (MFG date): [{}]", mfgDate);
 		mfgDateInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		mfgDateInput.click();
 		mfgDateInput.fill(mfgDate);
@@ -1095,7 +1050,6 @@ public class GoodsReceiptNote {
 		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(mfgDateInput, "MFG Date", mfgDate);
-		log.info("Entered Manufacturing Date: [{}] successfully.", mfgDate);
 	}
 
 	public void enterMfgDate() {
@@ -1107,7 +1061,6 @@ public class GoodsReceiptNote {
 		guaranteeDateInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String expDate = guaranteeDateInput.inputValue().trim();
 		boolean isFilled = expDate != null && !expDate.isEmpty();
-		log.info("Verifying Exp Date auto-set after entering MFG Date: [{}]", expDate);
 
 		if (!isFilled) {
 			log.warn("⚠️ Exp Date was not auto-set for product [{}]. Filling Exp Date dynamically...", DataManager.getData("product"));
@@ -1136,7 +1089,6 @@ public class GoodsReceiptNote {
 		retestDateInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String retestDate = retestDateInput.inputValue().trim();
 		boolean isFilled = retestDate != null && !retestDate.isEmpty();
-		log.info("Verifying Retest Date auto-set after entering MFG Date: [{}]", retestDate);
 
 		if (!isFilled) {
 			log.warn("⚠️ Retest Date was not auto-set for product [{}]. Filling Retest Date dynamically...", DataManager.getData("product"));
@@ -1166,7 +1118,6 @@ public class GoodsReceiptNote {
 	}
 
 	public void saveReceiptLine() {
-		log.info("Saving changes on Receipt Line...");
 		if (lineSaveButton.count() > 0 && lineSaveButton.first().isVisible()) {
 			lineSaveButton.first().click();
 		} else {
@@ -1185,7 +1136,6 @@ public class GoodsReceiptNote {
 	public void verifyReceiptLineQty(String expectedQty) {
 		qtyEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualQty = qtyEnteredInput.inputValue().trim();
-		log.info("Verifying EnteredInput Quantity: Actual [{}], Expected [{}]", actualQty, expectedQty);
 
 		boolean isMatch = actualQty.equalsIgnoreCase(expectedQty.trim());
 		try {
@@ -1212,7 +1162,6 @@ public class GoodsReceiptNote {
 		page.waitForTimeout(1000);
 		movementQtyInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String value = movementQtyInput.inputValue().trim();
-		log.info("Retrieved Movement Quantity from Receipt Line: [{}]", value);
 		return value;
 	}
 
@@ -1225,7 +1174,6 @@ public class GoodsReceiptNote {
 		page.waitForTimeout(1000);
 		attributeSetInstanceInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String value = attributeSetInstanceInput.inputValue().trim();
-		log.info("Retrieved Attribute Set Instance text from Receipt Line: [{}]", value);
 		return value;
 	}
 
@@ -1235,7 +1183,6 @@ public class GoodsReceiptNote {
 	 */
 	public void zoomOnAttributeSetInstance() {
 		page.waitForTimeout(1000);
-		log.info("Right clicking on Attribute Set Instance field in Receipt Line...");
 		Locator asiContainer = page.locator("//div[@instancename='M_InOutLine0M_AttributeSetInstance_ID']");
 		if (asiContainer.count() > 0 && asiContainer.first().isVisible()) {
 			asiContainer.first().click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
@@ -1249,7 +1196,6 @@ public class GoodsReceiptNote {
 			zoomMenuItem = page.locator("//div[contains(@class,'z-menupopup') and contains(@style,'visibility: visible')]//span[normalize-space(text())='Zoom']");
 		}
 		zoomMenuItem.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		log.info("Clicking on 'Zoom' option from context menu...");
 		zoomMenuItem.first().click();
 		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
@@ -1290,7 +1236,6 @@ public class GoodsReceiptNote {
 		// Handle "Post now and create Accounting entries?" confirmation popup if it appears
 		Locator modal = page.locator("//div[contains(@class,'z-messagebox') or contains(@class,'z-window-modal')]");
 		if (modal.count() > 0 && modal.first().isVisible()) {
-			log.info("Post confirmation dialog appeared. Clicking OK/Confirm button...");
 			Locator okBtn = modal.first().locator("button.z-button, button").first();
 			okBtn.click();
 			page.waitForTimeout(2000);
@@ -1413,7 +1358,6 @@ public class GoodsReceiptNote {
 				double d = ((Number) list.get(0)).doubleValue();
 				double c = ((Number) list.get(1)).doubleValue();
 				lastPostedAmounts = new double[]{d, c};
-				log.info("Extracted Posting amounts via JS: Debit [{}], Credit [{}]", d, c);
 				return lastPostedAmounts;
 			}
 		} catch (Exception e) {
@@ -1474,7 +1418,6 @@ public class GoodsReceiptNote {
 		double finalCredit = summaryCredit != null ? summaryCredit : sumCredit;
 
 		lastPostedAmounts = new double[]{finalDebit, finalCredit};
-		log.info("Extracted Posting amounts via Locators: Debit [{}], Credit [{}]", finalDebit, finalCredit);
 		return lastPostedAmounts;
 	}
 
@@ -1485,7 +1428,6 @@ public class GoodsReceiptNote {
 		double[] amounts = getPostedDebitAndCreditAmounts();
 		double debit = amounts[0];
 		double credit = amounts[1];
-		log.info("Verifying Posted amounts: Accounted Debit [{}], Accounted Credit [{}]", debit, credit);
 
 		boolean isMatch = Double.compare(debit, credit) == 0;
 		SoftAssert sa = base.BaseTest.getSoftAssert();
@@ -1519,22 +1461,17 @@ public class GoodsReceiptNote {
 	 * Closes the Posting window tab.
 	 */
 	public void closePostingWindow() {
-		log.info("Closing Posting window tab...");
 		Locator closeBtn = page.locator("//li[contains(@class,'z-tab') and contains(.,'Posting')]//i[contains(@class,'z-tab-icon') or contains(@class,'z-icon-times') or @aria-label='Close']");
 		if (closeBtn.count() > 0 && closeBtn.first().isVisible()) {
 			closeBtn.first().click();
 			page.waitForTimeout(1000);
 			WaitUtils.waitForLoadingIndicatorToDisappear(page);
-			log.info("Posting window closed.");
 		} else {
 			Locator postingTab = page.locator("//li[contains(@class,'z-tab')]//span[normalize-space(text())='Posting']");
 			if (postingTab.count() > 0 && postingTab.first().isVisible()) {
 				page.keyboard().press("Alt+W");
 				page.waitForTimeout(1000);
 				WaitUtils.waitForLoadingIndicatorToDisappear(page);
-				log.info("Posting window closed via Alt+W.");
-			} else {
-				log.info("Posting window was not open, skipping close.");
 			}
 		}
 	}

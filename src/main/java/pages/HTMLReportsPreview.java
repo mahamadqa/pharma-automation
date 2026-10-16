@@ -73,18 +73,11 @@ public class HTMLReportsPreview {
 			double footerTop = footerBox.y;
 			double footerBottom = footerBox.y + footerBox.height;
 
-			log.info("-------------------- Page: [{}] --------------------", i);
-			log.info("HEADER  -> Top: {}, Bottom: {}", headerTop, headerBottom);
-			log.info("CONTENT -> Top: {}, Bottom: {}", contentTop, contentBottom);
-			log.info("FOOTER  -> Top: {}, Bottom: {}", footerTop, footerBottom);
-
 			// Check Header vs Content overlap
 			if (headerBottom > contentTop) {
 				double overlap = headerBottom - contentTop;
 				log.error("❌ HEADER / CONTENT OVERLAP detected on Page [{}] by {} px", i, overlap);
 				Assert.fail("HEADER / CONTENT OVERLAP on Page " + i + " by " + overlap + " px");
-			} else {
-				log.info("✅ Page [{}]: Header and Content do not overlap.", i);
 			}
 
 			// Check Content vs Footer overlap
@@ -92,11 +85,9 @@ public class HTMLReportsPreview {
 				double overlap = contentBottom - footerTop;
 				log.error("❌ CONTENT / FOOTER OVERLAP detected on Page [{}] by {} px", i, overlap);
 				Assert.fail("CONTENT / FOOTER OVERLAP on Page " + i + " by " + overlap + " px");
-			} else {
-				log.info("✅ Page [{}]: Content and Footer do not overlap.", i);
 			}
 		}
 
-		log.info("HTML Report Preview overlap verification passed for all [{}] pages.", totalPages);
+		log.info("✅ HTML Report Preview overlap verification passed for all [{}] pages.", totalPages);
 	}
 }

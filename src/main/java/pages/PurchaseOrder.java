@@ -175,7 +175,6 @@ public class PurchaseOrder {
 		try {
 			targetItem.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 			targetItem.click();
-			log.info("Clicked on '+' on searched Purchase Order option.");
 		} catch (Exception e) {
 			log.warn("Searched PO item not visible after wait, pressing Enter: {}", e.getMessage());
 			poMenuSearchInput.press("Enter");
@@ -192,13 +191,11 @@ public class PurchaseOrder {
 
 	public void selectOrg(String orgName) {
 		page.waitForTimeout(1000);
-		log.info("Selecting Organization: [{}]", orgName);
 		orgInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		orgInput.fill(orgName);
 		orgInput.press("Tab");
 		page.waitForTimeout(2000);
 		verifyFieldFilled(orgInput, "Organization", orgName);
-		log.info("Selected Organization: [{}]", orgName);
 	}
 
 	public void selectOrg() {
@@ -207,14 +204,12 @@ public class PurchaseOrder {
 	}
 
 	public void selecTtargetDocType(String docType) {
-		log.info("Selecting Target Document Type: [{}]", docType);
 		targetDocTypeInput
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		targetDocTypeInput.fill(docType);
 		targetDocTypeInput.press("Tab");
 		page.waitForTimeout(2000);
 		verifyFieldFilled(targetDocTypeInput, "Target Document Type", docType);
-		log.info("Selected Target Document Type: [{}]", docType);
 	}
 
 	public void selecTtargetDocType() {
@@ -224,17 +219,14 @@ public class PurchaseOrder {
 	public void fillDescription() {
 		DescInput.click();
 		DescInput.fill(DataManager.getData("description"));
-		log.info("Description filled : " +DataManager.getData("description"));
 	}
 
 	public void selectBPartner(String partnerName) {
-		log.info("Selecting Business Partner: [{}]", partnerName);
 		bPartnerInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		bPartnerInput.fill(partnerName);
 		bPartnerInput.press("Tab");
 		page.waitForTimeout(2000);
 		verifyFieldFilled(bPartnerInput, "Business Partner", partnerName);
-		log.info("Selected Business Partner: [{}]", partnerName);
 	}
 
 	public void selectBPartner() {
@@ -243,13 +235,11 @@ public class PurchaseOrder {
 	}
 
 	public void selectSalesRep(String repName) {
-		log.info("Selecting Sales Representative: [{}]", repName);
 		salesRepInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		salesRepInput.fill(repName);
 		salesRepInput.press("Tab");
 		page.waitForTimeout(2000);
 		verifyFieldFilled(salesRepInput, "Sales Representative", repName);
-		log.info("Selected Sales Representative: [{}]", repName);
 	}
 
 	public void selectSalesRep() {
@@ -258,13 +248,11 @@ public class PurchaseOrder {
 
 	public void selectWarehouse(String warehouseName) {
 		page.waitForTimeout(1000);
-		log.info("Selecting Warehouse: [{}]", warehouseName);
 		warehouseInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		warehouseInput.fill(warehouseName);
 		warehouseInput.press("Tab");
 		page.waitForTimeout(2000);
 		verifyFieldFilled(warehouseInput, "Warehouse", warehouseName);
-		log.info("Selected Warehouse: [{}]", warehouseName);
 	}
 
 	public void selectWarehouse() {
@@ -273,7 +261,6 @@ public class PurchaseOrder {
 	}
 
 	public void clickOnPOLineTab() {
-		log.info("Clicking on 'PO Line' tab...");
 		poLineTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poLineTab.click();
 		page.waitForTimeout(3000);
@@ -290,14 +277,10 @@ public class PurchaseOrder {
 		try {
 			page.waitForTimeout(2000);
 			if (page.locator("(//div[@class='z-frozen'])[1]").isVisible()) {
-				
-					log.info("PO Line subtab opened in Grid View by default. Clicking Grid Toggle to view normally...");
-					page.locator("//a[@title='Grid Toggle    Alt+T']").click();
-					page.waitForTimeout(2000);
-					WaitUtils.waitForLoadingIndicatorToDisappear(page);
-					log.info("Switched PO Line subtab to normal Form View.");
-				}
-			
+				page.locator("//a[@title='Grid Toggle    Alt+T']").click();
+				page.waitForTimeout(2000);
+				WaitUtils.waitForLoadingIndicatorToDisappear(page);
+			}
 		} catch (Exception e) {
 			log.warn("Could not check/toggle PO Line subtab grid view: {}", e.getMessage());
 		}
@@ -305,7 +288,6 @@ public class PurchaseOrder {
 
 	public void enterProdct(String productName) {
 		page.waitForTimeout(1000);
-		log.info("Entering Product: [{}]", productName);
 		productInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		productInput.fill(productName);
 		productInput.press("Tab");
@@ -316,7 +298,6 @@ public class PurchaseOrder {
 		if (descriptionTextarea.isVisible()) {
 			descriptionTextarea.click();
 		}
-		log.info("Entered Product: [{}] successfully.", productName);
 
 		// Dynamic check: if price & List price is not auto set then fill both fields from test data files
 		handlePriceAndPriceListAutoSet();
@@ -329,7 +310,6 @@ public class PurchaseOrder {
 
 	public void enterQtyEntered(String qty) {
 		page.waitForTimeout(1000);
-		log.info("Entering QtyEntered: [{}]", qty);
 		qtyEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		qtyEnteredInput.click();
 		qtyEnteredInput.fill(qty);
@@ -337,7 +317,6 @@ public class PurchaseOrder {
 		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(qtyEnteredInput, "QtyEntered", qty);
-		log.info("Entered QtyEntered: [{}] successfully.", qty);
 	}
 
 	public void enterQtyEntered() {
@@ -355,7 +334,6 @@ public class PurchaseOrder {
 	public void verifyPOQty(String expectedQty) {
 		qtyOrderedInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualQty = qtyOrderedInput.inputValue().trim();
-		log.info("Verifying POQty (QtyOrdered): Actual [{}], Expected [{}]", actualQty, expectedQty);
 
 		boolean isMatch = actualQty.equalsIgnoreCase(expectedQty.trim());
 		try {
@@ -412,7 +390,6 @@ public class PurchaseOrder {
 
 	public void enterPriceEntered(String price) {
 		page.waitForTimeout(1000);
-		log.info("Entering PriceEntered: [{}]", price);
 		priceEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		priceEnteredInput.click();
 		priceEnteredInput.press("Control+A");
@@ -421,7 +398,6 @@ public class PurchaseOrder {
 		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(priceEnteredInput, "PriceEntered", price);
-		log.info("Entered PriceEntered: [{}] successfully.", price);
 	}
 
 	public void enterPriceEntered() {
@@ -430,7 +406,6 @@ public class PurchaseOrder {
 
 	public void enterPriceList(String priceList) {
 		page.waitForTimeout(1000);
-		log.info("Entering PriceList: [{}]", priceList);
 		priceListInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		priceListInput.click();
 		priceListInput.press("Control+A");
@@ -439,7 +414,6 @@ public class PurchaseOrder {
 		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(priceListInput, "PriceList", priceList);
-		log.info("Entered PriceList: [{}] successfully.", priceList);
 	}
 
 	public void enterPriceList() {
@@ -460,14 +434,10 @@ public class PurchaseOrder {
 		page.waitForTimeout(1500);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 
-		log.info("Checking if Price & List Price are auto-set after entering product...");
 		boolean priceAutoSet = isPriceAutoPopulated(priceEnteredInput);
 		if (!priceAutoSet) {
 			String priceEntered = DataManager.getData("priceEntered");
-			log.info("PriceEntered is not auto-set. Filling from test data: [{}]", priceEntered);
 			enterPriceEntered(priceEntered);
-		} else {
-			log.info("PriceEntered is auto-set: [{}]", priceEnteredInput.inputValue().trim());
 		}
 
 		boolean priceListAutoSet = isPriceAutoPopulated(priceListInput);
@@ -478,21 +448,16 @@ public class PurchaseOrder {
 			} catch (Exception e) {
 				priceListVal = DataManager.getData("priceEntered");
 			}
-			log.info("PriceList is not auto-set. Filling from test data: [{}]", priceListVal);
 			enterPriceList(priceListVal);
-		} else {
-			log.info("PriceList is auto-set: [{}]", priceListInput.inputValue().trim());
 		}
 	}
 
 	public void verifyPriceEntered(String expectedPrice) {
 		priceEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		if (!isPriceAutoPopulated(priceEnteredInput)) {
-			log.info("PriceEntered not auto-set before verification. Filling from test data: [{}]", expectedPrice);
 			enterPriceEntered(expectedPrice);
 		}
 		String actualPrice = priceEnteredInput.inputValue().trim();
-		log.info("Verifying PriceEntered: Actual [{}], Expected [{}]", actualPrice, expectedPrice);
 
 		boolean isMatch = actualPrice.equalsIgnoreCase(expectedPrice.trim());
 		try {
@@ -523,7 +488,6 @@ public class PurchaseOrder {
 
 	public void selectTax(String taxName) {
 		page.waitForTimeout(1000);
-		log.info("Selecting Tax: [{}]", taxName);
 		taxInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		taxInput.click();
 		taxInput.fill(taxName);
@@ -531,7 +495,6 @@ public class PurchaseOrder {
 		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(taxInput, "Tax", taxName);
-		log.info("Selected Tax: [{}]", taxName);
 	}
 
 	public void selectTax() {
@@ -547,11 +510,9 @@ public class PurchaseOrder {
 	public void verifyPriceList(String expectedPriceList) {
 		priceListInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		if (!isPriceAutoPopulated(priceListInput)) {
-			log.info("PriceList not auto-set before verification. Filling from test data: [{}]", expectedPriceList);
 			enterPriceList(expectedPriceList);
 		}
 		String actualPriceList = priceListInput.inputValue().trim();
-		log.info("Verifying PriceList: Actual [{}], Expected [{}]", actualPriceList, expectedPriceList);
 
 		boolean isMatch = actualPriceList.equalsIgnoreCase(expectedPriceList.trim());
 		try {
@@ -591,7 +552,6 @@ public class PurchaseOrder {
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		lineNetAmtInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualAmtStr = lineNetAmtInput.inputValue().trim();
-		log.info("Verifying LineNetAmt (ListPrice): [{}]", actualAmtStr);
 
 		double price = 0.0;
 		double qty = 0.0;
@@ -668,7 +628,6 @@ public class PurchaseOrder {
 	}
 
 	public void navigateBackOnPoHeader() {
-		log.info("Navigating back to Purchase Order header tab...");
 		poHeaderBreadcrumb
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poHeaderBreadcrumb.click();
@@ -819,11 +778,9 @@ public class PurchaseOrder {
 				found = true;
 			}
 			if (found) {
-				log.info("Dynamically extracted tax rate [{}%] from taxType: [{}]", totalPercent, taxStr);
 				return totalPercent;
 			}
 		}
-		log.info("No percentage found in taxType [{}], defaulting tax rate to 0.0%", taxStr);
 		return 0.0;
 	}
 
@@ -835,7 +792,6 @@ public class PurchaseOrder {
 	public void verifyHeaderTotalLineAmt(double expectedLineAmt) {
 		TotalLinesAmt.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualStr = TotalLinesAmt.inputValue().trim();
-		log.info("Verifying Header TotalLinesAmt: Actual [{}], Expected PO Line Amount [{}]", actualStr, expectedLineAmt);
 
 		boolean isMatch = false;
 		double actualAmt = 0.0;
@@ -873,7 +829,6 @@ public class PurchaseOrder {
 	public void verifyHeaderGrandTotalAmt(double expectedGrandTotal) {
 		GrandTotalAmt.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualStr = GrandTotalAmt.inputValue().trim();
-		log.info("Verifying Header GrandTotalAmt: Actual [{}], Expected [{}]", actualStr, expectedGrandTotal);
 
 		boolean isMatch = false;
 		double actualAmt = 0.0;
@@ -904,7 +859,6 @@ public class PurchaseOrder {
 		double taxRate = getTaxPercentage();
 		double taxAmt = (lineAmt * taxRate) / 100.0;
 		double expectedGrandTotal = lineAmt + taxAmt;
-		log.info("Calculating expected GrandTotal: LineAmt [{}] + Tax [{}% = {}] = [{}]", lineAmt, taxRate, taxAmt, expectedGrandTotal);
 		verifyHeaderGrandTotalAmt(expectedGrandTotal);
 	}
 

@@ -104,7 +104,6 @@ public class ClientAndRoleSelection {
 				} else {
 					tenantInputField.press("Tab");
 				}
-				log.info("Selected Client: [{}]", client);
 			} catch (Exception e) {
 				log.warn("Exception during client selection: {}, attempting Tab fallback", e.getMessage());
 				try {
@@ -112,8 +111,6 @@ public class ClientAndRoleSelection {
 				} catch (Exception ignored) {
 				}
 			}
-		} else {
-			log.info("Client selection skipped or disabled for Client [{}]. Disabled flag: [{}]", client, isClientDisabled);
 		}
 
 		// 2. Fill and select Role (if provided and field is not disabled)
@@ -136,7 +133,6 @@ public class ClientAndRoleSelection {
 				} else {
 					roleInputField.press("Tab");
 				}
-				log.info("Selected Role: [{}]", role);
 			} catch (Exception e) {
 				log.warn("Exception during role selection: {}, attempting Tab fallback", e.getMessage());
 				try {
@@ -144,15 +140,12 @@ public class ClientAndRoleSelection {
 				} catch (Exception ignored) {
 				}
 			}
-		} else {
-			log.info("Role dropdown is pre-set or disabled for Role: [{}]. Disabled flag: [{}]", role, isRoleDisabled);
 		}
 
 		// 3. Submit
 		okButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		okButton.click();
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-		log.info("Clicked OK button on Client & Role selection modal.");
 
 		// 4. Validate post-selection state
 		try {

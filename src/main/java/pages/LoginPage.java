@@ -118,32 +118,27 @@ public class LoginPage {
 		// 1. Enter username
 		usernameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		usernameInput.fill(user);
-		log.info("Entered username: [{}]", user);
 
 		// 2. Enter password
 		passwordInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		passwordInput.fill(pass);
-		log.info("Entered password.");
 
 		// 3. Ensure role checkbox is selected
 		selectRoleCheckbox
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(5000));
 		if (!selectRoleCheckbox.isChecked()) {
 			selectRoleCheckbox.check();
-			log.info("Checked 'Select Role' checkbox.");
 		}
 
 		rememberMeCheckbox
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(5000));
 		if (!rememberMeCheckbox.isChecked()) {
 			rememberMeCheckbox.check();
-			log.info("Checked 'Remember Me' checkbox.");
 		}
 
 		// 4. Click OK / Login submit button
 		okButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		okButton.click();
-		log.info("Clicked login submit button (OK).");
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 
 		// 5. Synchronize and validate post-login transition

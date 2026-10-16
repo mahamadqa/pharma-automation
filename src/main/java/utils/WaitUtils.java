@@ -47,7 +47,7 @@ public class WaitUtils {
 		try {
 			// If it appeared, wait until it disappears
 			loader.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.HIDDEN).setTimeout(30000));
-			log.info("Loading indicator disappeared.");
+			//log.info("Loading indicator disappeared.");
 		} catch (PlaywrightException e) {
 			log.warn("Loading indicator did not disappear within 30 seconds: {}", e.getMessage());
 		}
@@ -75,7 +75,7 @@ public class WaitUtils {
 		try {
 			// If it appeared, wait until it disappears
 			loader1.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.HIDDEN).setTimeout(30000));
-			log.info("Loading indicator disappeared.");
+			//log.info("Loading indicator disappeared.");
 		} catch (PlaywrightException e) {
 			log.warn("Big loading indicator did not disappear within 30 seconds: {}", e.getMessage());
 		}

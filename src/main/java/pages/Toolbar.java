@@ -49,7 +49,6 @@ public class Toolbar {
 	 * Clicks the Toolbar 'New' button to create a new record.
 	 */
 	public void createNewRecord() {
-		log.info("Creating a new record via Toolbar 'New' button...");
 		createNewButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		createNewButton.click();
 		page.waitForTimeout(1000);
@@ -60,7 +59,6 @@ public class Toolbar {
 	 * Clicks the Toolbar 'Save Changes' button to persist the current record.
 	 */
 	public void saveRecord() {
-		log.info("Saving changes via Toolbar 'Save' button...");
 		saveButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		saveButton.click();
 		page.waitForTimeout(1000);
@@ -73,31 +71,26 @@ public class Toolbar {
 		closeWindow.click();
 		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-		log.info("Record saved successfully.");
 	}
 
 	/**
 	 * Toggles between Form View and Grid View on the main window.
 	 */
 	public void clickOnGrid() {
-		log.info("Toggling Form/Grid View via Toolbar...");
 		gridViewButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		gridViewButton.click();
 		page.waitForTimeout(1000);
-		log.info("Toggled Grid View.");
 	}
 
 	/**
 	 * Toggles between Form View and Grid View on the active subtab (detail pane).
 	 */
 	public void clickOnSubtabGrid() {
-		log.info("Toggling Subtab Form/Grid View via subtab toolbar (Shift+Alt+T)...");
 		Locator toggleBtn = page.locator("(//div[contains(@class,'z-tabpanel') and not(contains(@style,'display: none')) and not(contains(@style,'display:none'))]//a[contains(@title,'Shift+Alt+T')])[1]");
 		toggleBtn.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		toggleBtn.click();
 		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-		log.info("Toggled Subtab Grid View.");
 	}
 
 	/**
@@ -105,20 +98,15 @@ public class Toolbar {
 	 * clicks Grid Toggle (Shift+Alt+T) to switch to normal Form View.
 	 */
 	public void ensureSubtabFormView() {
-		log.info("Checking if active subtab is in Grid View...");
 		try {
 			Locator formView = page.locator("//div[contains(@class,'z-tabpanel') and not(contains(@style,'display: none')) and not(contains(@style,'display:none'))]//div[contains(@class,'adwindow-form')]");
 			Locator toggleBtn = page.locator("(//div[contains(@class,'z-tabpanel') and not(contains(@style,'display: none')) and not(contains(@style,'display:none'))]//a[contains(@title,'Shift+Alt+T')])[1]");
 			if (toggleBtn.isVisible()) {
 				boolean isFormVisible = formView.count() > 0 && formView.first().isVisible();
 				if (!isFormVisible) {
-					log.info("Subtab is in Grid View by default. Clicking Grid Toggle (Shift+Alt+T) to view normally...");
 					toggleBtn.click();
 					page.waitForTimeout(1000);
 					WaitUtils.waitForLoadingIndicatorToDisappear(page);
-					log.info("Subtab successfully switched to normal Form View.");
-				} else {
-					log.info("Subtab is already displaying normally in Form View.");
 				}
 			}
 		} catch (Exception e) {
@@ -130,11 +118,9 @@ public class Toolbar {
 	 * Clicks the Toolbar 'Preview' button to open report preview.
 	 */
 	public void clickOnPreviewButton() {
-		log.info("Clicking on Toolbar 'Preview' button...");
 		previewButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		previewButton.click();
 		page.waitForTimeout(1000);
-		log.info("Preview button clicked.");
 	}
 
 	/**
@@ -153,7 +139,6 @@ public class Toolbar {
 		searchOkButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		searchOkButton.click();
 		page.waitForTimeout(1000);
-		log.info("Lookup submitted for Document No: [{}]", docNo);
 	}
 
 	public void performDocAction(String action) {

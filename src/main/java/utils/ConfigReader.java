@@ -12,21 +12,14 @@ public class ConfigReader {
 	public static Properties initProp() {
 		prop = new Properties();
 		try {
-			// FileInputStream configFile = new
-			// FileInputStream("src/test/resources/config.properties");
-			// FileInputStream loginCred = new
-			// FileInputStream("src/test/resources/loginCredentials.properties");
-
 			FileInputStream configFile = new FileInputStream(
 					System.getProperty("user.dir") + "/src/test/resources/config.properties");
 			FileInputStream loginCred = new FileInputStream(
 					System.getProperty("user.dir") + "/src/test/resources/loginCredentials.properties");
-			FileInputStream Hersteller = new FileInputStream(
-					System.getProperty("user.dir") + "/src/test/resources/Hersteller.properties");
 
 			prop.load(configFile);
 			prop.load(loginCred);
-			prop.load(Hersteller);
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

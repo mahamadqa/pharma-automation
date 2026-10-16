@@ -70,7 +70,6 @@ public class WorkflowActivities {
 	 * Clicks the Zoom button to zoom into the selected workflow record.
 	 */
 	public void zoomToRecord() {
-		log.info("Clicking on Zoom button...");
 		zoomButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		zoomButton.click();
 		log.info("Zoom button clicked successfully.");

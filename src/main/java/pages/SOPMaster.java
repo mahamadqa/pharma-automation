@@ -33,7 +33,6 @@ public class SOPMaster {
 	 * Navigates to the Annexure tab in SOP Master.
 	 */
 	public void goToAnnexureTab() {
-		log.info("Navigating to 'Annexure' tab...");
 		annexureTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		annexureTab.click();
 		log.info("Opened 'Annexure' tab.");
@@ -43,7 +42,6 @@ public class SOPMaster {
 	 * Navigates to the SOP Formats tab in SOP Master.
 	 */
 	public void goToSOPFormatTab() {
-		log.info("Navigating to 'SOP Formats' tab...");
 		formatTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		formatTab.click();
 		log.info("Opened 'SOP Formats' tab.");

@@ -42,7 +42,6 @@ public class Dashboard {
 	public void verifyLoginDetails() {
 		usernameLabel.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualDetails = usernameLabel.innerText().trim();
-		log.info("Desktop header displayed user details: [{}]", actualDetails);
 
 		if (loginPage != null && loginPage.UserName != null) {
 			Assert.assertTrue(actualDetails.contains(loginPage.UserName),
@@ -81,7 +80,6 @@ public class Dashboard {
 		try {
 			menuItem.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 			menuItem.first().click();
-			log.info("Clicked on menu item [{}]", menuName);
 		} catch (Exception e) {
 			log.warn("Menu item [{}] not visible after wait, pressing Enter: {}", menuName, e.getMessage());
 			menuSearchInput.press("Enter");
@@ -103,7 +101,6 @@ public class Dashboard {
 	 * Clicks the Logout button and waits for the login screen to return.
 	 */
 	public void clickLogout() {
-		log.info("Logging out current user...");
 		logoutButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		logoutButton.click();
 
@@ -120,10 +117,8 @@ public class Dashboard {
 	 * Closes the currently active window tab.
 	 */
 	public void closeWindow() {
-		log.info("Closing active window tab...");
 		windowCloseIcon.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		windowCloseIcon.click();
-		log.info("Closed active window tab.");
 	}
 
 }

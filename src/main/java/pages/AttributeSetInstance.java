@@ -94,7 +94,6 @@ public class AttributeSetInstance {
 	public void verifyAttributeSetInstanceWindowOpened() {
 		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-		log.info("Verifying that Attribute Set Instance window is opened...");
 		
 		asiTabHeader.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
 		boolean isOpened = asiTabHeader.isVisible();
@@ -115,9 +114,7 @@ public class AttributeSetInstance {
 	 */
 	public String getDescription() {
 		descriptionInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		String value = descriptionInput.inputValue().trim();
-		log.info("Retrieved Attribute Set Instance Description: [{}]", value);
-		return value;
+		return descriptionInput.inputValue().trim();
 	}
 
 	/**
@@ -129,7 +126,6 @@ public class AttributeSetInstance {
 	public void verifyDescription(String expectedASI) {
 		page.waitForTimeout(1000);
 		String actualDescription = getDescription();
-		log.info("Matching Description: Actual [{}], Expected [{}]", actualDescription, expectedASI);
 
 		boolean isMatch = actualDescription.equalsIgnoreCase(expectedASI.trim())
 				|| actualDescription.contains(expectedASI.trim())
@@ -158,7 +154,6 @@ public class AttributeSetInstance {
 	 */
 	public void clickOnLocatedAtTab() {
 		page.waitForTimeout(1000);
-		log.info("Clicking on 'Located At' subtab...");
 		locatedAtTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		locatedAtTab.click();
 		page.waitForTimeout(2000);
@@ -177,7 +172,6 @@ public class AttributeSetInstance {
 			page.waitForTimeout(1000);
 			boolean isProductVisible = locatedAtProductInput.count() > 0 && locatedAtProductInput.first().isVisible();
 			if (!isProductVisible) {
-				log.info("'Located At' subtab is in Grid View. Toggling to Form View (Shift+Alt+T)...");
 				if (subtabGridToggle.count() > 0 && subtabGridToggle.first().isVisible()) {
 					subtabGridToggle.first().click();
 				} else {
@@ -185,9 +179,6 @@ public class AttributeSetInstance {
 				}
 				page.waitForTimeout(1500);
 				WaitUtils.waitForLoadingIndicatorToDisappear(page);
-				log.info("Switched 'Located At' subtab to Form View.");
-			} else {
-				log.info("'Located At' subtab is already in Form View.");
 			}
 		} catch (Exception e) {
 			log.warn("Could not check/toggle Located At subtab grid view: {}", e.getMessage());
@@ -201,9 +192,7 @@ public class AttributeSetInstance {
 	 */
 	public String getProduct() {
 		locatedAtProductInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		String value = locatedAtProductInput.inputValue().trim();
-		log.info("Retrieved Located At Product: [{}]", value);
-		return value;
+		return locatedAtProductInput.inputValue().trim();
 	}
 
 	/**
@@ -214,7 +203,6 @@ public class AttributeSetInstance {
 	public void verifyProduct(String expectedProduct) {
 		page.waitForTimeout(1000);
 		String actualProduct = getProduct();
-		log.info("Verifying Located At Product: Actual [{}], Expected [{}]", actualProduct, expectedProduct);
 
 		boolean isMatch = actualProduct.equalsIgnoreCase(expectedProduct.trim())
 				|| actualProduct.contains(expectedProduct.trim())
@@ -241,9 +229,7 @@ public class AttributeSetInstance {
 	 */
 	public String getQtyOnHand() {
 		qtyOnHandInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		String value = qtyOnHandInput.inputValue().trim();
-		log.info("Retrieved Located At On Hand Quantity: [{}]", value);
-		return value;
+		return qtyOnHandInput.inputValue().trim();
 	}
 
 	/**
@@ -254,8 +240,6 @@ public class AttributeSetInstance {
 	public void verifyQtyOnHand(String expectedMovementQty) {
 		page.waitForTimeout(1000);
 		String actualQtyOnHand = getQtyOnHand();
-		log.info("Verifying On Hand Qty == Movement Qty: Actual [{}], Expected Movement Qty [{}]",
-				actualQtyOnHand, expectedMovementQty);
 
 		boolean isMatch = actualQtyOnHand.equalsIgnoreCase(expectedMovementQty.trim());
 		try {
@@ -290,7 +274,6 @@ public class AttributeSetInstance {
 	 */
 	public void clickOnCostTab() {
 		page.waitForTimeout(1000);
-		log.info("Clicking on 'Cost' subtab in Attribute Set Instance...");
 
 		// If not on ASI tab, click ASI tab header
 		if (asiTabHeader.count() > 0 && asiTabHeader.first().isVisible()) {
@@ -321,7 +304,6 @@ public class AttributeSetInstance {
 			page.waitForTimeout(1000);
 			boolean isFormVisible = costingMethodInput.count() > 0 && costingMethodInput.first().isVisible();
 			if (!isFormVisible) {
-				log.info("'Cost' subtab is in Grid View. Toggling to Form View (Shift+Alt+T)...");
 				if (subtabGridToggle.count() > 0 && subtabGridToggle.first().isVisible()) {
 					subtabGridToggle.first().click();
 				} else {
@@ -329,9 +311,6 @@ public class AttributeSetInstance {
 				}
 				page.waitForTimeout(1500);
 				WaitUtils.waitForLoadingIndicatorToDisappear(page);
-				log.info("Switched 'Cost' subtab to Form View.");
-			} else {
-				log.info("'Cost' subtab is already in Form View.");
 			}
 		} catch (Exception e) {
 			log.warn("Could not check/toggle Cost subtab grid view: {}", e.getMessage());
@@ -345,9 +324,7 @@ public class AttributeSetInstance {
 	 */
 	public String getCostingMethod() {
 		costingMethodInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		String value = costingMethodInput.inputValue().trim();
-		log.info("Retrieved Costing Method: [{}]", value);
-		return value;
+		return costingMethodInput.inputValue().trim();
 	}
 
 	/**
@@ -361,7 +338,6 @@ public class AttributeSetInstance {
 
 		ensureCostFormView();
 		String currentMethod = getCostingMethod();
-		log.info("Initial Costing Method: [{}]", currentMethod);
 
 		int maxAttempts = 5;
 		int attempts = 0;
@@ -369,7 +345,6 @@ public class AttributeSetInstance {
 				&& !currentMethod.toLowerCase().contains(targetCostingMethod.toLowerCase().trim())
 				&& attempts < maxAttempts) {
 			attempts++;
-			log.info("Current Costing Method is [{}], clicking Next record (Attempt {})...", currentMethod, attempts);
 
 			Locator nextBtn = page.locator("//div[contains(@class,'adwindow-detailpane') and not(contains(@style,'display: none'))]//a[contains(@title,'Next record')]");
 			if (nextBtn.count() > 0 && nextBtn.first().isVisible() && !Boolean.TRUE.equals(nextBtn.first().isDisabled())) {
@@ -401,9 +376,7 @@ public class AttributeSetInstance {
 	 */
 	public String getAccumulatedAmt() {
 		accumulatedAmtInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		String value = accumulatedAmtInput.inputValue().trim();
-		log.info("Retrieved Accumulated Amount: [{}]", value);
-		return value;
+		return accumulatedAmtInput.inputValue().trim();
 	}
 
 	/**
@@ -414,7 +387,6 @@ public class AttributeSetInstance {
 	public void verifyAccumulatedAmt(String expectedAmt) {
 		page.waitForTimeout(1000);
 		String actualAmt = getAccumulatedAmt();
-		log.info("Verifying Accumulated Amount: Actual [{}], Expected [{}]", actualAmt, expectedAmt);
 
 		boolean isMatch = actualAmt.equalsIgnoreCase(expectedAmt.trim());
 		try {
@@ -445,7 +417,6 @@ public class AttributeSetInstance {
 	 * Closes the Attribute Set Instance window tab.
 	 */
 	public void closeWindow() {
-		log.info("Closing Attribute Set Instance window...");
 		if (closeWindowButton.count() > 0 && closeWindowButton.first().isVisible()) {
 			closeWindowButton.first().click();
 		} else {
