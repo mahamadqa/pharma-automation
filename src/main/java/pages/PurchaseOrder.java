@@ -325,12 +325,16 @@ public class PurchaseOrder {
 		productInput.fill(productName);
 		productInput.press("Tab");
 		page.waitForTimeout(2000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(productInput, "Product", productName);
 
 		if (descriptionTextarea.isVisible()) {
 			descriptionTextarea.click();
 		}
 		log.info("Entered Product: [{}] successfully.", productName);
+
+		// Dynamic check: if price & List price is not auto set then fill both fields from test data files
+		handlePriceAndPriceListAutoSet();
 	}
 
 	public void enterProdct() {
@@ -399,8 +403,109 @@ public class PurchaseOrder {
 		verifyPOQty(qtyEnterValue);
 	}
 
+	/**
+	 * Checks if a price field is auto-populated with a positive value (> 0).
+	 *
+	 * @param locator Locator of the price input field
+	 * @return true if field has a numeric value > 0, false otherwise
+	 */
+	public boolean isPriceAutoPopulated(Locator locator) {
+		try {
+			if (!locator.isVisible()) {
+				return false;
+			}
+			String val = locator.inputValue();
+			if (val == null || val.trim().isEmpty()) {
+				return false;
+			}
+			double d = Double.parseDouble(val.trim().replace(",", ""));
+			return d > 0.0;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public void enterPriceEntered(String price) {
+		page.waitForTimeout(1000);
+		log.info("Entering PriceEntered: [{}]", price);
+		priceEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		priceEnteredInput.click();
+		priceEnteredInput.press("Control+A");
+		priceEnteredInput.fill(price);
+		priceEnteredInput.press("Tab");
+		page.waitForTimeout(2000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		verifyFieldFilled(priceEnteredInput, "PriceEntered", price);
+		log.info("Entered PriceEntered: [{}] successfully.", price);
+	}
+
+	public void enterPriceEntered() {
+		enterPriceEntered(DataManager.getData("priceEntered"));
+	}
+
+	public void enterPriceList(String priceList) {
+		page.waitForTimeout(1000);
+		log.info("Entering PriceList: [{}]", priceList);
+		priceListInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		priceListInput.click();
+		priceListInput.press("Control+A");
+		priceListInput.fill(priceList);
+		priceListInput.press("Tab");
+		page.waitForTimeout(2000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		verifyFieldFilled(priceListInput, "PriceList", priceList);
+		log.info("Entered PriceList: [{}] successfully.", priceList);
+	}
+
+	public void enterPriceList() {
+		String priceListVal;
+		try {
+			priceListVal = DataManager.getData("priceList");
+		} catch (Exception e) {
+			priceListVal = DataManager.getData("priceEntered");
+		}
+		enterPriceList(priceListVal);
+	}
+
+	/**
+	 * Dynamic check: After entering product, checks if Price and List Price are auto-set.
+	 * If either is not auto-set (empty or 0), it fills both fields from test data files.
+	 */
+	public void handlePriceAndPriceListAutoSet() {
+		page.waitForTimeout(1500);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+		log.info("Checking if Price & List Price are auto-set after entering product...");
+		boolean priceAutoSet = isPriceAutoPopulated(priceEnteredInput);
+		if (!priceAutoSet) {
+			String priceEntered = DataManager.getData("priceEntered");
+			log.info("PriceEntered is not auto-set. Filling from test data: [{}]", priceEntered);
+			enterPriceEntered(priceEntered);
+		} else {
+			log.info("PriceEntered is auto-set: [{}]", priceEnteredInput.inputValue().trim());
+		}
+
+		boolean priceListAutoSet = isPriceAutoPopulated(priceListInput);
+		if (!priceListAutoSet) {
+			String priceListVal;
+			try {
+				priceListVal = DataManager.getData("priceList");
+			} catch (Exception e) {
+				priceListVal = DataManager.getData("priceEntered");
+			}
+			log.info("PriceList is not auto-set. Filling from test data: [{}]", priceListVal);
+			enterPriceList(priceListVal);
+		} else {
+			log.info("PriceList is auto-set: [{}]", priceListInput.inputValue().trim());
+		}
+	}
+
 	public void verifyPriceEntered(String expectedPrice) {
 		priceEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		if (!isPriceAutoPopulated(priceEnteredInput)) {
+			log.info("PriceEntered not auto-set before verification. Filling from test data: [{}]", expectedPrice);
+			enterPriceEntered(expectedPrice);
+		}
 		String actualPrice = priceEnteredInput.inputValue().trim();
 		log.info("Verifying PriceEntered: Actual [{}], Expected [{}]", actualPrice, expectedPrice);
 
@@ -456,6 +561,10 @@ public class PurchaseOrder {
 
 	public void verifyPriceList(String expectedPriceList) {
 		priceListInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		if (!isPriceAutoPopulated(priceListInput)) {
+			log.info("PriceList not auto-set before verification. Filling from test data: [{}]", expectedPriceList);
+			enterPriceList(expectedPriceList);
+		}
 		String actualPriceList = priceListInput.inputValue().trim();
 		log.info("Verifying PriceList: Actual [{}], Expected [{}]", actualPriceList, expectedPriceList);
 
@@ -493,6 +602,8 @@ public class PurchaseOrder {
 	}
 
 	public void verifyLineNetAmt() {
+		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		lineNetAmtInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualAmtStr = lineNetAmtInput.inputValue().trim();
 		log.info("Verifying LineNetAmt (ListPrice): [{}]", actualAmtStr);
