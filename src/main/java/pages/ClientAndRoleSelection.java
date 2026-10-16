@@ -156,7 +156,7 @@ public class ClientAndRoleSelection {
 
 		// 4. Validate post-selection state
 		try {
-			page.waitForTimeout(2000);
+			page.waitForTimeout(3000);
 			desktopHeader.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(25000));
 			SoftAssert sa = base.BaseTest.getSoftAssert();
 			boolean headerVisible = desktopHeader.isVisible();

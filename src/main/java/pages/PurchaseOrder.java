@@ -165,131 +165,29 @@ public class PurchaseOrder {
 	 * Robustly handles cases where the searched option takes time to display or server responses are delayed.
 	 */
 	public void navigateToPOWindow() {
-		page.waitForTimeout(1000);
 		log.info("Navigating to Purchase Order window...");
+		poMenuSearchInput.fill("Purchase Order");
 
-		try {
-			poMenuSearchInput
-					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-			poMenuSearchInput.click();
-			poMenuSearchInput.fill("");
-			page.waitForTimeout(300);
-			poMenuSearchInput.fill("Purchase Order");
-		} catch (Exception e) {
-			log.warn("Exception while focusing/filling PO menu search input: {}", e.getMessage());
-			try {
-				poMenuSearchInput.fill("Purchase Order");
-			} catch (Exception ignored) {
-			}
-		}
+		// Simply wait for 3 to 10 sec after providing input in search field
+		page.waitForTimeout(5000);
 
-		page.waitForTimeout(1000);
-		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-
-		// Robust wait loop for searched option to display (handles slow response/delays)
 		Locator targetItem = searchPOWindowItem.first();
-		boolean optionDisplayed = false;
-		long searchTimeout = 10000; // Allow up to 30s as option sometimes takes time to display
-		long searchStart = System.currentTimeMillis();
-
-		while (System.currentTimeMillis() - searchStart < searchTimeout) {
-			try {
-				WaitUtils.waitForLoadingIndicatorToDisappear(page);
-				if (targetItem.isVisible()) {
-					optionDisplayed = true;
-					log.info("Searched Purchase Order option displayed after [{}] ms.",
-							System.currentTimeMillis() - searchStart);
-					break;
-				}
-			} catch (Exception ignored) {
-			}
-
-			// If it takes longer than 5s, press Enter or re-fill in case the search event was not triggered
-			long elapsed = System.currentTimeMillis() - searchStart;
-			if (elapsed > 5000 && elapsed % 5000 < 600) {
-				try {
-					log.info("Searched option taking time to display (elapsed: {} ms). Re-triggering search bandbox...",
-							elapsed);
-					poMenuSearchInput.press("Enter");
-				} catch (Exception ignored) {
-				}
-			}
-
-			page.waitForTimeout(500);
-		}
-
-		if (!optionDisplayed) {
-			log.warn("Searched PO option was not detected via polling, attempting explicit waitFor...");
-			try {
-				targetItem.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-				optionDisplayed = true;
-			} catch (Exception e) {
-				log.warn("PO option still not visible after explicit wait: {}", e.getMessage());
-			}
-		}
-
-		// Click the searched '+' item safely
-		boolean clicked = false;
-		for (int attempt = 1; attempt <= 3; attempt++) {
-			try {
-				if (targetItem.isVisible()) {
-					log.info("Clicking '+' on searched Purchase Order option (Attempt {})...", attempt);
-					targetItem.click(new Locator.ClickOptions().setTimeout(5000));
-					clicked = true;
-					break;
-				}
-			} catch (Exception e) {
-				log.warn("Click attempt {} on searched PO option failed: {}", attempt, e.getMessage());
-				page.waitForTimeout(1000);
-			}
-		}
-
-		if (!clicked) {
-			try {
-				log.info("Attempting fallback force click on searched PO option...");
-				targetItem.click(new Locator.ClickOptions().setForce(true).setTimeout(5000));
-			} catch (Exception e) {
-				log.warn("Fallback click on searched PO option threw exception: {}", e.getMessage());
-			}
+		try {
+			targetItem.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+			targetItem.click();
+			log.info("Clicked on '+' on searched Purchase Order option.");
+		} catch (Exception e) {
+			log.warn("Searched PO item not visible after wait, pressing Enter: {}", e.getMessage());
+			poMenuSearchInput.press("Enter");
 		}
 
 		// Wait for Purchase Order window (orgInput) to open
-		// Avoid repeated clicking on targetItem if it's already detached/closed!
-		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-		WaitUtils.waitForBigLoadingIndicatorToDisappear(page);
-
-		long openTimeout = 25000;
-		long openStart = System.currentTimeMillis();
-		while (System.currentTimeMillis() - openStart < openTimeout) {
-			try {
-				WaitUtils.waitForLoadingIndicatorToDisappear(page);
-				if (orgInput.isVisible()) {
-					break;
-				}
-			} catch (Exception ignored) {
-			}
-
-			// Only retry clicking if the window is NOT open AND the option is STILL visible in DOM
-			try {
-				if (targetItem.isVisible()) {
-					log.info("Purchase Order window not opened yet, clicking '+' again safely...");
-					targetItem.click(new Locator.ClickOptions().setTimeout(2000));
-				}
-			} catch (Exception ignored) {
-			}
-
-			page.waitForTimeout(500);
-		}
-
 		try {
-			orgInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+			orgInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(25000));
+			log.info("Opened Purchase Order window successfully.");
 		} catch (Exception e) {
 			log.warn("Waiting for orgInput visible timed out: {}", e.getMessage());
 		}
-
-		page.waitForTimeout(1000);
-		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-		log.info("Opened Purchase Order window successfully.");
 	}
 
 	public void selectOrg(String orgName) {

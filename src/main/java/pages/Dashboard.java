@@ -70,66 +70,20 @@ public class Dashboard {
 	 */
 	public void menuSearchandNavigateToWindow(String menuName) {
 		log.info("Searching and navigating to menu window: [{}]", menuName);
-		try {
-			menuSearchInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
-			menuSearchInput.click();
-			menuSearchInput.fill("");
-			page.waitForTimeout(300);
-			menuSearchInput.fill(menuName);
-		} catch (Exception e) {
-			log.warn("Exception focusing/filling menuSearchInput: {}", e.getMessage());
-			try {
-				menuSearchInput.fill(menuName);
-			} catch (Exception ignored) {
-			}
-		}
+		menuSearchInput.fill(menuName);
 
-		page.waitForTimeout(1000);
-		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		// Simply wait for 3 to 10 sec after providing input
+		page.waitForTimeout(5000);
 
 		Locator menuItem = page.locator(
-				"//div[@class='z-listcell-content']//span[text()='" + menuName + "'] | //td[contains(.,'" + menuName + "')]");
-		boolean itemFound = false;
-		long timeout = 30000; // Allow up to 30s as option sometimes takes time to display
-		long start = System.currentTimeMillis();
-
-		while (System.currentTimeMillis() - start < timeout) {
-			try {
-				WaitUtils.waitForLoadingIndicatorToDisappear(page);
-				if (menuItem.first().isVisible()) {
-					itemFound = true;
-					log.info("Menu item [{}] displayed after [{}] ms.", menuName, System.currentTimeMillis() - start);
-					break;
-				}
-			} catch (Exception ignored) {
-			}
-
-			long elapsed = System.currentTimeMillis() - start;
-			if (elapsed > 5000 && elapsed % 5000 < 600) {
-				try {
-					log.info("Menu search taking time to display [{}], pressing Enter...", menuName);
-					menuSearchInput.press("Enter");
-				} catch (Exception ignored) {
-				}
-			}
-
-			page.waitForTimeout(500);
-		}
-
-		if (itemFound) {
-			try {
-				menuItem.first().click(new Locator.ClickOptions().setTimeout(5000));
-			} catch (Exception e) {
-				log.warn("Clicking menu item [{}] threw exception: {}, trying force click...", menuName, e.getMessage());
-				try {
-					menuItem.first().click(new Locator.ClickOptions().setForce(true).setTimeout(3000));
-				} catch (Exception e2) {
-					menuSearchInput.press("Enter");
-				}
-			}
-		} else {
-			log.warn("Menu item [{}] not found in dropdown after [{}] ms, pressing Enter as fallback...", menuName,
-					timeout);
+				"//div[@class='z-listcell-content']//span[text()='" + menuName + "'] | //td[contains(.,'" + menuName
+						+ "')]");
+		try {
+			menuItem.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+			menuItem.first().click();
+			log.info("Clicked on menu item [{}]", menuName);
+		} catch (Exception e) {
+			log.warn("Menu item [{}] not visible after wait, pressing Enter: {}", menuName, e.getMessage());
 			menuSearchInput.press("Enter");
 		}
 
@@ -137,7 +91,8 @@ public class Dashboard {
 		Locator openedTab = page.locator("//li[contains(@class,'z-tab')]//span[text()='" + menuName
 				+ "'] | //li[contains(@class,'z-tab')]//span[contains(text(),'" + menuName + "')]");
 		try {
-			openedTab.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(20000));
+			openedTab.first()
+					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
 			log.info("Navigated to [{}] Window successfully.", menuName);
 		} catch (Exception e) {
 			log.warn("Opened tab for [{}] was not immediately visible, continuing: {}", menuName, e.getMessage());
