@@ -24,6 +24,7 @@ import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 
+import pages.AttributeSetInstance;
 import pages.ClientAndRoleSelection;
 import pages.Dashboard;
 import pages.GoodsReceiptNote;
@@ -69,6 +70,7 @@ public class BaseTest {
 	protected WorkflowActivities workflowActivities;
 	protected PurchaseOrder purchaseOrder;
 	protected GoodsReceiptNote goodsReceiptNote;
+	protected AttributeSetInstance attributeSetInstance;
 
 	protected static ExtentReports extent;
 	protected static ExtentSparkReporter sparkReporter;
@@ -189,6 +191,7 @@ public class BaseTest {
 		dashboard = new Dashboard(page, loginPage, clientAndRole);
 		purchaseOrder = new PurchaseOrder(page);
 		goodsReceiptNote = new GoodsReceiptNote(page);
+		attributeSetInstance = new AttributeSetInstance(page);
 		workflowActivities = new WorkflowActivities(page);
 		hTMLPreview = new HTMLReportsPreview(page);
 		sopMaster = new SOPMaster(page);

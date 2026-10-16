@@ -6,6 +6,7 @@ import org.testng.annotations.Test;
 
 import base.BaseTest;
 import utils.ConfigReader;
+import utils.DataManager;
 
 /**
  * End-to-end test flow:
@@ -126,7 +127,55 @@ public class CreateGRNFromPOFlow extends BaseTest {
 
 		toolbar.performDocAction("Complete");
 		toolbar.verifyDocStatus("Completed");
-		
+
+		// Step 10: Click on Posted button on GRN window & verify Accounted Debit == Accounted Credit
+		log.info("Step 10: Clicking on 'Posted' button on Goods Receipt Note...");
+		goodsReceiptNote.clickPostedButton();
+		goodsReceiptNote.verifyPostedDebitEqualsCredit();
+		String postedAmt = goodsReceiptNote.getPostedAmount();
+		log.info("Step 10: Verified Posted Debit and Credit amounts are equal: [{}]", postedAmt);
+		goodsReceiptNote.closePostingWindow();
+
+		// Step 11: After completing doc action for GRN, go to Receipt Line tab
+		log.info("Step 11: Navigating to Receipt Line tab after completing GRN doc action...");
+		goodsReceiptNote.clickOnReceiptLineTab();
+
+		// 1. Get the Movement Quantity & store it
+		String movementQty = goodsReceiptNote.getMovementQty();
+		log.info("Step 11.1: Retrieved & stored Movement Quantity: [{}]", movementQty);
+
+		// Store Receipt Line's Attribute Set Instance field text
+		String receiptLineASI = goodsReceiptNote.getAttributeSetInstanceText();
+		log.info("Step 11.1: Retrieved & stored Receipt Line Attribute Set Instance field value: [{}]", receiptLineASI);
+
+		// 2. Do right click on Attribute Set Instance & click on Zoom option
+		log.info("Step 11.2: Right clicking on Attribute Set Instance field and clicking on Zoom option...");
+		goodsReceiptNote.zoomOnAttributeSetInstance();
+
+		// 3. Verify Attribute Set Instance window is opened & match description with receipt line's Attribute Set Instance field
+		log.info("Step 11.3: Verifying Attribute Set Instance window is opened & matching Description...");
+		attributeSetInstance.verifyAttributeSetInstanceWindowOpened();
+		attributeSetInstance.verifyDescription(receiptLineASI);
+
+		// 4. Go to Located At subtab, verify product field & On hand qty = Movement qty from GRN Receipt Line
+		log.info("Step 11.4: Navigating to Located At subtab and verifying Product and On Hand Quantity...");
+		attributeSetInstance.clickOnLocatedAtTab();
+		attributeSetInstance.verifyProduct(DataManager.getData("product"));
+		attributeSetInstance.verifyQtyOnHand(movementQty);
+		attributeSetInstance.navigateBackToheader();
+
+		// Step 12: In Attribute Set Instance, go to Cost subtab & navigate to the record having Average PO as costing method
+		log.info("Step 12: Navigating to Cost subtab in Attribute Set Instance and locating 'Average PO' record...");
+		attributeSetInstance.clickOnCostTab();
+		attributeSetInstance.navigateToCostingMethod("Average PO");
+
+		// Fetch Accumulated amt & verify it equals Posted Credit & Debit amount
+		String accumulatedAmt = attributeSetInstance.getAccumulatedAmt();
+		log.info("Step 12: Fetched Accumulated Amount: [{}]", accumulatedAmt);
+		attributeSetInstance.verifyAccumulatedAmt(postedAmt);
+
+		// Close Attribute Set Instance window
+		attributeSetInstance.closeWindow();
 
 		log.info("========== Goods Receipt Note from PO Flow Completed Successfully! Doc No: [{}] ==========", grnDocNo);
 	}

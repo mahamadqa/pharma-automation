@@ -62,7 +62,7 @@ public class WaitUtils {
 			return;
 		}
 
-		Locator loader1 = page.locator("//div[contains(@class,'busy-dialog-box')]");
+		Locator loader1 = page.locator("(//div[contains(@class,'busy-dialog-box')])[1]");
 
 		try {
 			// Give the application a chance to display the loader
@@ -77,7 +77,7 @@ public class WaitUtils {
 			loader1.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.HIDDEN).setTimeout(15000));
 			log.info("Loading indicator disappeared.");
 		} catch (PlaywrightException e) {
-			throw new RuntimeException("Loading indicator did not disappear within 10 seconds", e);
+			throw new RuntimeException("Loading indicator did not disappear within 15 seconds", e);
 		}
 	}
 

@@ -10,6 +10,8 @@ import org.testng.asserts.SoftAssert;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.TimeoutError;
+import com.microsoft.playwright.options.MouseButton;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
 import utils.DataManager;
@@ -217,7 +219,8 @@ public class GoodsReceiptNote {
 		this.postedButton = page.locator("//button[@instancename='M_InOut0Posted']");
 
 		// Receipt Line Tab Fields
-		this.receiptLineTab = page.locator("//span[text()='Receipt Line']");
+		this.receiptLineTab = page.locator(
+				"//li[contains(@class,'z-tab')]//span[text()='Receipt Line'] | //div[contains(@class,'z-tabbox')]//span[contains(@class,'z-tab-text') and text()='Receipt Line']");
 		this.lineOrgInput = page.locator("//span[@instancename='M_InOutLine0AD_Org_ID']//input");
 		this.receiptRefInput = page.locator("//div[@instancename='M_InOutLine0M_InOut_ID']//input");
 		this.lineNoInput = page.locator("//div[@instancename='M_InOutLine0Line']//input");
@@ -274,10 +277,28 @@ public class GoodsReceiptNote {
 		log.info("Navigating to Goods Receipt Note window via menubar search...");
 		grnMenuSearchInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		grnMenuSearchInput.fill("Goods receipt Note");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(3000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		
+		try {
+			searchGRNWindowItem
+			.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(10000));
+			searchGRNWindowItem.click();
+		}
+		catch (TimeoutError e1) {
+			page.waitForTimeout(3000);
+			searchGRNWindowItem
+			.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(10000));
+			searchGRNWindowItem.click();
+		}
+		catch (Exception e2) {
+			page.waitForTimeout(3000);
+			searchGRNWindowItem
+			.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(10000));
+			searchGRNWindowItem.click();
+		}
 
-		searchGRNWindowItem.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(10000));
+	
 		long startTime = System.currentTimeMillis();
 		long timeout = 10000;
 		searchGRNWindowItem.click();
@@ -618,7 +639,7 @@ public class GoodsReceiptNote {
 		log.info("Clicking on 'Receipt Line' tab...");
 		receiptLineTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		receiptLineTab.click();
-		page.waitForTimeout(1000);
+		page.waitForTimeout(3000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		ensureReceiptLineFormView();
 		log.info("Navigated to 'Receipt Line' tab.");
@@ -1169,6 +1190,266 @@ public class GoodsReceiptNote {
 		}
 	}
 
+	/**
+	 * Gets and returns the Movement Quantity from the Receipt Line.
+	 *
+	 * @return Movement Quantity input value
+	 */
+	public String getMovementQty() {
+		page.waitForTimeout(1000);
+		movementQtyInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		String value = movementQtyInput.inputValue().trim();
+		log.info("Retrieved Movement Quantity from Receipt Line: [{}]", value);
+		return value;
+	}
+
+	/**
+	 * Gets and returns the Attribute Set Instance text from the Receipt Line.
+	 *
+	 * @return Attribute Set Instance input value
+	 */
+	public String getAttributeSetInstanceText() {
+		page.waitForTimeout(1000);
+		attributeSetInstanceInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		String value = attributeSetInstanceInput.inputValue().trim();
+		log.info("Retrieved Attribute Set Instance text from Receipt Line: [{}]", value);
+		return value;
+	}
+
+	/**
+	 * Right-clicks on the Attribute Set Instance field and clicks the 'Zoom' option
+	 * from the context menu popup.
+	 */
+	public void zoomOnAttributeSetInstance() {
+		page.waitForTimeout(1000);
+		log.info("Right clicking on Attribute Set Instance field in Receipt Line...");
+		Locator asiContainer = page.locator("//div[@instancename='M_InOutLine0M_AttributeSetInstance_ID']");
+		if (asiContainer.count() > 0 && asiContainer.first().isVisible()) {
+			asiContainer.first().click(new Locator.ClickOptions().setButton(MouseButton.RIGHT));
+		} else {
+			attributeSetInstanceInput.click(new Locator.ClickOptions().setButton(MouseButton.RIGHT).setForce(true));
+		}
+
+		page.waitForTimeout(1000);
+		Locator zoomMenuItem = page.locator(".z-menupopup:visible").getByText("Zoom");
+		if (zoomMenuItem.count() == 0 || !zoomMenuItem.first().isVisible()) {
+			zoomMenuItem = page.locator("//div[contains(@class,'z-menupopup') and contains(@style,'visibility: visible')]//span[normalize-space(text())='Zoom']");
+		}
+		zoomMenuItem.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		log.info("Clicking on 'Zoom' option from context menu...");
+		zoomMenuItem.first().click();
+		page.waitForTimeout(2000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		log.info("Zoom option clicked successfully on Attribute Set Instance.");
+	}
+
+	// ==================== Posted Window Actions ====================
+
+	/**
+	 * Navigates to the Goods Receipt Note window/header if needed, and clicks the
+	 * 'Posted' button.
+	 */
+	public void clickPostedButton() {
+		page.waitForTimeout(1000);
+		log.info("Clicking on 'Posted' button on Goods Receipt Note...");
+
+		// If not on GRN window tab, click GRN tab
+		Locator grnTab = page.locator("//li[contains(@class,'z-tab')]//span[contains(text(),'Goods Receipt Note:')]");
+		if (grnTab.count() > 0 && grnTab.first().isVisible()) {
+			try {
+				String tabClass = grnTab.first().locator("..").getAttribute("class");
+				if (tabClass != null && !tabClass.contains("z-tab-selected")) {
+					grnTab.first().click();
+					page.waitForTimeout(1000);
+				}
+			} catch (Exception ignored) {
+			}
+		}
+
+		// Ensure on GRN Header
+		navigateBackOnGRNHeader();
+
+		postedButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		postedButton.click();
+		page.waitForTimeout(2000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+		// Verify Posting window opened
+		Locator postingTab = page.locator("//li[contains(@class,'z-tab')]//span[normalize-space(text())='Posting']");
+		postingTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		log.info("'Posting' window opened successfully.");
+	}
+
+	private double[] lastPostedAmounts;
+
+	/**
+	 * Reads Accounted Debit and Accounted Credit amounts from the Posting window table.
+	 *
+	 * @return Array of double: [totalDebit, totalCredit]
+	 */
+	public double[] getPostedDebitAndCreditAmounts() {
+		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+		Locator postingTable = page.locator(".z-listbox, .z-grid")
+				.filter(new Locator.FilterOptions().setHasText("Accounted Debit"))
+				.first();
+		postingTable.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+
+		try {
+			String js = "table => {\n"
+					+ "  const headers = Array.from(table.querySelectorAll('.z-listheader, .z-column, th')).map(h => h.innerText.trim());\n"
+					+ "  let debitIdx = headers.findIndex(h => h.toLowerCase().includes('accounted debit') || h.toLowerCase() === 'debit');\n"
+					+ "  let creditIdx = headers.findIndex(h => h.toLowerCase().includes('accounted credit') || h.toLowerCase() === 'credit');\n"
+					+ "  if (debitIdx === -1) debitIdx = 2;\n"
+					+ "  if (creditIdx === -1) creditIdx = 3;\n"
+					+ "  const rows = Array.from(table.querySelectorAll('.z-listitem, .z-row, .z-listbox-body tr, .z-grid-body tr')).filter(r => r.offsetParent !== null);\n"
+					+ "  let summaryDebit = null, summaryCredit = null;\n"
+					+ "  let sumDebit = 0.0, sumCredit = 0.0;\n"
+					+ "  for (const r of rows) {\n"
+					+ "    const cells = Array.from(r.querySelectorAll('.z-listcell, .z-cell, td')).map(c => c.innerText.trim());\n"
+					+ "    if (cells.length > Math.max(debitIdx, creditIdx)) {\n"
+					+ "      const d = parseFloat(cells[debitIdx].replace(/,/g, ''));\n"
+					+ "      const c = parseFloat(cells[creditIdx].replace(/,/g, ''));\n"
+					+ "      const isSummary = cells[0] === '' && (cells.length < 2 || cells[1] === '');\n"
+					+ "      if (isSummary && (!isNaN(d) || !isNaN(c))) {\n"
+					+ "        summaryDebit = isNaN(d) ? 0.0 : d;\n"
+					+ "        summaryCredit = isNaN(c) ? 0.0 : c;\n"
+					+ "      } else {\n"
+					+ "        if (!isNaN(d)) sumDebit += d;\n"
+					+ "        if (!isNaN(c)) sumCredit += c;\n"
+					+ "      }\n"
+					+ "    }\n"
+					+ "  }\n"
+					+ "  const finalDebit = summaryDebit !== null ? summaryDebit : sumDebit;\n"
+					+ "  const finalCredit = summaryCredit !== null ? summaryCredit : sumCredit;\n"
+					+ "  return [finalDebit, finalCredit];\n"
+					+ "}";
+
+			Object res = postingTable.evaluate(js);
+			if (res instanceof java.util.List) {
+				java.util.List<?> list = (java.util.List<?>) res;
+				double d = ((Number) list.get(0)).doubleValue();
+				double c = ((Number) list.get(1)).doubleValue();
+				lastPostedAmounts = new double[]{d, c};
+				log.info("Extracted Posting amounts via JS: Debit [{}], Credit [{}]", d, c);
+				return lastPostedAmounts;
+			}
+		} catch (Exception e) {
+			log.warn("JS extraction failed, falling back to Playwright locators: {}", e.getMessage());
+		}
+
+		// Fallback using Playwright Locators
+		Locator headers = postingTable.locator(".z-listheader, .z-column, th");
+		int debitIdx = -1;
+		int creditIdx = -1;
+		int headerCount = headers.count();
+		for (int i = 0; i < headerCount; i++) {
+			String text = headers.nth(i).innerText().trim().toLowerCase();
+			if (text.contains("accounted debit") || text.equals("debit")) {
+				debitIdx = i;
+			} else if (text.contains("accounted credit") || text.equals("credit")) {
+				creditIdx = i;
+			}
+		}
+
+		if (debitIdx == -1) debitIdx = 2;
+		if (creditIdx == -1) creditIdx = 3;
+
+		Locator rows = postingTable.locator(".z-listitem, .z-row, .z-listbox-body tr, .z-grid-body tr");
+		int rowCount = rows.count();
+		Double summaryDebit = null;
+		Double summaryCredit = null;
+		double sumDebit = 0.0;
+		double sumCredit = 0.0;
+
+		for (int i = 0; i < rowCount; i++) {
+			Locator row = rows.nth(i);
+			Locator cells = row.locator(".z-listcell, .z-cell, td");
+			int cellCount = cells.count();
+			if (cellCount > Math.max(debitIdx, creditIdx)) {
+				String dText = cells.nth(debitIdx).innerText().trim().replace(",", "");
+				String cText = cells.nth(creditIdx).innerText().trim().replace(",", "");
+				String orgText = cells.nth(0).innerText().trim();
+				String acctText = cellCount > 1 ? cells.nth(1).innerText().trim() : "";
+
+				try {
+					double d = dText.isEmpty() ? 0.0 : Double.parseDouble(dText);
+					double c = cText.isEmpty() ? 0.0 : Double.parseDouble(cText);
+
+					if (orgText.isEmpty() && acctText.isEmpty() && (!dText.isEmpty() || !cText.isEmpty())) {
+						summaryDebit = d;
+						summaryCredit = c;
+					} else {
+						sumDebit += d;
+						sumCredit += c;
+					}
+				} catch (Exception ignored) {
+				}
+			}
+		}
+
+		double finalDebit = summaryDebit != null ? summaryDebit : sumDebit;
+		double finalCredit = summaryCredit != null ? summaryCredit : sumCredit;
+
+		lastPostedAmounts = new double[]{finalDebit, finalCredit};
+		log.info("Extracted Posting amounts via Locators: Debit [{}], Credit [{}]", finalDebit, finalCredit);
+		return lastPostedAmounts;
+	}
+
+	/**
+	 * Verifies that the Accounted Debit amount equals Accounted Credit amount in Posting window.
+	 */
+	public void verifyPostedDebitEqualsCredit() {
+		double[] amounts = getPostedDebitAndCreditAmounts();
+		double debit = amounts[0];
+		double credit = amounts[1];
+		log.info("Verifying Posted amounts: Accounted Debit [{}], Accounted Credit [{}]", debit, credit);
+
+		boolean isMatch = Double.compare(debit, credit) == 0;
+		SoftAssert sa = base.BaseTest.getSoftAssert();
+		if (sa != null) {
+			sa.assertTrue(isMatch, "[Posting] Accounted Debit [" + debit + "] does not equal Accounted Credit [" + credit + "]");
+		} else {
+			Assert.assertTrue(isMatch, "[Posting] Accounted Debit [" + debit + "] does not equal Accounted Credit [" + credit + "]");
+		}
+
+		if (isMatch) {
+			log.info("✅ Verified Posted Debit [{}] equals Credit [{}] successfully.", debit, credit);
+		} else {
+			log.error("❌ Posted Debit [{}] does NOT equal Credit [{}]!", debit, credit);
+		}
+	}
+
+	/**
+	 * Gets the verified posted amount (e.g. "150.00").
+	 *
+	 * @return Formatted posted amount
+	 */
+	public String getPostedAmount() {
+		if (lastPostedAmounts != null && lastPostedAmounts.length > 0) {
+			return String.format(java.util.Locale.US, "%.2f", lastPostedAmounts[0]);
+		}
+		double[] amounts = getPostedDebitAndCreditAmounts();
+		return String.format(java.util.Locale.US, "%.2f", amounts[0]);
+	}
+
+	/**
+	 * Closes the Posting window tab.
+	 */
+	public void closePostingWindow() {
+		log.info("Closing Posting window tab...");
+		Locator closeBtn = page.locator("//li[contains(@class,'z-tab') and contains(.,'Posting')]//i[contains(@class,'z-tab-icon') or contains(@class,'z-icon-times') or @aria-label='Close']");
+		if (closeBtn.count() > 0 && closeBtn.first().isVisible()) {
+			closeBtn.first().click();
+		} else {
+			page.keyboard().press("Alt+W");
+		}
+		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		log.info("Posting window closed.");
+	}
+
 	// ==================== Field Verification Helpers ====================
 
 	public boolean verifyFieldFilled(Locator fieldLocator, String fieldName, String expectedValue) {
@@ -1256,6 +1537,7 @@ public class GoodsReceiptNote {
 	public Locator getQtyEnteredInput() { return qtyEnteredInput; }
 	public Locator getUomInput() { return uomInput; }
 	public Locator getMovementQtyInput() { return movementQtyInput; }
+	public Locator getAttributeSetInstanceInput() { return attributeSetInstanceInput; }
 	public Locator getIsQCCheckbox() { return isQCCheckbox; }
 	public Locator getLotInput() { return lotInput; }
 	public Locator getMfgByInput() { return mfgByInput; }

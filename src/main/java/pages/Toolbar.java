@@ -188,4 +188,9 @@ public class Toolbar {
 		}
 	}
 
+	public void navigateBackToheader() {
+		// TODO Auto-generated method stub
+		page.locator("(//div[@instancename='breadcrumb']//a[@class='z-a'])[1] | (//div[@instancename='breadcrumb']//a[@class='z-a'])[2] | (//div[@instancename='breadcrumb']//a[@class='z-a'])[3]").click();
+	}
+
 }

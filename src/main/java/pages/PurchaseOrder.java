@@ -10,6 +10,7 @@ import org.testng.asserts.SoftAssert;
 
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.TimeoutError;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
 import base.BaseTest;
@@ -168,10 +169,27 @@ public class PurchaseOrder {
 		poMenuSearchInput
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poMenuSearchInput.fill("Purchase Order");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(3000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-		searchPOWindowItem
-				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(10000));
+		
+		try {
+			searchPOWindowItem
+			.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(10000));
+			searchPOWindowItem.click();
+		}
+		catch (TimeoutError e1) {
+			page.waitForTimeout(3000);
+			searchPOWindowItem
+			.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(10000));
+			searchPOWindowItem.click();
+		}
+		catch (Exception e2) {
+			page.waitForTimeout(3000);
+			searchPOWindowItem
+			.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(10000));
+			searchPOWindowItem.click();
+		}
+		
 		long startTime = System.currentTimeMillis();
 		long timeout = 10000;
 		searchPOWindowItem.click();
@@ -273,7 +291,7 @@ public class PurchaseOrder {
 		log.info("Clicking on 'PO Line' tab...");
 		poLineTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poLineTab.click();
-		page.waitForTimeout(1000);
+		page.waitForTimeout(3000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		ensurePOLineFormView();
 		log.info("Navigated to 'PO Line' tab.");
