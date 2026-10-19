@@ -30,6 +30,7 @@ import pages.Dashboard;
 import pages.GoodsReceiptNote;
 import pages.HTMLReportsPreview;
 import pages.LoginPage;
+import pages.PurchaseInvoice;
 import pages.PurchaseOrder;
 import pages.SOPMaster;
 import pages.Toolbar;
@@ -71,6 +72,7 @@ public class BaseTest {
 	protected PurchaseOrder purchaseOrder;
 	protected GoodsReceiptNote goodsReceiptNote;
 	protected AttributeSetInstance attributeSetInstance;
+	protected PurchaseInvoice purchaseInvoice;
 
 	protected static ExtentReports extent;
 	protected static ExtentSparkReporter sparkReporter;
@@ -192,6 +194,7 @@ public class BaseTest {
 		purchaseOrder = new PurchaseOrder(page);
 		goodsReceiptNote = new GoodsReceiptNote(page);
 		attributeSetInstance = new AttributeSetInstance(page);
+		purchaseInvoice = new PurchaseInvoice(page);
 		workflowActivities = new WorkflowActivities(page);
 		hTMLPreview = new HTMLReportsPreview(page);
 		sopMaster = new SOPMaster(page);

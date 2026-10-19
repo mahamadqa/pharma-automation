@@ -16,12 +16,20 @@ import utils.DataManager;
  * 4. Attach PO to GRN Header & verify auto-populated fields
  * 5. Add Receipt lines from "Create Lines From" button & select the PO record
  * 6. Verify receipt line details and navigate back to GRN Header
+ * 7. Complete GRN doc action and verify posting
+ * 8. Open Attribute Set Instance, verify Located At and Cost tabs
+ * 9. In Menubar search "Purchase Invoice and Credit/Debit Note" and create new record
+ * 10. Fill Org & BPartner, attach created PO via "Create lines from" button
+ * 11. Verify the fields in Invoice line
+ * 12. Match Grand total & Total lines on header
+ * 13. Complete doc action on Invoice
+ * 14. Verify invoice posting (Debit equals Credit)
  */
 public class CreateGRNFromPOFlow extends BaseTest {
 
 	private static final Logger log = LogManager.getLogger(CreateGRNFromPOFlow.class);
 
-	@Test(groups = { "basic"}, description = "Goods Receipt Note Flow from Purchase Order: Login (Admin) → Create PO → Open GRN & Click New Record (+) → Attach PO → Add Receipt Lines via 'Create Lines From' → Verify & Save")
+	@Test(groups = { "basic"}, description = "End-to-End Flow: Login → Create PO → Create GRN from PO & Verify → Create Purchase Invoice from PO & Verify Lines, Header Totals, DocAction & Posting")
 	public void verificationOfCreateGRNFromPOFlow() {
 
 		log.info("========== Starting Goods Receipt Note from PO Flow ==========");
@@ -177,6 +185,60 @@ public class CreateGRNFromPOFlow extends BaseTest {
 		// Close Attribute Set Instance window
 		attributeSetInstance.closeWindow();
 
-		log.info("========== Goods Receipt Note from PO Flow Completed Successfully! Doc No: [{}] ==========", grnDocNo);
+		// Close Goods Receipt Note window
+		toolbar.closeWindow();
+
+		log.info("Goods Receipt Note [{}] processed successfully. Proceeding to Purchase Invoice Flow...", grnDocNo);
+
+		// ==================== PURCHASE INVOICE FLOW ====================
+		// Step 13: In Menubar search "Purchase Invoice and Credit/Debit Note" and open new record
+		log.info("Step 13: Opening 'Purchase Invoice and Credit/Debit Note' window through menu search...");
+		purchaseInvoice.navigateToInvoiceWindow();
+
+		// Step 14: Fill Org & BPartner, save header, and attach created PO via "Create lines from" button
+		log.info("Step 14: Filling Org & BPartner on Invoice Header, saving record, and attaching created PO [{}]...", poDocNo);
+		purchaseInvoice.selectOrg();
+		purchaseInvoice.selectTargetDocType("AP Invoice");
+		purchaseInvoice.selectBPartner();
+		purchaseInvoice.fillDescription();
+		toolbar.saveRecord();
+
+		String invoiceDocNo = purchaseInvoice.getInvoiceDocNo();
+		log.info("Purchase Invoice created with Doc No: [{}]", invoiceDocNo);
+		toolbar.verifyDocStatus("Drafted");
+
+		purchaseInvoice.clickCreateLinesFromButton();
+		purchaseInvoice.attachPOInCreateLinesFromModal(poDocNo);
+		purchaseInvoice.confirmCreateLinesFromModal();
+
+		// Step 15: Verify the fields in Invoice line
+		log.info("Step 15: Navigating to Invoice Line tab and verifying line fields...");
+		purchaseInvoice.clickOnInvoiceLineTab();
+		toolbar.ensureSubtabFormView();
+		purchaseInvoice.verifyInvoiceLineFields(purchaseOrder);
+
+		// Step 16: Match Grand total & Total lines on header
+		log.info("Step 16: Navigating back to Invoice Header and matching Grand total & Total lines...");
+		purchaseInvoice.navigateBackOnInvoiceHeader();
+		purchaseInvoice.verifyHeaderTotalLinesAndGrandTotal(purchaseOrder);
+
+		// Step 17: Do complete the doc action
+		log.info("Step 17: Completing document action for Purchase Invoice [{}]...", invoiceDocNo);
+		toolbar.performDocAction("Complete");
+		toolbar.verifyDocStatus("Completed");
+		log.info("Purchase Invoice [{}] completed successfully.", invoiceDocNo);
+
+		// Step 18: Verify the posting
+		log.info("Step 18: Clicking 'Posted' button on Purchase Invoice and verifying posting...");
+		purchaseInvoice.clickPostedButton();
+		purchaseInvoice.verifyPostedDebitEqualsCredit();
+		String invoicePostedAmt = purchaseInvoice.getPostedAmount();
+		log.info("Step 18: Verified Purchase Invoice Posted Debit and Credit amounts are equal: [{}]", invoicePostedAmt);
+		purchaseInvoice.closePostingWindow();
+
+		// Close Purchase Invoice window
+		toolbar.closeWindow();
+
+		log.info("========== Goods Receipt Note & Purchase Invoice Flow from PO Completed Successfully! GRN Doc No: [{}], Invoice Doc No: [{}] ==========", grnDocNo, invoiceDocNo);
 	}
 }

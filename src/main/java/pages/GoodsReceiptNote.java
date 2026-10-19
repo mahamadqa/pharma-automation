@@ -607,8 +607,8 @@ public class GoodsReceiptNote {
 	// ==================== Receipt Line Actions ====================
 
 	public void clickOnReceiptLineTab() {
-		receiptLineTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		receiptLineTab.click();
+		receiptLineTab.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		receiptLineTab.first().click();
 		page.waitForTimeout(3000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		ensureReceiptLineFormView();

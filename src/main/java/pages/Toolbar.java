@@ -143,11 +143,11 @@ public class Toolbar {
 
 	public void performDocAction(String action) {
 		page.waitForTimeout(1000);
-		docActionButton.click();
+		docActionButton.first().click();
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-		docActionPopup.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+		docActionPopup.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		Locator dropdown = page.locator("//div[@instancename='documentAction']//select");
-		dropdown.selectOption(new SelectOption().setLabel(action));
+		dropdown.first().selectOption(new SelectOption().setLabel(action));
 		page.click("//div[@instancename='documentAction']//button[@title='OK']");
 		WaitUtils.waitForBigLoadingIndicatorToDisappear(page);
 		page.waitForTimeout(1000);
@@ -155,7 +155,7 @@ public class Toolbar {
 	
 	public void verifyDocStatus(String status) {
 		Locator DocStatus = page.locator("//span[contains(@instancename,'DocStatus')]//input");
-		String actualStatus = DocStatus.inputValue();
+		String actualStatus = DocStatus.first().inputValue();
 
 		SoftAssert sa = base.BaseTest.getSoftAssert();
 		if (sa != null) {
