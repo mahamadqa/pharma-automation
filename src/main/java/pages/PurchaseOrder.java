@@ -62,9 +62,14 @@ public class PurchaseOrder {
 		this.productInput = page.locator("//div[@instancename='C_OrderLine0M_Product_ID']//input");
 		this.descriptionTextarea = page.locator("//textarea[@instancename='C_OrderLine0Description']");
 		this.poHeaderBreadcrumb = page.locator("//div[@instancename='breadcrumb']//a[text()='Purchase Order']");
-		this.poMenuSearchInput = page.locator("//input[@class='z-bandbox-input']");
+		this.poMenuSearchInput = page
+				.locator("//input[contains(@class,'z-bandbox-input')] | (//input[@placeholder='Alt+G'])[1]");
 		this.searchPOWindowItem = page.locator(
-				"//tr[contains(.,'Purchase Order')]//a[@title='New'] | //td[contains(.,'Purchase Order')]/following-sibling::td//a[@title='New'] | //td[@title='Manage Purchase Orders']/following-sibling::td//a[@title='New']");
+				"//div[contains(@class,'z-bandbox-popup')]//tr[contains(.,'Purchase Order') and not(contains(.,'Close')) and not(contains(.,'Matched'))]//a[@title='New'] | "
+						+
+						"//tr[contains(.,'Purchase Order')]//a[@title='New'] | " +
+						"//td[contains(.,'Purchase Order')]/following-sibling::td//a[@title='New'] | " +
+						"//td[@title='Manage Purchase Orders']/following-sibling::td//a[@title='New']");
 		this.partnerLocation = page.locator("//span[@instancename='C_Order0C_BPartner_Location_ID']//input");
 		this.invoiceLocation = page.locator("//span[@instancename='C_Order0Bill_Location_ID']//input");
 		this.TotalLinesAmt = page.locator("(//div[@instancename='C_Order0TotalLines']//input)[1]");
@@ -162,19 +167,22 @@ public class PurchaseOrder {
 
 	/**
 	 * Navigates to the Manage Purchase Orders window via search bandbox.
-	 * Robustly handles cases where the searched option takes time to display or server responses are delayed.
+	 * Robustly handles cases where the searched option takes time to display or
+	 * server responses are delayed.
 	 */
 	public void navigateToPOWindow() {
 		log.info("Navigating to Purchase Order window...");
+		poMenuSearchInput
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		poMenuSearchInput.click();
 		poMenuSearchInput.fill("Purchase Order");
-
-		// Simply wait for 3 to 10 sec after providing input in search field
-		page.waitForTimeout(5000);
+		page.waitForTimeout(3000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 
 		Locator targetItem = searchPOWindowItem.first();
 		try {
-			targetItem.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
-			targetItem.click();
+			targetItem.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+			targetItem.click(new Locator.ClickOptions().setForce(true));
 		} catch (Exception e) {
 			log.warn("Searched PO item not visible after wait, pressing Enter: {}", e.getMessage());
 			poMenuSearchInput.press("Enter");
@@ -187,14 +195,15 @@ public class PurchaseOrder {
 		} catch (Exception e) {
 			log.warn("Waiting for orgInput visible timed out: {}", e.getMessage());
 		}
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 	}
 
 	public void selectOrg(String orgName) {
-		page.waitForTimeout(1000);
 		orgInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		orgInput.fill(orgName);
 		orgInput.press("Tab");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(300);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(orgInput, "Organization", orgName);
 	}
 
@@ -208,14 +217,15 @@ public class PurchaseOrder {
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		targetDocTypeInput.fill(docType);
 		targetDocTypeInput.press("Tab");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(300);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(targetDocTypeInput, "Target Document Type", docType);
 	}
 
 	public void selecTtargetDocType() {
 		selecTtargetDocType(DataManager.getData("targetDocType"));
 	}
-	
+
 	public void fillDescription() {
 		DescInput.click();
 		DescInput.fill(DataManager.getData("description"));
@@ -225,7 +235,8 @@ public class PurchaseOrder {
 		bPartnerInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		bPartnerInput.fill(partnerName);
 		bPartnerInput.press("Tab");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(400);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(bPartnerInput, "Business Partner", partnerName);
 	}
 
@@ -238,7 +249,8 @@ public class PurchaseOrder {
 		salesRepInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		salesRepInput.fill(repName);
 		salesRepInput.press("Tab");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(300);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(salesRepInput, "Sales Representative", repName);
 	}
 
@@ -247,11 +259,11 @@ public class PurchaseOrder {
 	}
 
 	public void selectWarehouse(String warehouseName) {
-		page.waitForTimeout(1000);
 		warehouseInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		warehouseInput.fill(warehouseName);
 		warehouseInput.press("Tab");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(300);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(warehouseInput, "Warehouse", warehouseName);
 	}
 
@@ -263,7 +275,7 @@ public class PurchaseOrder {
 	public void clickOnPOLineTab() {
 		poLineTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poLineTab.click();
-		page.waitForTimeout(3000);
+		page.waitForTimeout(400);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		ensurePOLineFormView();
 		log.info("Navigated to 'PO Line' tab.");
@@ -275,10 +287,10 @@ public class PurchaseOrder {
 	 */
 	public void ensurePOLineFormView() {
 		try {
-			page.waitForTimeout(2000);
+			page.waitForTimeout(300);
 			if (page.locator("(//div[@class='z-frozen'])[1]").isVisible()) {
 				page.locator("//a[@title='Grid Toggle    Alt+T']").click();
-				page.waitForTimeout(2000);
+				page.waitForTimeout(400);
 				WaitUtils.waitForLoadingIndicatorToDisappear(page);
 			}
 		} catch (Exception e) {
@@ -287,11 +299,10 @@ public class PurchaseOrder {
 	}
 
 	public void enterProdct(String productName) {
-		page.waitForTimeout(1000);
 		productInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		productInput.fill(productName);
 		productInput.press("Tab");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(400);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(productInput, "Product", productName);
 
@@ -299,7 +310,8 @@ public class PurchaseOrder {
 			descriptionTextarea.click();
 		}
 
-		// Dynamic check: if price & List price is not auto set then fill both fields from test data files
+		// Dynamic check: if price & List price is not auto set then fill both fields
+		// from test data files
 		handlePriceAndPriceListAutoSet();
 	}
 
@@ -309,12 +321,11 @@ public class PurchaseOrder {
 	}
 
 	public void enterQtyEntered(String qty) {
-		page.waitForTimeout(1000);
 		qtyEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		qtyEnteredInput.click();
 		qtyEnteredInput.fill(qty);
 		qtyEnteredInput.press("Tab");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(400);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(qtyEnteredInput, "QtyEntered", qty);
 	}
@@ -389,13 +400,13 @@ public class PurchaseOrder {
 	}
 
 	public void enterPriceEntered(String price) {
-		page.waitForTimeout(1000);
-		priceEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		priceEnteredInput
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		priceEnteredInput.click();
 		priceEnteredInput.press("Control+A");
 		priceEnteredInput.fill(price);
 		priceEnteredInput.press("Tab");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(400);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(priceEnteredInput, "PriceEntered", price);
 	}
@@ -405,13 +416,12 @@ public class PurchaseOrder {
 	}
 
 	public void enterPriceList(String priceList) {
-		page.waitForTimeout(1000);
 		priceListInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		priceListInput.click();
 		priceListInput.press("Control+A");
 		priceListInput.fill(priceList);
 		priceListInput.press("Tab");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(400);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(priceListInput, "PriceList", priceList);
 	}
@@ -427,11 +437,13 @@ public class PurchaseOrder {
 	}
 
 	/**
-	 * Dynamic check: After entering product, checks if Price and List Price are auto-set.
-	 * If either is not auto-set (empty or 0), it fills both fields from test data files.
+	 * Dynamic check: After entering product, checks if Price and List Price are
+	 * auto-set.
+	 * If either is not auto-set (empty or 0), it fills both fields from test data
+	 * files.
 	 */
 	public void handlePriceAndPriceListAutoSet() {
-		page.waitForTimeout(1500);
+		page.waitForTimeout(300);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 
 		boolean priceAutoSet = isPriceAutoPopulated(priceEnteredInput);
@@ -453,7 +465,8 @@ public class PurchaseOrder {
 	}
 
 	public void verifyPriceEntered(String expectedPrice) {
-		priceEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		priceEnteredInput
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		if (!isPriceAutoPopulated(priceEnteredInput)) {
 			enterPriceEntered(expectedPrice);
 		}
@@ -487,12 +500,11 @@ public class PurchaseOrder {
 	}
 
 	public void selectTax(String taxName) {
-		page.waitForTimeout(1000);
 		taxInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		taxInput.click();
 		taxInput.fill(taxName);
 		taxInput.press("Tab");
-		page.waitForTimeout(2000);
+		page.waitForTimeout(400);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(taxInput, "Tax", taxName);
 	}
@@ -525,7 +537,8 @@ public class PurchaseOrder {
 		SoftAssert sa = base.BaseTest.getSoftAssert();
 		if (sa != null) {
 			sa.assertTrue(isMatch,
-					"[PO Line] PriceList [" + actualPriceList + "] does not match expected [" + expectedPriceList + "]");
+					"[PO Line] PriceList [" + actualPriceList + "] does not match expected [" + expectedPriceList
+							+ "]");
 		} else {
 			Assert.assertTrue(isMatch,
 					"PriceList [" + actualPriceList + "] does not match expected [" + expectedPriceList + "]");
@@ -548,7 +561,7 @@ public class PurchaseOrder {
 	}
 
 	public void verifyLineNetAmt() {
-		page.waitForTimeout(1000);
+		page.waitForTimeout(300);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		lineNetAmtInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualAmtStr = lineNetAmtInput.inputValue().trim();
@@ -590,15 +603,19 @@ public class PurchaseOrder {
 		SoftAssert sa = base.BaseTest.getSoftAssert();
 		if (sa != null) {
 			sa.assertTrue(isMatch,
-					"[PO Line] LineNetAmt [" + actualAmtStr + "] does not match calculated (Price [" + price + "] * Qty [" + qty + "] = [" + expectedAmt + "])");
+					"[PO Line] LineNetAmt [" + actualAmtStr + "] does not match calculated (Price [" + price
+							+ "] * Qty [" + qty + "] = [" + expectedAmt + "])");
 		} else {
 			Assert.assertTrue(isMatch,
-					"LineNetAmt [" + actualAmtStr + "] does not match calculated (Price [" + price + "] * Qty [" + qty + "] = [" + expectedAmt + "])");
+					"LineNetAmt [" + actualAmtStr + "] does not match calculated (Price [" + price + "] * Qty [" + qty
+							+ "] = [" + expectedAmt + "])");
 		}
 		if (isMatch) {
-			log.info("LineNetAmt verified successfully: Actual [{}], Calculated [{} * {} = {}]", actualAmtStr, price, qty, expectedAmt);
+			log.info("LineNetAmt verified successfully: Actual [{}], Calculated [{} * {} = {}]", actualAmtStr, price,
+					qty, expectedAmt);
 		} else {
-			log.warn("LineNetAmt mismatch: Actual [{}], Calculated [{} * {} = {}]", actualAmtStr, price, qty, expectedAmt);
+			log.warn("LineNetAmt mismatch: Actual [{}], Calculated [{} * {} = {}]", actualAmtStr, price, qty,
+					expectedAmt);
 		}
 	}
 
@@ -631,17 +648,19 @@ public class PurchaseOrder {
 		poHeaderBreadcrumb
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poHeaderBreadcrumb.click();
-		page.waitForTimeout(1000);
+		page.waitForTimeout(400);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Navigated back to Purchase Order header.");
 	}
-	
+
 	public void verifyDateFields() {
 
-		Locator DateOrdered = page.locator("//span[@instancename='C_Order0DateOrdered']//input[@class='z-datebox-input']");
+		Locator DateOrdered = page
+				.locator("//span[@instancename='C_Order0DateOrdered']//input[@class='z-datebox-input']");
 		String dateOrdered = DateOrdered.inputValue();
 
-		Locator DatePromised = page.locator("//span[@instancename='C_Order0DatePromised']//input[@class='z-datebox-input']");
+		Locator DatePromised = page
+				.locator("//span[@instancename='C_Order0DatePromised']//input[@class='z-datebox-input']");
 		String datePromised = DatePromised.inputValue();
 
 		String currentDate = LocalDate.now()
@@ -659,9 +678,7 @@ public class PurchaseOrder {
 		}
 		log.info("DateOrdered & DatePromised verified — both should be [{}]", currentDate);
 	}
-	
-	
-	
+
 	public void verifyBPLocationfields() {
 		String bpLocation = partnerLocation.inputValue();
 		String bpInvLocation = invoiceLocation.inputValue();
@@ -671,16 +688,18 @@ public class PurchaseOrder {
 		SoftAssert sa = base.BaseTest.getSoftAssert();
 		if (sa != null) {
 			sa.assertEquals(bpLocation, expectedLocation,
-					"[PO] BP Partner Location mismatch — Expected: [" + expectedLocation + "] Actual: [" + bpLocation + "]");
+					"[PO] BP Partner Location mismatch — Expected: [" + expectedLocation + "] Actual: [" + bpLocation
+							+ "]");
 			sa.assertEquals(bpInvLocation, expectedInvLocation,
-					"[PO] BP Invoice Location mismatch — Expected: [" + expectedInvLocation + "] Actual: [" + bpInvLocation + "]");
+					"[PO] BP Invoice Location mismatch — Expected: [" + expectedInvLocation + "] Actual: ["
+							+ bpInvLocation + "]");
 		} else {
 			Assert.assertEquals(bpLocation, expectedLocation);
 			Assert.assertEquals(bpInvLocation, expectedInvLocation);
 		}
 		log.info("BP Location fields verified for region [{}] — Location: [{}]", DataManager.getRegion(), bpLocation);
 	}
-	
+
 	public String getPODocNo() {
 		Locator documentSequence = page.locator("//input[@title='Document sequence number of the document']");
 		String value = documentSequence.inputValue();
@@ -750,10 +769,11 @@ public class PurchaseOrder {
 	}
 
 	/**
-	 * Dynamically extracts and calculates the total tax percentage from the provided taxType in test data.
+	 * Dynamically extracts and calculates the total tax percentage from the
+	 * provided taxType in test data.
 	 * Examples:
 	 * - "SGST 9% + CGST 9%" -> 9.0 + 9.0 = 18.0%
-	 * - "GST 18%"           -> 18.0%
+	 * - "GST 18%" -> 18.0%
 	 * - "Customs / Zero-Rated" -> 0.0%
 	 *
 	 * @return dynamically calculated tax percentage
@@ -785,7 +805,8 @@ public class PurchaseOrder {
 	}
 
 	/**
-	 * Validation 1: On Header, Total Line amount should be equal to PO Lines Line amount.
+	 * Validation 1: On Header, Total Line amount should be equal to PO Lines Line
+	 * amount.
 	 *
 	 * @param expectedLineAmt Expected PO Line Net Amount
 	 */
@@ -805,10 +826,12 @@ public class PurchaseOrder {
 		SoftAssert sa = base.BaseTest.getSoftAssert();
 		if (sa != null) {
 			sa.assertTrue(isMatch,
-					"[PO Header] TotalLines amount [" + actualStr + "] does not match PO Lines Line amount [" + expectedLineAmt + "]");
+					"[PO Header] TotalLines amount [" + actualStr + "] does not match PO Lines Line amount ["
+							+ expectedLineAmt + "]");
 		} else {
 			Assert.assertTrue(isMatch,
-					"TotalLines amount [" + actualStr + "] does not match PO Lines Line amount [" + expectedLineAmt + "]");
+					"TotalLines amount [" + actualStr + "] does not match PO Lines Line amount [" + expectedLineAmt
+							+ "]");
 		}
 		if (isMatch) {
 			log.info("Header TotalLines amount verified successfully: [{}]", actualStr);
@@ -822,7 +845,8 @@ public class PurchaseOrder {
 	}
 
 	/**
-	 * Validation 2: On Header, Grand Total amount should be equal to PO Lines Line amount + taxType.
+	 * Validation 2: On Header, Grand Total amount should be equal to PO Lines Line
+	 * amount + taxType.
 	 *
 	 * @param expectedGrandTotal Expected Grand Total Amount
 	 */
@@ -842,10 +866,12 @@ public class PurchaseOrder {
 		SoftAssert sa = base.BaseTest.getSoftAssert();
 		if (sa != null) {
 			sa.assertTrue(isMatch,
-					"[PO Header] GrandTotal amount [" + actualStr + "] does not match calculated Line amount + Tax [" + expectedGrandTotal + "]");
+					"[PO Header] GrandTotal amount [" + actualStr + "] does not match calculated Line amount + Tax ["
+							+ expectedGrandTotal + "]");
 		} else {
 			Assert.assertTrue(isMatch,
-					"GrandTotal amount [" + actualStr + "] does not match calculated Line amount + Tax [" + expectedGrandTotal + "]");
+					"GrandTotal amount [" + actualStr + "] does not match calculated Line amount + Tax ["
+							+ expectedGrandTotal + "]");
 		}
 		if (isMatch) {
 			log.info("Header GrandTotal amount verified successfully: [{}]", actualStr);
@@ -863,7 +889,8 @@ public class PurchaseOrder {
 	}
 
 	/**
-	 * Validates both Header Total Line amount and Grand Total amount after returning from PO Line tab.
+	 * Validates both Header Total Line amount and Grand Total amount after
+	 * returning from PO Line tab.
 	 */
 	public void verifyAmtFieldsAfterPOLines() {
 		verifyHeaderTotalLineAmt();

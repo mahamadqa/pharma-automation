@@ -61,7 +61,7 @@ public class Toolbar {
 	public void saveRecord() {
 		saveButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		saveButton.click();
-		page.waitForTimeout(1000);
+		page.waitForTimeout(300);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Record saved successfully.");
 	}
@@ -69,7 +69,7 @@ public class Toolbar {
 	public void closeWindow() {
 		closeWindow.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		closeWindow.click();
-		page.waitForTimeout(1000);
+		page.waitForTimeout(400);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 	}
 
@@ -142,7 +142,7 @@ public class Toolbar {
 	}
 
 	public void performDocAction(String action) {
-		page.waitForTimeout(1000);
+		docActionButton.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		docActionButton.first().click();
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		docActionPopup.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
@@ -150,11 +150,11 @@ public class Toolbar {
 		dropdown.first().selectOption(new SelectOption().setLabel(action));
 		page.click("//div[@instancename='documentAction']//button[@title='OK']");
 		WaitUtils.waitForBigLoadingIndicatorToDisappear(page);
-		page.waitForTimeout(1000);
+		page.waitForTimeout(400);
 	}
 	
 	public void verifyDocStatus(String status) {
-		Locator DocStatus = page.locator("//span[contains(@instancename,'DocStatus')]//input");
+		Locator DocStatus = page.locator("//span[contains(@instancename,'DocStatus')]//input | //div[contains(@instancename,'DocStatus')]//input | //input[contains(@instancename,'DocStatus')]");
 		String actualStatus = DocStatus.first().inputValue();
 
 		SoftAssert sa = base.BaseTest.getSoftAssert();

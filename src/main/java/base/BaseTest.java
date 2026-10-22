@@ -26,12 +26,15 @@ import com.microsoft.playwright.Playwright;
 
 import pages.AttributeSetInstance;
 import pages.ClientAndRoleSelection;
+import pages.CustomerShipment;
 import pages.Dashboard;
 import pages.GoodsReceiptNote;
 import pages.HTMLReportsPreview;
 import pages.LoginPage;
 import pages.PurchaseInvoice;
 import pages.PurchaseOrder;
+import pages.SalesOrder;
+import pages.SalesInvoice;
 import pages.SOPMaster;
 import pages.Toolbar;
 import pages.WorkflowActivities;
@@ -73,6 +76,9 @@ public class BaseTest {
 	protected GoodsReceiptNote goodsReceiptNote;
 	protected AttributeSetInstance attributeSetInstance;
 	protected PurchaseInvoice purchaseInvoice;
+	protected SalesOrder salesOrder;
+	protected CustomerShipment customerShipment;
+	protected SalesInvoice salesInvoice;
 
 	protected static ExtentReports extent;
 	protected static ExtentSparkReporter sparkReporter;
@@ -195,6 +201,9 @@ public class BaseTest {
 		goodsReceiptNote = new GoodsReceiptNote(page);
 		attributeSetInstance = new AttributeSetInstance(page);
 		purchaseInvoice = new PurchaseInvoice(page);
+		salesOrder = new SalesOrder(page);
+		customerShipment = new CustomerShipment(page);
+		salesInvoice = new SalesInvoice(page);
 		workflowActivities = new WorkflowActivities(page);
 		hTMLPreview = new HTMLReportsPreview(page);
 		sopMaster = new SOPMaster(page);

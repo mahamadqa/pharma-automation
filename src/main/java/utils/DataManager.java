@@ -32,22 +32,63 @@ public class DataManager {
         testData = new Properties();
         currentRegion = region;
 
-        String dataFilePath = System.getProperty("user.dir") 
-                + "/src/test/resources/testdata/" + region + ".properties";
-
-        File file = new File(dataFilePath);
-        if (!file.exists()) {
-            log.warn("Test data file not found at: {}. Falling back to localization.properties", dataFilePath);
-            dataFilePath = System.getProperty("user.dir") + "/src/test/resources/testdata/localization.properties";
-            currentRegion = "localization";
+        File testDataDir = new File(System.getProperty("user.dir") + "/src/test/resources/testdata");
+        if (!testDataDir.exists() || !testDataDir.isDirectory()) {
+            throw new RuntimeException("Test data directory not found at: " + testDataDir.getAbsolutePath());
         }
 
-        try (FileInputStream fis = new FileInputStream(dataFilePath)) {
-            testData.load(fis);
-            log.info("Loaded test data for region: [{}] from {}", currentRegion, dataFilePath);
-        } catch (IOException e) {
-            log.error("Failed to load test data from path: " + dataFilePath, e);
-            throw new RuntimeException("Failed to load test data for region: " + region, e);
+        final String activeRegion = currentRegion;
+        File[] matchingFiles = testDataDir.listFiles((dir, name) -> {
+            String lower = name.toLowerCase();
+            if (!lower.endsWith(".properties")) {
+                return false;
+            }
+            String baseName = lower.substring(0, lower.length() - ".properties".length());
+            if (activeRegion.equals("localization")) {
+                return (baseName.endsWith("_localization") || baseName.equals("localization"))
+                        && !baseName.endsWith("non-localization")
+                        && !baseName.endsWith("non_localization");
+            } else if (activeRegion.equals("non-localization")) {
+                return baseName.endsWith("_non-localization")
+                        || baseName.endsWith("-non-localization")
+                        || baseName.endsWith("_non_localization")
+                        || baseName.equals("non-localization")
+                        || baseName.equals("non_localization");
+            } else {
+                return baseName.endsWith("_" + activeRegion) || baseName.equals(activeRegion);
+            }
+        });
+
+        // Fallback to localization if non-localization files not found
+        if ((matchingFiles == null || matchingFiles.length == 0) && !activeRegion.equals("localization")) {
+            log.warn("No test data files found for region: [{}]. Falling back to [localization].", activeRegion);
+            currentRegion = "localization";
+            matchingFiles = testDataDir.listFiles((dir, name) -> {
+                String lower = name.toLowerCase();
+                if (!lower.endsWith(".properties")) {
+                    return false;
+                }
+                String baseName = lower.substring(0, lower.length() - ".properties".length());
+                return (baseName.endsWith("_localization") || baseName.equals("localization"))
+                        && !baseName.endsWith("non-localization")
+                        && !baseName.endsWith("non_localization");
+            });
+        }
+
+        if (matchingFiles == null || matchingFiles.length == 0) {
+            throw new RuntimeException("No test data properties files found for region: " + currentRegion);
+        }
+
+        // Sort so purchase_order / base files load first, then other module files
+        java.util.Arrays.sort(matchingFiles, java.util.Comparator.comparing(File::getName));
+
+        for (File mf : matchingFiles) {
+            try (FileInputStream fis = new FileInputStream(mf)) {
+                testData.load(fis);
+                log.info("Loaded test data from {}", mf.getName());
+            } catch (IOException e) {
+                log.warn("Failed to load test data from: {}", mf.getAbsolutePath(), e);
+            }
         }
 
         return testData;
@@ -69,6 +110,32 @@ public class DataManager {
             throw new RuntimeException("Key [" + key + "] not found in test data for region [" + currentRegion + "]");
         }
         return value.trim();
+    }
+
+    public static String getData(String key, String fallbackKey) {
+        if (testData == null) {
+            initData();
+        }
+
+        String sysProp = System.getProperty(key);
+        if (sysProp != null && !sysProp.trim().isEmpty()) {
+            return sysProp.trim();
+        }
+
+        String value = testData.getProperty(key);
+        if (value != null && !value.trim().isEmpty()) {
+            return value.trim();
+        }
+
+        return getData(fallbackKey);
+    }
+
+    public static String getOrDefault(String key, String defaultValue) {
+        try {
+            return getData(key);
+        } catch (Exception e) {
+            return defaultValue;
+        }
     }
 
     public static String getRegion() {
