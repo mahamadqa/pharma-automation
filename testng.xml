@@ -15,7 +15,7 @@
     RetryListener  → Auto-wires RetryAnalyzer to every @Test (max 2 retries)
     ─────────────────────────────────────────────────────────────────────
 -->
-<suite name="Pharma Automation Test Suite" verbose="1" thread-count="1">
+<suite name="Pharma Automation Test Suite" verbose="1" parallel="classes" thread-count="2">
 
     <!-- ═══════════════════════════════════════════════════════════
          LISTENERS
@@ -28,11 +28,17 @@
         <listener class-name="utils.RetryListener"/>
     </listeners>
 
-    <test name="Pharma Modules Test">
+    <!--
+        Parallel Execution Configuration:
+        - parallel="classes" : Runs distinct test classes simultaneously across worker threads
+        - thread-count="2"   : Number of concurrent threads (adjust as needed based on system resources)
+    -->
+    <test name="Pharma Modules Test" parallel="classes" thread-count="2">
 
-        <packages>
-            <package name="baseModules.*"/>
-        </packages>
+        <classes>
+            <class name="baseModules.CreateGRNFromPOFlow"/>
+            <class name="baseModules.VerifySOShipmentInvoiceFlow"/>
+        </classes>
 
     </test>
 

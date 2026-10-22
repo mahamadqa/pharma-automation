@@ -26,7 +26,7 @@ public class CustomerShipment {
 	private final Page page;
 
 	// Cached last created shipment document number
-	private static String lastShipmentDocNo;
+	private static final ThreadLocal<String> lastShipmentDocNo = ThreadLocal.withInitial(() -> "");
 
 	// ==================== Navigation & Menubar Locators ====================
 	private final Locator menuSearchInput;
@@ -308,9 +308,10 @@ public class CustomerShipment {
 	public String captureShipmentDocNo() {
 		try {
 			documentNoInput.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-			lastShipmentDocNo = documentNoInput.first().inputValue().trim();
-			log.info("Captured Shipment Document No: [{}]", lastShipmentDocNo);
-			return lastShipmentDocNo;
+			String docNo = documentNoInput.first().inputValue().trim();
+			lastShipmentDocNo.set(docNo);
+			log.info("Captured Shipment Document No: [{}]", docNo);
+			return docNo;
 		} catch (Exception e) {
 			log.warn("Could not capture Shipment Document No: {}", e.getMessage());
 			return "";
@@ -318,14 +319,19 @@ public class CustomerShipment {
 	}
 
 	public static String getLastShipmentDocNo() {
-		return lastShipmentDocNo;
+		return lastShipmentDocNo.get();
+	}
+
+	public static void setLastShipmentDocNo(String docNo) {
+		lastShipmentDocNo.set(docNo);
 	}
 
 	public String getShipmentDocNo() {
-		if (lastShipmentDocNo == null || lastShipmentDocNo.trim().isEmpty()) {
+		String cached = lastShipmentDocNo.get();
+		if (cached == null || cached.trim().isEmpty()) {
 			return captureShipmentDocNo();
 		}
-		return lastShipmentDocNo;
+		return cached;
 	}
 
 	// ==================== Header Reflected Fields Validations ====================

@@ -68,7 +68,7 @@ public class SalesOrder {
 
 	private double lastLineNetAmt = 0.0;
 	private double lastTaxPercentage = 0.0;
-	private static String lastSODocNo = "";
+	private static final ThreadLocal<String> lastSODocNo = ThreadLocal.withInitial(() -> "");
 
 	public SalesOrder(Page page) {
 		this.page = page;
@@ -322,13 +322,18 @@ public class SalesOrder {
 
 	public String getSODocNo() {
 		docNoInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		lastSODocNo = docNoInput.inputValue().trim();
-		log.info("Captured Sales Order Document No: [{}]", lastSODocNo);
-		return lastSODocNo;
+		String docNo = docNoInput.inputValue().trim();
+		lastSODocNo.set(docNo);
+		log.info("Captured Sales Order Document No: [{}]", docNo);
+		return docNo;
 	}
 
 	public static String getLastSODocNo() {
-		return lastSODocNo;
+		return lastSODocNo.get();
+	}
+
+	public static void setLastSODocNo(String docNo) {
+		lastSODocNo.set(docNo);
 	}
 
 	/**
