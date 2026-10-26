@@ -101,16 +101,28 @@ public class Dashboard {
 	 * Clicks the Logout button and waits for the login screen to return.
 	 */
 	public void clickLogout() {
-		logoutButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		logoutButton.click();
+		log.info("Attempting to click Logout...");
+		// Dismiss any modal dialog or message box if present
+		Locator modalClose = page.locator("div.z-window-modal div.z-window-close, div.z-window-highlighted div.z-window-close, div.z-messagebox div.z-window-close, div.z-messagebox button, div.z-window-modal button.btn-primary, div.z-window-highlighted button.btn-primary");
+		if (modalClose.count() > 0 && modalClose.first().isVisible()) {
+			try {
+				modalClose.first().click(new Locator.ClickOptions().setTimeout(2000));
+				page.waitForTimeout(500);
+			} catch (Exception ignored) {
+			}
+		}
 
-		Locator loginBtn = page.locator("//li[@id='main-requestBtns-btnLogin']");
+		logoutButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		try {
-			loginBtn.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+			logoutButton.click(new Locator.ClickOptions().setTimeout(5000));
 			log.info("User logged out successfully and returned to login screen.");
 		} catch (Exception e) {
-			log.warn("Waiting for login button after logout timed out: {}", e.getMessage());
+			log.warn("Standard click on logout button blocked, attempting force click: {}", e.getMessage());
+			logoutButton.click(new Locator.ClickOptions().setForce(true));
+			log.info("User logged out successfully and returned to login screen..");
 		}
+		page.waitForTimeout(2000);
+		page.locator("//td[@class='login-field']//input[@autocomplete='username']").waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 	}
 
 	/**

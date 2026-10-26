@@ -104,6 +104,8 @@ public class ClientAndRoleSelection {
 				} else {
 					tenantInputField.press("Tab");
 				}
+				page.waitForTimeout(1000);
+				WaitUtils.waitForLoadingIndicatorToDisappear(page);
 			} catch (Exception e) {
 				log.warn("Exception during client selection: {}, attempting Tab fallback", e.getMessage());
 				try {
@@ -113,6 +115,9 @@ public class ClientAndRoleSelection {
 			}
 		}
 
+		page.waitForTimeout(500);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
 		// 2. Fill and select Role (if provided and field is not disabled)
 		boolean isRoleDisabled = false;
 		try {
@@ -120,7 +125,9 @@ public class ClientAndRoleSelection {
 		} catch (Exception ignored) {
 		}
 
-		if (role != null && !role.trim().isEmpty() && !isRoleDisabled) {
+		if (isRoleDisabled) {
+			log.info("Role field is disabled/pre-set to [{}]. Skipping manual role selection.", roleInputField.inputValue());
+		} else if (role != null && !role.trim().isEmpty()) {
 			try {
 				roleInputField.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 				roleInputField.fill(role);

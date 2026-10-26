@@ -28,6 +28,7 @@ public class Toolbar {
 	private final Locator docActionButton;
 	private final Locator docActionPopup;
 	private final Locator closeWindow;
+	private final Locator requeryButton;
 
 	public Toolbar(Page page) {
 		this.page = page;
@@ -40,9 +41,45 @@ public class Toolbar {
 		this.searchButton = page.locator("//a[@title='Lookup Record    Alt+F']");
 		this.docNoSearchInput = page.locator("//input[@instancename='DocumentNo']");
 		this.searchOkButton = page.locator("(//button[@title='OK'])[1]");
-		this.docActionButton = page.locator("//button[@instancename='C_Order0DocAction'] | //button[@instancename='M_InOut0DocAction'] | //button[contains(@instancename,'DocAction')]");
+		this.docActionButton = page.locator("//button[@instancename='PHX_SOP0DocAction'] | //button[@instancename='C_Order0DocAction'] | //button[@instancename='M_InOut0DocAction'] | //button[contains(@instancename,'DocAction')]");
 		this.docActionPopup = page.locator("//div[@instancename='documentAction']");
 		this.closeWindow = page.locator("//div[@class='z-tab-button']//i[@aria-label='Close']");
+		this.requeryButton = page.locator("//div[contains(@class,'adwindow-toolbar')]//a[contains(@title,'ReQuery') and not(contains(@class,'trash'))] | //a[@title='ReQuery    Alt+F5' and not(contains(@class,'trash'))]");
+	}
+
+	/**
+	 * Clicks the Toolbar 'ReQuery' button (Alt+F5) to refresh the current record.
+	 */
+	public void clickRequery() {
+		log.info("Clicking ReQuery button from toolbar...");
+		try {
+			Locator btn = page.locator("//div[contains(@class,'adwindow-toolbar')]//a[contains(@title,'ReQuery') and not(contains(@class,'trash'))] | //a[@title='ReQuery    Alt+F5' and not(contains(@class,'trash'))]").first();
+			if (btn.isVisible()) {
+				btn.click(new Locator.ClickOptions().setTimeout(2500).setForce(true));
+			} else {
+				page.keyboard().press("Alt+F5");
+			}
+		} catch (Exception e) {
+			log.warn("ReQuery button click failed, pressing Alt+F5: {}", e.getMessage());
+			page.keyboard().press("Alt+F5");
+		}
+		page.waitForTimeout(2000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		log.info("Record re-queried successfully.");
+	}
+
+	/**
+	 * Alias for clickRequery().
+	 */
+	public void clickOnRequeryButton() {
+		clickRequery();
+	}
+
+	/**
+	 * Hits the ReQuery button from toolbar.
+	 */
+	public void hitRequeryButton() {
+		clickRequery();
 	}
 
 	/**

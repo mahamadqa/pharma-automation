@@ -90,4 +90,79 @@ public class HTMLReportsPreview {
 
 		log.info("✅ HTML Report Preview overlap verification passed for all [{}] pages.", totalPages);
 	}
+
+	/**
+	 * Verifies that text elements inside the HTML report preview do not overlap with each other.
+	 */
+	public void checkTextOverlapIssue() {
+		log.info("Checking for text overlap issues in HTML Report Preview...");
+
+		Locator iframeLoc = page.locator("//iframe[@class='z-iframe']").first();
+		try {
+			iframeLoc.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(15000));
+		} catch (Exception e) {
+			log.warn("Report iframe wait timed out: {}", e.getMessage());
+			Assert.fail("Report iframe not found for text overlap verification.");
+		}
+
+		String jsScript =
+			"(iframe) => {\n" +
+			"  const doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);\n" +
+			"  if (!doc) return 'ERROR: Unable to access iframe document';\n" +
+			"  const pages = Array.from(doc.querySelectorAll('.pagedjs_page, [data-page-number]'));\n" +
+			"  if (pages.length === 0) return '';\n" +
+			"  const overlaps = [];\n" +
+			"  pages.forEach((pageEl, idx) => {\n" +
+			"    const pageNum = pageEl.getAttribute('data-page-number') || (idx + 1);\n" +
+			"    const walker = doc.createTreeWalker(pageEl, NodeFilter.SHOW_TEXT, {\n" +
+			"      acceptNode: function(node) {\n" +
+			"        if (!node.textContent || !node.textContent.trim()) return NodeFilter.FILTER_REJECT;\n" +
+			"        const parent = node.parentElement;\n" +
+			"        if (!parent) return NodeFilter.FILTER_REJECT;\n" +
+			"        const style = window.getComputedStyle(parent);\n" +
+			"        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return NodeFilter.FILTER_REJECT;\n" +
+			"        return NodeFilter.FILTER_ACCEPT;\n" +
+			"      }\n" +
+			"    });\n" +
+			"    const textItems = [];\n" +
+			"    let textNode;\n" +
+			"    while ((textNode = walker.nextNode())) {\n" +
+			"      const range = doc.createRange();\n" +
+			"      range.selectNodeContents(textNode);\n" +
+			"      const rects = Array.from(range.getClientRects());\n" +
+			"      for (const r of rects) {\n" +
+			"        if (r.width > 1 && r.height > 1) {\n" +
+			"          textItems.push({\n" +
+			"            text: textNode.textContent.trim(),\n" +
+			"            rect: { top: r.top, bottom: r.bottom, left: r.left, right: r.right },\n" +
+			"            node: textNode\n" +
+			"          });\n" +
+			"        }\n" +
+			"      }\n" +
+			"    }\n" +
+			"    for (let i = 0; i < textItems.length; i++) {\n" +
+			"      for (let j = i + 1; j < textItems.length; j++) {\n" +
+			"        const a = textItems[i];\n" +
+			"        const b = textItems[j];\n" +
+			"        if (a.node === b.node) continue;\n" +
+			"        const xOverlap = Math.max(0, Math.min(a.rect.right, b.rect.right) - Math.max(a.rect.left, b.rect.left));\n" +
+			"        const yOverlap = Math.max(0, Math.min(a.rect.bottom, b.rect.bottom) - Math.max(a.rect.top, b.rect.top));\n" +
+			"        if (xOverlap > 3 && yOverlap > 3) {\n" +
+			"          const snippetA = a.text.length > 25 ? a.text.substring(0, 25) + '...' : a.text;\n" +
+			"          const snippetB = b.text.length > 25 ? b.text.substring(0, 25) + '...' : b.text;\n" +
+			"          overlaps.push('Page ' + pageNum + ': Text [\"' + snippetA + '\"] overlaps with [\"' + snippetB + '\"] (' + xOverlap.toFixed(1) + 'x' + yOverlap.toFixed(1) + 'px)');\n" +
+			"        }\n" +
+			"      }\n" +
+			"    }\n" +
+			"  });\n" +
+			"  return overlaps.join('; ');\n" +
+			"}";
+
+		String result = (String) iframeLoc.evaluate(jsScript);
+		if (result != null && !result.trim().isEmpty()) {
+			log.error("❌ Text overlap detected in HTML report preview: {}", result);
+			Assert.fail("Text overlap detected in HTML report preview: " + result);
+		}
+		log.info("✅ HTML Report Preview text overlap verification passed for all pages.");
+	}
 }

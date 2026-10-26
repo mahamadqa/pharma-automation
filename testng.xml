@@ -33,11 +33,12 @@
         - parallel="classes" : Runs distinct test classes simultaneously across worker threads
         - thread-count="2"   : Number of concurrent threads (adjust as needed based on system resources)
     -->
-    <test name="Pharma Modules Test" parallel="classes" thread-count="2">
+    <test name="Pharma Modules Test" parallel="classes" thread-count="4">
 
         <classes>
             <class name="baseModules.CreateGRNFromPOFlow"/>
             <class name="baseModules.VerifySOShipmentInvoiceFlow"/>
+            <class name="advanceModules.VerificationOfSOPMaster"/>
         </classes>
 
     </test>

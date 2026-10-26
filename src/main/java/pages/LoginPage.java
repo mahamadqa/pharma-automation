@@ -112,15 +112,17 @@ public class LoginPage {
 	 * @param pass Password
 	 */
 	public void login(String user, String pass) {
-		log.info("Starting login with username: [{}]", user);
+		page.waitForTimeout(1000);
 		this.UserName = user;
-
+		log.info("Starting login with username: [{}]", UserName);
 		// 1. Enter username
 		usernameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		usernameInput.fill(user);
+		usernameInput.clear();
+		page.waitForTimeout(1000);
+		usernameInput.fill(UserName);
 
 		// 2. Enter password
-		passwordInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		passwordInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		passwordInput.fill(pass);
 
 		// 3. Ensure role checkbox is selected
@@ -149,24 +151,24 @@ public class LoginPage {
 			boolean logoVisible = nextScreenLogo.isVisible();
 			if (sa != null) {
 				sa.assertTrue(logoVisible,
-						"[Login] Client/Role selection logo is NOT visible after login for user: [" + user + "]");
+						"[Login] Client/Role selection logo is NOT visible after login for user: [" + UserName + "]");
 			}
 			if (logoVisible) {
-				log.info("Login successful for user: [{}], transitioned to Client & Role selection screen.", user);
+				log.info("Login successful for user: [{}], transitioned to Client & Role selection screen.", UserName);
 			} else {
-				log.warn("[Login] Post-login logo NOT visible for user: [{}] — soft assertion recorded.", user);
+				log.warn("[Login] Post-login logo NOT visible for user: [{}] — soft assertion recorded.", UserName);
 			}
 		} catch (Exception e) {
 			if (errorMessage.isVisible()) {
 				String errText = errorMessage.innerText().trim();
-				log.error("Login failed for user [{}] with application error: [{}]", user, errText);
+				log.error("Login failed for user [{}] with application error: [{}]", UserName, errText);
 				if (sa != null) {
-					sa.fail("[Login] Application error for user [" + user + "]: " + errText);
+					sa.fail("[Login] Application error for user [" + UserName + "]: " + errText);
 				}
 			} else {
-				log.error("Login timed out waiting for post-login screen for user [{}]: {}", user, e.getMessage());
+				log.error("Login timed out waiting for post-login screen for user [{}]: {}", UserName, e.getMessage());
 				if (sa != null) {
-					sa.fail("[Login] Timed out waiting for post-login screen for user: [" + user + "]");
+					sa.fail("[Login] Timed out waiting for post-login screen for user: [" + UserName + "]");
 				}
 			}
 		}

@@ -38,6 +38,9 @@ import pages.SalesInvoice;
 import pages.SOPMaster;
 import pages.Toolbar;
 import pages.WorkflowActivities;
+import pages.PrintReport;
+import pages.DocumentExplorer;
+import pages.SystemConfiguration;
 import utils.ConfigReader;
 import utils.CustomSoftAssert;
 import utils.ExtentManager;
@@ -79,6 +82,9 @@ public class BaseTest {
 	protected SalesOrder salesOrder;
 	protected CustomerShipment customerShipment;
 	protected SalesInvoice salesInvoice;
+	protected PrintReport printReport;
+	protected DocumentExplorer documentExplorer;
+	protected SystemConfiguration systemConfiguration;
 
 	protected static ExtentReports extent;
 	protected static ExtentSparkReporter sparkReporter;
@@ -207,6 +213,9 @@ public class BaseTest {
 		workflowActivities = new WorkflowActivities(page);
 		hTMLPreview = new HTMLReportsPreview(page);
 		sopMaster = new SOPMaster(page);
+		printReport = new PrintReport(page);
+		documentExplorer = new DocumentExplorer(page);
+		systemConfiguration = new SystemConfiguration(page);
 
 		loginPage.navigateToMainLoginPage();
 		loginPage.checkLogoOnLogin();
