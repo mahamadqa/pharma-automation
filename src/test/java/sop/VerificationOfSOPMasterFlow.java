@@ -33,7 +33,7 @@ public class VerificationOfSOPMasterFlow extends BaseTest {
 	private static final Logger log = LogManager.getLogger(VerificationOfSOPMasterFlow.class);
 
 	@Test(groups = { "advance",
-			"sop" }, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
+			"sop" }, alwaysRun = true, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
 	public void verificationOfSOPMasterLifecycle() {
 
 		log.info("================================================================================");

@@ -15,7 +15,7 @@
     RetryListener  → Auto-wires RetryAnalyzer to every @Test (max 2 retries)
     ─────────────────────────────────────────────────────────────────────
 -->
-<suite name="Pharma Automation Test Suite" verbose="1" parallel="classes" thread-count="2">
+<suite name="Pharma Automation Test Suite" verbose="1" parallel="classes" thread-count="4">
 
     <!-- ═══════════════════════════════════════════════════════════
          LISTENERS
@@ -30,16 +30,18 @@
 
     <!--
         Parallel Execution Configuration:
-        - parallel="classes" : Runs distinct test classes simultaneously across worker threads
-        - thread-count="2"   : Number of concurrent threads (adjust as needed based on system resources)
+        - parallel="classes" : Runs test classes concurrently across worker threads
+        - thread-count="4"   : Number of concurrent threads
+        - Execution Flow:
+          * baseModules classes and sop.VerificationOfSOPMasterFlow run in parallel
+          * sop.VerifySOPMasterFlowIfEffectivenessCheckRequired starts only after
+            sop.VerificationOfSOPMasterFlow has fully completed (enforced via dependsOnMethods)
     -->
     <test name="Pharma Modules Test" parallel="classes" thread-count="4">
-
         <packages>
-           <!-- <package name="baseModules"/> -->
+            <package name="baseModules"/>
             <package name="sop"/>
         </packages>
-
     </test>
 
 </suite>
