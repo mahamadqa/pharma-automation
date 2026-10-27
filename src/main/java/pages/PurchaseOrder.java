@@ -64,12 +64,7 @@ public class PurchaseOrder {
 		this.poHeaderBreadcrumb = page.locator("//div[@instancename='breadcrumb']//a[text()='Purchase Order']");
 		this.poMenuSearchInput = page
 				.locator("//input[contains(@class,'z-bandbox-input')] | (//input[@placeholder='Alt+G'])[1]");
-		this.searchPOWindowItem = page.locator(
-				"//div[contains(@class,'z-bandbox-popup')]//tr[contains(.,'Purchase Order') and not(contains(.,'Close')) and not(contains(.,'Matched'))]//a[@title='New'] | "
-						+
-						"//tr[contains(.,'Purchase Order')]//a[@title='New'] | " +
-						"//td[contains(.,'Purchase Order')]/following-sibling::td//a[@title='New'] | " +
-						"//td[@title='Manage Purchase Orders']/following-sibling::td//a[@title='New']");
+		this.searchPOWindowItem = page.locator("//td[@title='Manage Purchase Orders']/following-sibling::td//a[@title='New']");
 		this.partnerLocation = page.locator("//span[@instancename='C_Order0C_BPartner_Location_ID']//input");
 		this.invoiceLocation = page.locator("//span[@instancename='C_Order0Bill_Location_ID']//input");
 		this.TotalLinesAmt = page.locator("(//div[@instancename='C_Order0TotalLines']//input)[1]");

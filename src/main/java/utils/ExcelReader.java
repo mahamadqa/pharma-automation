@@ -21,8 +21,21 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 public class ExcelReader {
 
 	private static final Logger log = LogManager.getLogger(ExcelReader.class);
-	private static final String DEFAULT_EXCEL_PATH = System.getProperty("user.dir") + "/src/test/resources/testdata/sop_contents.xlsx";
+	private static final String DEFAULT_EXCEL_PATH = resolveDefaultExcelPath();
 	private static final Map<String, String> cache = new HashMap<>();
+
+	private static String resolveDefaultExcelPath() {
+		String base = System.getProperty("user.dir");
+		File preferred = new File(base + "/src/test/resources/testData_SOP/sop_contents.xlsx");
+		if (preferred.exists()) {
+			return preferred.getAbsolutePath();
+		}
+		File fallback = new File(base + "/src/test/resources/testdata/sop_contents.xlsx");
+		if (fallback.exists()) {
+			return fallback.getAbsolutePath();
+		}
+		return preferred.getAbsolutePath();
+	}
 
 	/**
 	 * Reads all key-value rows from the specified sheet in an Excel file.

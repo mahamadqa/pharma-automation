@@ -98,7 +98,7 @@ public class CreateSOPExcelData {
 		}
 		dataSheet.autoSizeColumn(0);
 
-		File dest = new File("src/test/resources/testdata/sop_contents.xlsx");
+		File dest = new File("src/test/resources/testData_SOP/sop_contents.xlsx");
 		dest.getParentFile().mkdirs();
 		try (FileOutputStream fos = new FileOutputStream(dest)) {
 			workbook.write(fos);

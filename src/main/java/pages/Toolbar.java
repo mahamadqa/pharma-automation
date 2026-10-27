@@ -41,10 +41,12 @@ public class Toolbar {
 		this.searchButton = page.locator("//a[@title='Lookup Record    Alt+F']");
 		this.docNoSearchInput = page.locator("//input[@instancename='DocumentNo']");
 		this.searchOkButton = page.locator("(//button[@title='OK'])[1]");
-		this.docActionButton = page.locator("//button[@instancename='PHX_SOP0DocAction'] | //button[@instancename='C_Order0DocAction'] | //button[@instancename='M_InOut0DocAction'] | //button[contains(@instancename,'DocAction')]");
+		this.docActionButton = page.locator(
+				"//button[@instancename='PHX_SOP0DocAction'] | //button[@instancename='C_Order0DocAction'] | //button[@instancename='M_InOut0DocAction'] | //button[contains(@instancename,'DocAction')]");
 		this.docActionPopup = page.locator("//div[@instancename='documentAction']");
 		this.closeWindow = page.locator("//div[@class='z-tab-button']//i[@aria-label='Close']");
-		this.requeryButton = page.locator("//div[contains(@class,'adwindow-toolbar')]//a[contains(@title,'ReQuery') and not(contains(@class,'trash'))] | //a[@title='ReQuery    Alt+F5' and not(contains(@class,'trash'))]");
+		this.requeryButton = page.locator(
+				"//div[contains(@class,'adwindow-toolbar')]//a[contains(@title,'ReQuery') and not(contains(@class,'trash'))] | //a[@title='ReQuery    Alt+F5' and not(contains(@class,'trash'))]");
 	}
 
 	/**
@@ -53,7 +55,9 @@ public class Toolbar {
 	public void clickRequery() {
 		log.info("Clicking ReQuery button from toolbar...");
 		try {
-			Locator btn = page.locator("//div[contains(@class,'adwindow-toolbar')]//a[contains(@title,'ReQuery') and not(contains(@class,'trash'))] | //a[@title='ReQuery    Alt+F5' and not(contains(@class,'trash'))]").first();
+			Locator btn = page.locator(
+					"//div[contains(@class,'adwindow-toolbar')]//a[contains(@title,'ReQuery') and not(contains(@class,'trash'))] | //a[@title='ReQuery    Alt+F5' and not(contains(@class,'trash'))]")
+					.first();
 			if (btn.isVisible()) {
 				btn.click(new Locator.ClickOptions().setTimeout(2500).setForce(true));
 			} else {
@@ -102,7 +106,7 @@ public class Toolbar {
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Record saved successfully.");
 	}
-	
+
 	public void closeWindow() {
 		closeWindow.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		closeWindow.click();
@@ -123,7 +127,8 @@ public class Toolbar {
 	 * Toggles between Form View and Grid View on the active subtab (detail pane).
 	 */
 	public void clickOnSubtabGrid() {
-		Locator toggleBtn = page.locator("(//div[contains(@class,'z-tabpanel') and not(contains(@style,'display: none')) and not(contains(@style,'display:none'))]//a[contains(@title,'Shift+Alt+T')])[1]");
+		Locator toggleBtn = page.locator(
+				"(//div[contains(@class,'z-tabpanel') and not(contains(@style,'display: none')) and not(contains(@style,'display:none'))]//a[contains(@title,'Shift+Alt+T')])[1]");
 		toggleBtn.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		toggleBtn.click();
 		page.waitForTimeout(1000);
@@ -136,8 +141,10 @@ public class Toolbar {
 	 */
 	public void ensureSubtabFormView() {
 		try {
-			Locator formView = page.locator("//div[contains(@class,'z-tabpanel') and not(contains(@style,'display: none')) and not(contains(@style,'display:none'))]//div[contains(@class,'adwindow-form')]");
-			Locator toggleBtn = page.locator("(//div[contains(@class,'z-tabpanel') and not(contains(@style,'display: none')) and not(contains(@style,'display:none'))]//a[contains(@title,'Shift+Alt+T')])[1]");
+			Locator formView = page.locator(
+					"//div[contains(@class,'z-tabpanel') and not(contains(@style,'display: none')) and not(contains(@style,'display:none'))]//div[contains(@class,'adwindow-form')]");
+			Locator toggleBtn = page.locator(
+					"(//div[contains(@class,'z-tabpanel') and not(contains(@style,'display: none')) and not(contains(@style,'display:none'))]//a[contains(@title,'Shift+Alt+T')])[1]");
 			if (toggleBtn.isVisible()) {
 				boolean isFormVisible = formView.count() > 0 && formView.first().isVisible();
 				if (!isFormVisible) {
@@ -179,19 +186,47 @@ public class Toolbar {
 	}
 
 	public void performDocAction(String action) {
-		docActionButton.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		docActionButton.first()
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		docActionButton.first().click();
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-		docActionPopup.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+		docActionPopup.first()
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 		Locator dropdown = page.locator("//div[@instancename='documentAction']//select");
 		dropdown.first().selectOption(new SelectOption().setLabel(action));
 		page.click("//div[@instancename='documentAction']//button[@title='OK']");
 		WaitUtils.waitForBigLoadingIndicatorToDisappear(page);
 		page.waitForTimeout(400);
 	}
+
+
+public void checkGridView() {
+    Locator frozenElements = page.locator("//div[@class='z-frozen']");
+    Locator gridToggle = page.locator("//a[@title='Grid Toggle    Alt+T']");
+
+    try {
+        boolean gridVisible = false;
+        page.waitForTimeout(2000);
+        for (int i = 0; i < frozenElements.count(); i++) {
+            if (frozenElements.nth(i).isVisible()) {
+                gridVisible = true;
+                break;
+            }
+        }
+
+        if (gridVisible) {
+            gridToggle.click();
+            WaitUtils.waitForLoadingIndicatorToDisappear(page);
+        }
+    } catch (Exception e) {
+        throw new RuntimeException("Failed to handle grid view", e);
+    }
+}
+
 	
 	public void verifyDocStatus(String status) {
-		Locator DocStatus = page.locator("//span[contains(@instancename,'DocStatus')]//input | //div[contains(@instancename,'DocStatus')]//input | //input[contains(@instancename,'DocStatus')]");
+		Locator DocStatus = page.locator(
+				"//span[contains(@instancename,'DocStatus')]//input | //div[contains(@instancename,'DocStatus')]//input | //input[contains(@instancename,'DocStatus')]");
 		String actualStatus = DocStatus.first().inputValue();
 
 		SoftAssert sa = base.BaseTest.getSoftAssert();
@@ -206,13 +241,16 @@ public class Toolbar {
 		if (actualStatus.equalsIgnoreCase(status)) {
 			log.info("DocStatus verified successfully: [{}]", actualStatus);
 		} else {
-			log.warn("DocStatus mismatch — Expected: [{}] Actual: [{}] — soft assertion recorded.", status, actualStatus);
+			log.warn("DocStatus mismatch — Expected: [{}] Actual: [{}] — soft assertion recorded.", status,
+					actualStatus);
 		}
 	}
 
 	public void navigateBackToheader() {
 		// TODO Auto-generated method stub
-		page.locator("(//div[@instancename='breadcrumb']//a[@class='z-a'])[1] | (//div[@instancename='breadcrumb']//a[@class='z-a'])[2] | (//div[@instancename='breadcrumb']//a[@class='z-a'])[3]").click();
+		page.locator(
+				"(//div[@instancename='breadcrumb']//a[@class='z-a'])[1] | (//div[@instancename='breadcrumb']//a[@class='z-a'])[2] | (//div[@instancename='breadcrumb']//a[@class='z-a'])[3]")
+				.click();
 	}
 
 }

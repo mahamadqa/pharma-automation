@@ -24,6 +24,7 @@ public class SystemConfiguration {
 
 	// Menu Search
 	private final Locator menuSearchInput;
+	private final Locator searchButton;
 	private final Locator systemConfiguratorLabel;
 
 	// Lookup Record Dialog
@@ -43,7 +44,7 @@ public class SystemConfiguration {
 
 	public SystemConfiguration(Page page) {
 		this.page = page;
-
+		this.searchButton = page.locator("//a[@title='Lookup Record    Alt+F']");
 		// Menu Search Locators
 		this.menuSearchInput = page.locator("//input[contains(@class,'z-bandbox-input')] | (//input[@placeholder='Alt+G'])[1]");
 		this.systemConfiguratorLabel = page.locator(
@@ -125,6 +126,8 @@ public class SystemConfiguration {
 		}
 
 		lookupNameInput.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		lookupNameInput.first().clear();
+		page.waitForTimeout(1000);
 		lookupNameInput.first().fill(configName);
 		page.waitForTimeout(500);
 
@@ -196,7 +199,15 @@ public class SystemConfiguration {
 		openSystemConfiguratorWindow();
 		searchRecordInLookup(configName);
 		verifyOrUpdateConfigValue(expectedValue);
-		closeWindow();
+		try {	
+			searchRecordInLookup("SOP_AS_ATTACHMENT");
+			verifyOrUpdateConfigValue("N");
+			searchRecordInLookup("SOP_Format_As_Aattachment");
+			verifyOrUpdateConfigValue("N");
+			closeWindow();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
 	}
 
 	/**

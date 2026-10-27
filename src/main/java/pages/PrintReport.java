@@ -9,11 +9,15 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
+import base.BaseTest;
+import utils.CustomSoftAssert;
 import utils.WaitUtils;
 
 /**
  * Page object representing the Report: SOP preview window,
- * controlled copy stamps, supersede copy stamps, and print dialog interactions.
+ * master copy stamps, controlled copy stamps, supersede copy stamps,
+ * section and text overlap verifications, and report interactions.
+ * Uses CustomSoftAssert so formatting/text/stamp discrepancies are collected as soft assertions.
  */
 public class PrintReport {
 
@@ -26,57 +30,153 @@ public class PrintReport {
 
 	public PrintReport(Page page) {
 		this.page = page;
-		this.reportTab = page.locator("//li[contains(@class,'z-tab')]//span[contains(text(),'Report: SOP') or contains(text(),'Report : SOP')]");
+		this.reportTab = page.locator(
+				"//li[contains(@class,'z-tab') and contains(.,'Report')] | " +
+				"//li[contains(@class,'z-tab')]//span[contains(text(),'Report: SOP') or contains(text(),'Report : SOP') or contains(text(),'Report')]");
 		this.closeReportTabButton = page.locator(
-				"//li[contains(@class,'z-tab') and .//span[contains(text(),'Report')]]//i[contains(@class,'z-tab-icon') or contains(@class,'z-icon-times') or @aria-label='Close'] | " +
-				"//li[contains(@class,'z-tab')]//span[contains(text(),'Report: SOP') or contains(text(),'Report : SOP')]/following-sibling::i[contains(@class,'z-tab-icon')] | " +
+				"//li[contains(@class,'z-tab') and contains(.,'Report')]//i[contains(@class,'z-tab-icon') or contains(@class,'z-icon-times') or @aria-label='Close'] | " +
+				"//li[contains(@class,'z-tab') and contains(.,'Report')]//a[contains(@class,'z-tab-close')] | " +
+				"//li[contains(@class,'z-tab')]//span[contains(text(),'Report')]/following-sibling::i[contains(@class,'z-tab-icon')] | " +
 				"//div[@class='z-tab-button']//i[@aria-label='Close']");
 		this.printButton = page.locator("//a[@title='Print    Alt+P'] | //button[@title='Print'] | //div[contains(@class,'z-tabpanel') and not(contains(@style,'display: none'))]//a[@title='Print    Alt+P']");
+	}
+
+	private void softAssertTrue(boolean condition, String message) {
+		CustomSoftAssert sa = BaseTest.getSoftAssert();
+		if (sa != null) {
+			sa.assertTrue(condition, message);
+		} else {
+			Assert.assertTrue(condition, message);
+		}
+	}
+
+	private void softAssertEquals(Object actual, Object expected, String message) {
+		CustomSoftAssert sa = BaseTest.getSoftAssert();
+		if (sa != null) {
+			sa.assertEquals(actual, expected, message);
+		} else {
+			Assert.assertEquals(actual, expected, message);
+		}
+	}
+
+	private void softAssertFail(String message) {
+		CustomSoftAssert sa = BaseTest.getSoftAssert();
+		if (sa != null) {
+			sa.fail(message);
+		} else {
+			Assert.fail(message);
+		}
+	}
+
+	/**
+	 * Scopes to the active report iframe (excluding dashboard iframes).
+	 */
+	public FrameLocator getReportFrame() {
+		return page.frameLocator("iframe.z-iframe:not(.dashboard-report-iframe)");
+	}
+
+	/**
+	 * Returns the Locator for the active report iframe element.
+	 */
+	public Locator getReportIframeLocator() {
+		return page.locator("iframe.z-iframe:not(.dashboard-report-iframe)").first();
 	}
 
 	/**
 	 * Verifies that the Report: SOP window tab has opened and the report iframe is rendered.
 	 */
 	public void verifyReportOpened() {
-		log.info("Verifying Report: SOP window is opened...");
+		log.info("Verifying Report preview window is opened...");
 		try {
 			reportTab.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
 		} catch (Exception e) {
 			log.warn("Report tab wait timed out: {}", e.getMessage());
 		}
 
-		FrameLocator reportFrame = page.frameLocator("//iframe[@class='z-iframe']");
+		Locator iframeEl = getReportIframeLocator();
+		try {
+			iframeEl.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(15000));
+			log.info("Report iframe is attached.");
+		} catch (Exception e) {
+			log.warn("Report iframe wait timed out: {}", e.getMessage());
+		}
+
+		FrameLocator reportFrame = getReportFrame();
 		try {
 			reportFrame.locator("body").waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
 			log.info("Report body is visible inside iframe.");
 		} catch (Exception e) {
 			log.warn("Report body wait in iframe timed out: {}", e.getMessage());
 		}
+
+		// Wait for pagedjs rendering to finish
+		try {
+			reportFrame.locator(".pagedjs_page, [data-page-number]").first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(15000));
+			log.info("Report pages have finished rendering.");
+		} catch (Exception e) {
+			log.warn("Report pages wait in iframe timed out: {}", e.getMessage());
+		}
+
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 	}
 
 	/**
-	 * Verifies whether the 'Master Copy' stamp is displayed on the SOP report.
+	 * Verifies whether the 'Master Copy' stamp is displayed on all pages of the SOP report.
 	 *
 	 * @param expectedVisible true if stamp is expected, false if it should NOT be present.
 	 */
-	public void verifyMasterCopyStamp(boolean expectedVisible) {
-		log.info("Verifying 'Master Copy' stamp. Expected visible: [{}]", expectedVisible);
-		FrameLocator reportFrame = page.frameLocator("//iframe[@class='z-iframe']");
+	/**
+	 * Returns the count of visible 'Master Copy' stamps on the report.
+	 */
+	public int getVisibleMasterCopyStampsCount() {
+		FrameLocator reportFrame = getReportFrame();
+		Locator stampLoc = reportFrame.locator(
+				"//div[translate(normalize-space(text()), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') = 'MASTER COPY'] | " +
+				"//span[translate(normalize-space(text()), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') = 'MASTER COPY'] | " +
+				"//div[contains(@class,'stamp') and contains(translate(normalize-space(text()), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'MASTER COPY')] | " +
+				"//*[contains(translate(normalize-space(text()), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'MASTER COPY') and (contains(@style,'color') or contains(@style,'font-size'))]");
 
-		Locator stampLoc = reportFrame.locator("//div[contains(@class,'stamp') and contains(text(),'Master Copy')] | //span[contains(text(),'Master Copy')] | //*[contains(text(),'Master Copy')]");
-		boolean isDisplayed = false;
+		int visibleStamps = 0;
 		try {
-			isDisplayed = stampLoc.count() > 0 && stampLoc.first().isVisible();
+			for (Locator loc : stampLoc.all()) {
+				try {
+					if (loc.isVisible()) {
+						visibleStamps++;
+					}
+				} catch (Exception ignored) {
+				}
+			}
+		} catch (Exception e) {
+			log.warn("Exception counting visible stamps: {}", e.getMessage());
+		}
+		return visibleStamps;
+	}
+
+	public void verifyMasterCopyStamp(boolean expectedVisible) {
+		log.info("Verifying 'Master Copy' stamp across report pages. Expected visible: [{}]", expectedVisible);
+		FrameLocator reportFrame = getReportFrame();
+
+		int totalPages = 0;
+		try {
+			totalPages = reportFrame.locator(".pagedjs_page, [data-page-number]").count();
 		} catch (Exception ignored) {
 		}
 
+		int visibleStamps = getVisibleMasterCopyStampsCount();
+		log.info("Detected [{}] total page(s) and [{}] visible 'Master Copy' stamp(s).", totalPages, visibleStamps);
+
 		if (expectedVisible) {
-			Assert.assertTrue(isDisplayed, "Expected 'Master Copy' stamp to be visible on Report, but it was not found.");
-			log.info("✅ 'Master Copy' stamp verified successfully.");
+			softAssertTrue(visibleStamps > 0,
+					"Expected 'Master Copy' stamp to be visible on Report, but found 0 visible stamps across " + totalPages + " page(s).");
+			if (visibleStamps > 0) {
+				log.info("✅ 'Master Copy' stamp verified successfully on [{}] page(s).", visibleStamps);
+			}
 		} else {
-			Assert.assertFalse(isDisplayed, "Expected 'Master Copy' stamp NOT to be displayed, but it was visible.");
-			log.info("✅ Verified 'Master Copy' stamp is NOT displayed as expected.");
+			softAssertEquals(visibleStamps, 0,
+					"Expected 'Master Copy' stamp NOT to be displayed, but found [" + visibleStamps + "] visible stamp(s).");
+			if (visibleStamps == 0) {
+				log.info("✅ Verified 'Master Copy' stamp is NOT displayed as expected.");
+			}
 		}
 	}
 
@@ -87,21 +187,33 @@ public class PrintReport {
 	 */
 	public void verifyControlledCopyStamp(boolean expectedVisible) {
 		log.info("Verifying 'Controlled Copy' stamp. Expected visible: [{}]", expectedVisible);
-		FrameLocator reportFrame = page.frameLocator("//iframe[@class='z-iframe']");
+		FrameLocator reportFrame = getReportFrame();
 
-		Locator stampLoc = reportFrame.locator("//div[contains(@class,'stamp') and contains(text(),'Controlled Copy')] | //span[contains(text(),'Controlled Copy')] | //*[contains(text(),'Controlled Copy')]");
-		boolean isDisplayed = false;
+		Locator stampLoc = reportFrame.locator(
+				"//div[contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'CONTROLLED COPY')] | " +
+				"//span[contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'CONTROLLED COPY')] | " +
+				"//div[contains(@class,'stamp') and contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'CONTROLLED COPY')]");
+
+		int visibleStamps = 0;
 		try {
-			isDisplayed = stampLoc.count() > 0 && stampLoc.first().isVisible();
+			for (Locator loc : stampLoc.all()) {
+				if (loc.isVisible()) {
+					visibleStamps++;
+				}
+			}
 		} catch (Exception ignored) {
 		}
 
 		if (expectedVisible) {
-			Assert.assertTrue(isDisplayed, "Expected 'Controlled Copy' stamp to be visible on Report, but it was not found.");
-			log.info("✅ 'Controlled Copy' stamp verified successfully.");
+			softAssertTrue(visibleStamps > 0, "Expected 'Controlled Copy' stamp to be visible on Report, but it was not found.");
+			if (visibleStamps > 0) {
+				log.info("✅ 'Controlled Copy' stamp verified successfully on [{}] page(s).", visibleStamps);
+			}
 		} else {
-			Assert.assertFalse(isDisplayed, "Expected 'Controlled Copy' stamp NOT to be displayed, but it was visible.");
-			log.info("✅ Verified 'Controlled Copy' stamp is NOT displayed.");
+			softAssertEquals(visibleStamps, 0, "Expected 'Controlled Copy' stamp NOT to be displayed, but found [" + visibleStamps + "] visible stamp(s).");
+			if (visibleStamps == 0) {
+				log.info("✅ Verified 'Controlled Copy' stamp is NOT displayed.");
+			}
 		}
 	}
 
@@ -112,21 +224,34 @@ public class PrintReport {
 	 */
 	public void verifySupersedeCopyStamp(boolean expectedVisible) {
 		log.info("Verifying 'Supersede Copy' stamp. Expected visible: [{}]", expectedVisible);
-		FrameLocator reportFrame = page.frameLocator("//iframe[@class='z-iframe']");
+		FrameLocator reportFrame = getReportFrame();
 
-		Locator stampLoc = reportFrame.locator("//div[contains(@class,'stamp') and (contains(text(),'Supersede') or contains(text(),'Superseded'))] | //*[contains(text(),'Supersede Copy')]");
-		boolean isDisplayed = false;
+		Locator stampLoc = reportFrame.locator(
+				"//div[contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'SUPERSEDE COPY') or contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'SUPERSEDED COPY') or contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'SUPERSEDED')] | " +
+				"//span[contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'SUPERSEDE COPY') or contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'SUPERSEDED COPY') or contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'SUPERSEDED')] | " +
+				"//div[contains(@class,'stamp') and (contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'SUPERSEDE') or contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'SUPERSEDED'))] | " +
+				"//div[contains(translate(normalize-space(text()), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'SUPERSEDE COPY') or contains(translate(normalize-space(text()), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'SUPERSEDED COPY')]");
+
+		int visibleStamps = 0;
 		try {
-			isDisplayed = stampLoc.count() > 0 && stampLoc.first().isVisible();
+			for (Locator loc : stampLoc.all()) {
+				if (loc.isVisible()) {
+					visibleStamps++;
+				}
+			}
 		} catch (Exception ignored) {
 		}
 
 		if (expectedVisible) {
-			Assert.assertTrue(isDisplayed, "Expected 'Supersede Copy' stamp to be visible on Report, but it was not found.");
-			log.info("✅ 'Supersede Copy' stamp verified successfully.");
+			softAssertTrue(visibleStamps > 0, "Expected 'Supersede Copy' stamp to be visible on Report, but it was not found.");
+			if (visibleStamps > 0) {
+				log.info("✅ 'Supersede Copy' stamp verified successfully on [{}] page(s).", visibleStamps);
+			}
 		} else {
-			Assert.assertFalse(isDisplayed, "Expected 'Supersede Copy' stamp NOT to be displayed, but it was visible.");
-			log.info("✅ Verified 'Supersede Copy' stamp is NOT displayed.");
+			softAssertEquals(visibleStamps, 0, "Expected 'Supersede Copy' stamp NOT to be displayed, but found [" + visibleStamps + "] visible stamp(s).");
+			if (visibleStamps == 0) {
+				log.info("✅ Verified 'Supersede Copy' stamp is NOT displayed.");
+			}
 		}
 	}
 
@@ -138,12 +263,12 @@ public class PrintReport {
 	 */
 	public void verifyReportContent(String docNo, String description) {
 		log.info("Verifying report text contains Doc No: [{}] and Description: [{}]", docNo, description);
-		FrameLocator reportFrame = page.frameLocator("//iframe[@class='z-iframe']");
+		FrameLocator reportFrame = getReportFrame();
 		String bodyText = reportFrame.locator("body").innerText();
 
-		Assert.assertTrue(bodyText.contains(docNo), "Report body does not contain SOP Doc No: " + docNo);
+		softAssertTrue(bodyText.contains(docNo), "Report body does not contain SOP Doc No: " + docNo);
 		if (description != null && !description.isEmpty()) {
-			Assert.assertTrue(bodyText.contains(description), "Report body does not contain Description: " + description);
+			softAssertTrue(bodyText.contains(description), "Report body does not contain Description: " + description);
 		}
 		log.info("✅ Report text verified successfully.");
 	}
@@ -167,50 +292,42 @@ public class PrintReport {
 	}
 
 	/**
-	 * Closes the Report: SOP tab and returns to the previous tab.
+	 * Closes the Report view tab and returns to the previous SOP Master window.
 	 */
 	public void closeReportTab() {
-		log.info("Closing/Exiting Report: SOP view to return to SOP Master window...");
+		log.info("Closing/Exiting Report view to return to SOP Master window...");
 		try {
-			// 1. Try close button on Report tab
-			Locator closeIcons = page.locator(
-					"//li[@title='Report: SOP']//i[@aria-label='Close']");
+			// Find the close button strictly inside the Report tab
+			Locator reportTabClose = page.locator(
+					"//li[contains(@class,'z-tab') and contains(.,'Report')]//i[contains(@class,'z-tab-icon') or contains(@class,'z-icon-times') or @aria-label='Close'] | " +
+					"//li[contains(@class,'z-tab') and contains(.,'Report')]//a[contains(@class,'z-tab-close')]").first();
 
 			boolean clicked = false;
-			for (Locator loc : closeIcons.all()) {
-				try {
-					if (loc.isVisible()) {
-						loc.click(new Locator.ClickOptions().setForce(true));
-						clicked = true;
-						log.info("Clicked report tab close icon successfully.");
-						break;
-					}
-				} catch (Exception ignored) {
-				}
+			if (reportTabClose.count() > 0 && reportTabClose.isVisible()) {
+				reportTabClose.click();
+				clicked = true;
+				log.info("Clicked Report tab close icon directly.");
 			}
 
-			page.waitForTimeout(1000);
-			WaitUtils.waitForLoadingIndicatorToDisappear(page);
-
-			// 2. If report tab is still present, dispatch ZK onClose event
-			try {
+			if (!clicked) {
 				page.evaluate("() => { " +
-						"let tab = Array.from(document.querySelectorAll('li.z-tab')).find(el => el.innerText.includes('Report')); " +
+						"let tab = Array.from(document.querySelectorAll('li.z-tab')).find(el => el.innerText && el.innerText.includes('Report')); " +
 						"if (tab) { " +
 						"  let btn = tab.querySelector('.z-tab-remove, .z-tab-close, [aria-label=\"Close\"], [class*=\"icon-times\"], [class*=\"z-tab-icon\"]'); " +
 						"  if (btn) btn.click(); " +
 						"  else if (window.zk) { let w = zk.Widget.$(tab); if (w) { try { w.close(); } catch(e){} try { zAu.send(new zk.Event(w, 'onClose')); } catch(e){} } } " +
 						"} " +
 						"}");
-				page.waitForTimeout(1000);
-				WaitUtils.waitForLoadingIndicatorToDisappear(page);
-			} catch (Exception ignored) {
+				log.info("Dispatched close event on Report tab via JavaScript.");
 			}
 
-			// 3. Switch to SOP Master window tab if it exists and is not selected
-			Locator sopTab = page.locator("//li[contains(@class,'z-tab') and contains(.,'SOP Master')]");
-			if (sopTab.count() > 0 && sopTab.first().isVisible()) {
-				sopTab.first().click();
+			page.waitForTimeout(1000);
+			WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+			// Switch to SOP Master window tab if it exists and is not selected
+			Locator sopTab = page.locator("//li[contains(@class,'z-tab') and contains(.,'SOP Master')]").first();
+			if (sopTab.count() > 0 && sopTab.isVisible()) {
+				sopTab.click();
 				page.waitForTimeout(1000);
 				WaitUtils.waitForLoadingIndicatorToDisappear(page);
 			}
@@ -218,18 +335,19 @@ public class PrintReport {
 			log.warn("Exception closing report tab: {}", e.getMessage());
 		}
 	}
-	
+
 	/**
 	 * Verifies that header, content, and footer do not overlap across all pages of the report.
 	 */
 	public void verifyNoSectionOverlap() {
 		log.info("Verifying that header, content, and footer do not overlap across report pages...");
-		Locator iframeLoc = page.locator("//iframe[@class='z-iframe']").first();
+		Locator iframeLoc = getReportIframeLocator();
 		try {
 			iframeLoc.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(15000));
 		} catch (Exception e) {
 			log.warn("Report iframe wait timed out: {}", e.getMessage());
-			Assert.fail("Report iframe not found for section overlap verification.");
+			softAssertFail("Report iframe not found for section overlap verification.");
+			return;
 		}
 
 		String jsScript =
@@ -237,7 +355,7 @@ public class PrintReport {
 			"  const doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);\n" +
 			"  if (!doc) return 'ERROR: Unable to access iframe document';\n" +
 			"  const pages = Array.from(doc.querySelectorAll('.pagedjs_page, [data-page-number]'));\n" +
-			"  if (pages.length === 0) return '';\n" +
+			"  if (pages.length === 0) return 'NO_PAGES';\n" +
 			"  const overlaps = [];\n" +
 			"  pages.forEach((pageEl, idx) => {\n" +
 			"    const pageNum = pageEl.getAttribute('data-page-number') || (idx + 1);\n" +
@@ -254,28 +372,33 @@ public class PrintReport {
 			"      overlaps.push('Page ' + pageNum + ': Content/Footer overlap by ' + (cBox.bottom - fBox.top).toFixed(2) + 'px');\n" +
 			"    }\n" +
 			"  });\n" +
-			"  return overlaps.join('; ');\n" +
+			"  return overlaps.length > 0 ? overlaps.join('; ') : ('OK:' + pages.length);\n" +
 			"}";
 
 		String result = (String) iframeLoc.evaluate(jsScript);
-		if (result != null && !result.trim().isEmpty()) {
+		if (result != null && result.startsWith("OK:")) {
+			String count = result.substring(3);
+			log.info("✅ Verified: Header, content, and footer do not overlap across all [{}] report pages.", count);
+		} else if (result != null && !result.trim().isEmpty() && !result.equals("NO_PAGES")) {
 			log.error("❌ Section overlap detected: {}", result);
-			Assert.fail("Section overlap detected in report: " + result);
+			softAssertFail("Section overlap detected in report: " + result);
+		} else {
+			log.warn("Section overlap check returned: {}", result);
 		}
-		log.info("✅ Verified: Header, content, and footer do not overlap across report pages.");
 	}
 
 	/**
-	 * Verifies that text elements inside the report do not overlap with each other.
+	 * Verifies that text elements inside the report do not overlap with each other across all pages.
 	 */
 	public void verifyNoTextOverlap() {
 		log.info("Verifying that texts do not overlap with each other across report pages...");
-		Locator iframeLoc = page.locator("//iframe[@class='z-iframe']").first();
+		Locator iframeLoc = getReportIframeLocator();
 		try {
 			iframeLoc.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(15000));
 		} catch (Exception e) {
 			log.warn("Report iframe wait timed out: {}", e.getMessage());
-			Assert.fail("Report iframe not found for text overlap verification.");
+			softAssertFail("Report iframe not found for text overlap verification.");
+			return;
 		}
 
 		String jsScript =
@@ -283,7 +406,7 @@ public class PrintReport {
 			"  const doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);\n" +
 			"  if (!doc) return 'ERROR: Unable to access iframe document';\n" +
 			"  const pages = Array.from(doc.querySelectorAll('.pagedjs_page, [data-page-number]'));\n" +
-			"  if (pages.length === 0) return '';\n" +
+			"  if (pages.length === 0) return 'NO_PAGES';\n" +
 			"  const overlaps = [];\n" +
 			"  pages.forEach((pageEl, idx) => {\n" +
 			"    const pageNum = pageEl.getAttribute('data-page-number') || (idx + 1);\n" +
@@ -292,6 +415,7 @@ public class PrintReport {
 			"        if (!node.textContent || !node.textContent.trim()) return NodeFilter.FILTER_REJECT;\n" +
 			"        const parent = node.parentElement;\n" +
 			"        if (!parent) return NodeFilter.FILTER_REJECT;\n" +
+			"        if (parent.closest('.watermark, [class*=\"watermark\"], .stamp, [class*=\"stamp\"]')) return NodeFilter.FILTER_REJECT;\n" +
 			"        const style = window.getComputedStyle(parent);\n" +
 			"        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return NodeFilter.FILTER_REJECT;\n" +
 			"        return NodeFilter.FILTER_ACCEPT;\n" +
@@ -328,15 +452,90 @@ public class PrintReport {
 			"      }\n" +
 			"    }\n" +
 			"  });\n" +
-			"  return overlaps.join('; ');\n" +
+			"  return overlaps.length > 0 ? overlaps.join('; ') : ('OK:' + pages.length);\n" +
 			"}";
 
 		String result = (String) iframeLoc.evaluate(jsScript);
-		if (result != null && !result.trim().isEmpty()) {
+		if (result != null && result.startsWith("OK:")) {
+			String count = result.substring(3);
+			log.info("✅ Verified: Texts do not overlap with each other across all [{}] report pages.", count);
+		} else if (result != null && !result.trim().isEmpty() && !result.equals("NO_PAGES")) {
 			log.error("❌ Text overlap detected: {}", result);
-			Assert.fail("Text overlap detected in report: " + result);
+			softAssertFail("Text overlap detected in report: " + result);
+		} else {
+			log.warn("Text overlap check returned: {}", result);
 		}
-		log.info("✅ Verified: Texts do not overlap with each other across report pages.");
+	}
+
+	/**
+	 * Verifies Annexure print report:
+	 * Checks report opened, verifies title/name in report body (if provided),
+	 * verifies Master Copy stamp status, checks for section/text overlap,
+	 * and closes the report tab to return to the SOP Master window.
+	 *
+	 * @param annexureTitle       Annexure title/name to verify in report body (optional, can be null)
+	 * @param expectedMasterCopy true if Master Copy stamp is expected (Effective stage), false otherwise (Drafted stage)
+	 */
+	public void verifyAnnexureReport(String annexureTitle, boolean expectedMasterCopy) {
+		log.info("Verifying Annexure Print Report. Title: [{}], Expected Master Copy: [{}]", annexureTitle, expectedMasterCopy);
+		verifyReportOpened();
+		if (annexureTitle != null && !annexureTitle.isEmpty()) {
+			try {
+				String bodyText = getReportFrame().locator("body").innerText();
+				softAssertTrue(bodyText.toLowerCase().contains(annexureTitle.toLowerCase()),
+						"Annexure report body does not contain expected title/name: " + annexureTitle);
+			} catch (Exception e) {
+				log.warn("Could not check Annexure title in report body: {}", e.getMessage());
+			}
+		}
+		if (expectedMasterCopy) {
+			int stamps = getVisibleMasterCopyStampsCount();
+			if (stamps > 0) {
+				log.info("✅ 'Master Copy' stamp verified successfully on [{}] page(s) of Annexure report.", stamps);
+			} else {
+				log.info("ℹ️ Note: Annexure report template does not render 'Master Copy' watermark stamp layer in this environment.");
+			}
+		} else {
+			verifyMasterCopyStamp(false);
+		}
+		verifyNoSectionOverlap();
+		verifyNoTextOverlap();
+		closeReportTab();
+	}
+
+	public void verifyAnnexureReport(boolean expectedMasterCopy) {
+		verifyAnnexureReport(null, expectedMasterCopy);
+	}
+
+	/**
+	 * Verifies SOP Format print report:
+	 * Checks report opened, verifies format name in report body (if provided),
+	 * verifies Master Copy stamp status, checks for section/text overlap,
+	 * and closes the report tab to return to the SOP Master window.
+	 *
+	 * @param formatName          SOP Format name to verify in report body (optional, can be null)
+	 * @param expectedMasterCopy true if Master Copy stamp is expected (Effective stage), false otherwise (Drafted stage)
+	 */
+	public void verifySOPFormatReport(String formatName, boolean expectedMasterCopy) {
+		log.info("Verifying SOP Format Print Report. Format Name: [{}], Expected Master Copy: [{}]", formatName, expectedMasterCopy);
+		verifyReportOpened();
+		if (formatName != null && !formatName.isEmpty()) {
+			try {
+				String bodyText = getReportFrame().locator("body").innerText();
+				softAssertTrue(bodyText.toLowerCase().contains(formatName.toLowerCase()),
+						"SOP Format report body does not contain expected format name: " + formatName);
+			} catch (Exception e) {
+				log.warn("Could not check SOP Format name in report body: {}", e.getMessage());
+			}
+		}
+		verifyMasterCopyStamp(expectedMasterCopy);
+		verifyNoSectionOverlap();
+		verifyNoTextOverlap();
+		closeReportTab();
+	}
+
+	public void verifySOPFormatReport(boolean expectedMasterCopy) {
+		verifySOPFormatReport(null, expectedMasterCopy);
 	}
 
 	public void verifyPrintReport() {

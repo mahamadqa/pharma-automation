@@ -142,7 +142,11 @@ public class BaseTest {
 
 		page.navigate(ConfigReader.get("url"));
 		page.bringToFront();
-		page.locator("body").click();
+		try {
+			page.locator("body").click(new com.microsoft.playwright.Locator.ClickOptions().setTimeout(3000));
+		} catch (Exception e) {
+			log.debug("Initial body focus click ignored: {}", e.getMessage());
+		}
 		log.info("Launched " + browserName + " browser (headless=" + isHeadless + ") and navigated to URL: "
 				+ ConfigReader.get("url"));
 		return page;

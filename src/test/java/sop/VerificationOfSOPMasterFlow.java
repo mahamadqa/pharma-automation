@@ -1,4 +1,4 @@
-package advanceModules;
+package sop;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,24 +11,29 @@ import utils.DataManager;
 import utils.ExcelReader;
 
 /**
- * Test Case PHX-3499: Verification of SOP Master.
+ * Test Case PHX-3499: Verification of SOP Master Flow (Without Effectiveness Check / No DMS Upload).
  * Comprehensive end-to-end verification of SOP Master lifecycle covering:
- * - SOP Master creation, Content sections (Objective, Scope, Responsibility, Procedure)
+ * - SOP Master creation, Content sections (Objective, Scope, Responsibility,
+ * Procedure)
  * - Subtabs: Abbreviations, Annexure, SOP Formats, Distribution List
  * - Digital signatures (Prepared By, Checked By, Reviewed By, Approver)
- * - Multi-level Workflow approval (EngUser -> EngReviewer -> EngManager -> QAReviewer -> QAManager)
+ * - Multi-level Workflow approval (EngUser -> EngReviewer -> EngManager ->
+ * QAReviewer -> QAManager)
  * - Rejection and correction cycle (Not Approved status & field clearing)
  * - Report Preview and Master Copy stamp verification
- * - DMS Training Completion Report upload in Document Explorer
+ * - System Config SOP_Effective_TNI_Check = 'N' (No DMS upload required)
+ * - Approval without DMS Training Completion Report error
  * - Effective date & status transition
- * - Revise SOP flow (Revision 1, Annexure format revision, SOP Formats revision, Revision History)
+ * - Revise SOP flow (Revision 1, Annexure format revision, SOP Formats
+ * revision, Revision History)
  * - Previous version superseding and Supersede Copy stamp verification
  */
-public class VerificationOfSOPMaster extends BaseTest {
+public class VerificationOfSOPMasterFlow extends BaseTest {
 
-	private static final Logger log = LogManager.getLogger(VerificationOfSOPMaster.class);
+	private static final Logger log = LogManager.getLogger(VerificationOfSOPMasterFlow.class);
 
-	@Test(groups = { "advance", "sop" }, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
+	@Test(groups = { "advance",
+			"sop" }, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
 	public void verificationOfSOPMasterLifecycle() {
 
 		log.info("================================================================================");
@@ -59,49 +64,70 @@ public class VerificationOfSOPMaster extends BaseTest {
 
 		// SOP Header Data from Excel / Properties
 		String docType = ExcelReader.getOrDefault("sop.docType", DataManager.getOrDefault("sop.docType", "SOP"));
-		String description = ExcelReader.getOrDefault("sop.description", DataManager.getOrDefault("sop.description", "ANNUAL BUILDING MAINTENANCE"));
-		String department = ExcelReader.getOrDefault("sop.department", DataManager.getOrDefault("sop.department", "Maintenance"));
-		String respDept = ExcelReader.getOrDefault("sop.respDept", DataManager.getOrDefault("sop.respDept", "Maintenance,Quality Assurance"));
-		String masterCopyOwner = ExcelReader.getOrDefault("sop.masterCopyOwner", DataManager.getOrDefault("sop.masterCopyOwner", "Quality Assurance"));
-		String supersedesNo = ExcelReader.getOrDefault("sop.supersedesNo", DataManager.getOrDefault("sop.supersedesNo", "NIL"));
+		String description = DataManager.getOrDefault("sop.description", "ANNUAL BUILDING MAINTENANCE : Playwright Automation..");
+		String department = ExcelReader.getOrDefault("sop.department",
+				DataManager.getOrDefault("sop.department", "Maintenance"));
+		String respDept = ExcelReader.getOrDefault("sop.respDept",
+				DataManager.getOrDefault("sop.respDept", "Maintenance,Quality Assurance"));
+		String masterCopyOwner = ExcelReader.getOrDefault("sop.masterCopyOwner",
+				DataManager.getOrDefault("sop.masterCopyOwner", "Quality Assurance"));
+		String supersedesNo = ExcelReader.getOrDefault("sop.supersedesNo",
+				DataManager.getOrDefault("sop.supersedesNo", "NIL"));
 
 		// SOP Contents Data from Excel (sop_contents.xlsx)
-		String objective = ExcelReader.getOrDefault("Objective", DataManager.getOrDefault("sop.objective", "The purpose of this SOP is to provide stepwise instructions for the Annual Building Maintenance."));
-		String scope = ExcelReader.getOrDefault("Scope", DataManager.getOrDefault("sop.scope", "This Procedure is applicable to Annual Building Maintenance of factory building in the manufacturing plant located at all the Locations."));
-		String responsibility = ExcelReader.getOrDefault("Responsibility", DataManager.getOrDefault("sop.responsibility", "The engineering officer / designee is responsible to follow the procedure as per SOP of Annual Building Maintenance."));
-		String procedure = ExcelReader.getOrDefault("Procedure", DataManager.getOrDefault("sop.procedure", "Carry Out The Following Activities As Per Yearly or As & When Required Schedule: The area shall be inspected by the respective user department personnel."));
+		String objective = ExcelReader.getOrDefault("Objective", DataManager.getOrDefault("sop.objective",
+				"The purpose of this SOP is to provide stepwise instructions for the Annual Building Maintenance."));
+		String scope = ExcelReader.getOrDefault("Scope", DataManager.getOrDefault("sop.scope",
+				"This Procedure is applicable to Annual Building Maintenance of factory building in the manufacturing plant located at all the Locations."));
+		String responsibility = ExcelReader.getOrDefault("Responsibility", DataManager.getOrDefault(
+				"sop.responsibility",
+				"The engineering officer / designee is responsible to follow the procedure as per SOP of Annual Building Maintenance."));
+		String procedure = ExcelReader.getOrDefault("Procedure", DataManager.getOrDefault("sop.procedure",
+				"Carry Out The Following Activities As Per Yearly or As & When Required Schedule: The area shall be inspected by the respective user department personnel."));
 
 		// Subtabs Data from Excel / Properties
-		String abbrevQAShort = ExcelReader.getOrDefault("sop.abbreviation.qa.short", DataManager.getOrDefault("sop.abbreviation.qa.short", "QA"));
-		String abbrevQAFull = ExcelReader.getOrDefault("sop.abbreviation.qa.full", DataManager.getOrDefault("sop.abbreviation.qa.full", "Quality Assurance"));
-		String abbrevSOPShort = ExcelReader.getOrDefault("sop.abbreviation.sop.short", DataManager.getOrDefault("sop.abbreviation.sop.short", "SOP"));
-		String abbrevSOPFull = ExcelReader.getOrDefault("sop.abbreviation.sop.full", DataManager.getOrDefault("sop.abbreviation.sop.full", "Standard Operating Procedure"));
+		String abbrevQAShort = ExcelReader.getOrDefault("sop.abbreviation.qa.short",
+				DataManager.getOrDefault("sop.abbreviation.qa.short", "QA"));
+		String abbrevQAFull = ExcelReader.getOrDefault("sop.abbreviation.qa.full",
+				DataManager.getOrDefault("sop.abbreviation.qa.full", "Quality Assurance"));
+		String abbrevSOPShort = ExcelReader.getOrDefault("sop.abbreviation.sop.short",
+				DataManager.getOrDefault("sop.abbreviation.sop.short", "SOP"));
+		String abbrevSOPFull = ExcelReader.getOrDefault("sop.abbreviation.sop.full",
+				DataManager.getOrDefault("sop.abbreviation.sop.full", "Standard Operating Procedure"));
 
-		String annexureName = ExcelReader.getOrDefault("sop.annexure.name", DataManager.getOrDefault("sop.annexure.name", "Annexure-I"));
-		String annexureTitle = ExcelReader.getOrDefault("sop.annexure.title", DataManager.getOrDefault("sop.annexure.title", "BUILDING MAINTENANCE SCHEDULE"));
-		String annexurePaper = ExcelReader.getOrDefault("sop.annexure.printPaper", DataManager.getOrDefault("sop.annexure.printPaper", "A4 Landscape"));
-		String annexureContent = ExcelReader.getOrDefault("AnnexureContent", DataManager.getOrDefault("sop.annexure.content", "Facility Room Checklist PLANNED Q Q Q Q ACTUAL"));
+		String annexureName = ExcelReader.getOrDefault("sop.annexure.name",
+				DataManager.getOrDefault("sop.annexure.name", "Annexure-I"));
+		String annexureTitle = ExcelReader.getOrDefault("sop.annexure.title",
+				DataManager.getOrDefault("sop.annexure.title", "BUILDING MAINTENANCE SCHEDULE"));
+		String annexurePaper = ExcelReader.getOrDefault("sop.annexure.printPaper",
+				DataManager.getOrDefault("sop.annexure.printPaper", "A4 Landscape"));
+		String annexureContent = ExcelReader.getOrDefault("AnnexureContent",
+				DataManager.getOrDefault("sop.annexure.content", "Facility Room Checklist PLANNED Q Q Q Q ACTUAL"));
 
-		String formatDocType = ExcelReader.getOrDefault("sop.format.docType", DataManager.getOrDefault("sop.format.docType", "SOP Format"));
-		String formatName = ExcelReader.getOrDefault("sop.format.name", DataManager.getOrDefault("sop.format.name", "PAINT RECORD"));
-		String formatPaper = ExcelReader.getOrDefault("sop.format.printPaper", DataManager.getOrDefault("sop.format.printPaper", "A4 Portrait"));
-		String formatContent = ExcelReader.getOrDefault("FormatContent", DataManager.getOrDefault("sop.format.content", "SR NO. Name of the Area Type of paint Paint Done on Checked by(Sign/Date) Remark"));
+		String formatDocType = ExcelReader.getOrDefault("sop.format.docType",
+				DataManager.getOrDefault("sop.format.docType", "SOP Format"));
+		String formatName = ExcelReader.getOrDefault("sop.format.name",
+				DataManager.getOrDefault("sop.format.name", "PAINT RECORD"));
+		String formatPaper = ExcelReader.getOrDefault("sop.format.printPaper",
+				DataManager.getOrDefault("sop.format.printPaper", "A4 Portrait"));
+		String formatContent = ExcelReader.getOrDefault("FormatContent", DataManager.getOrDefault("sop.format.content",
+				"SR NO. Name of the Area Type of paint Paint Done on Checked by(Sign/Date) Remark"));
 
-		String distDept1 = ExcelReader.getOrDefault("sop.distribution.dept1", DataManager.getOrDefault("sop.distribution.dept1", "Maintenance"));
-		String distCopies1 = ExcelReader.getOrDefault("sop.distribution.copies1", DataManager.getOrDefault("sop.distribution.copies1", "1"));
-		String distDept2 = ExcelReader.getOrDefault("sop.distribution.dept2", DataManager.getOrDefault("sop.distribution.dept2", "Quality Assurance"));
-		String distCopies2 = ExcelReader.getOrDefault("sop.distribution.copies2", DataManager.getOrDefault("sop.distribution.copies2", "1"));
-
-		String signDept = DataManager.getOrDefault("sop.digitalSignature.dept", "Maintenance");
-		String dmsContentType = ExcelReader.getOrDefault("sop.dms.contentType", DataManager.getOrDefault("sop.dms.contentType", "Training Completion Report"));
-		String dmsFilePath = "src/test/resources/Training_Completion_Report.pdf";
+		String distDept1 = ExcelReader.getOrDefault("sop.distribution.dept1",
+				DataManager.getOrDefault("sop.distribution.dept1", "Maintenance"));
+		String distCopies1 = ExcelReader.getOrDefault("sop.distribution.copies1",
+				DataManager.getOrDefault("sop.distribution.copies1", "1"));
+		String distDept2 = ExcelReader.getOrDefault("sop.distribution.dept2",
+				DataManager.getOrDefault("sop.distribution.dept2", "Quality Assurance"));
+		String distCopies2 = ExcelReader.getOrDefault("sop.distribution.copies2",
+				DataManager.getOrDefault("sop.distribution.copies2", "1"));
 
 		// --------------------------------------------------------------------------------------------------
-		// Pre-requisite: Verify / Update SOP_Effective_TNI_Check = 'D' in System Configurator
+		// Pre-requisite: Verify / Update SOP_Effective_TNI_Check = 'N' in System Configurator
 		// 1. Login with System tenant & System Administrator role
 		// 2. Open System Configurator window through menu searchbox (click on label, not '+')
 		// 3. In lookup record search the record by filling name : "SOP_Effective_TNI_Check"
-		// 4. Check configured value is D; if not D update to D and save
+		// 4. Check configured value is N; if not N update to N and save
 		// 5. Do logout
 		// --------------------------------------------------------------------------------------------------
 		String systemUser = ConfigReader.get("Superuser");
@@ -115,7 +141,7 @@ public class VerificationOfSOPMaster extends BaseTest {
 		dashboard.verifyLoginDetails();
 
 		log.info("Pre-requisite Step 2: Opening System Configurator window through menu searchbox (clicking label)...");
-		systemConfiguration.verifyOrUpdateSystemConfig("SOP_Effective_TNI_Check", "D");
+		systemConfiguration.verifyOrUpdateSystemConfig("SOP_Effective_TNI_Check", "N");
 		dashboard.clickLogout();
 
 		// --------------------------------------------------------------------------------------------------
@@ -142,23 +168,23 @@ public class VerificationOfSOPMaster extends BaseTest {
 		// Step 4 to 9: Fill Content Section (Objective, Scope, Responsibility, Procedure) and Save
 		// --------------------------------------------------------------------------------------------------
 		log.info("Step 4-9: Entering Objective, Scope, Responsibility, and Procedure text...");
-//		sopMaster.fillContentSection("Objective", objective);
-//		sopMaster.fillContentSection("Scope", scope);
-//		sopMaster.fillContentSection("Responsibility", responsibility);
-//		sopMaster.fillContentSection("Procedure", procedure);
-//		sopMaster.saveRecord();
-		
+		sopMaster.fillContentSection("Objective", objective);
+		sopMaster.fillContentSection("Scope", scope);
+		sopMaster.fillContentSection("Responsibility", responsibility);
+		sopMaster.fillContentSection("Procedure", procedure);
+		sopMaster.saveRecord();
+
 		log.info("Step 10-12: Adding records to Abbreviations tab...");
 		sopMaster.addAbbreviation(abbrevQAShort, abbrevQAFull);
 		sopMaster.createNewSubrecord();
 		sopMaster.addAbbreviation(abbrevSOPShort, abbrevSOPFull);
-		
+
 		log.info("Step 13-16: Adding record to Annexure tab...");
 		sopMaster.addAnnexure(annexureName, annexureTitle, annexurePaper, supersedesNo, annexureContent);
-		
+
 		log.info("Step 17-20: Adding record to SOP Formats tab...");
 		sopMaster.addSOPFormat(formatDocType, formatName, formatPaper, supersedesNo, formatContent);
-		
+
 		log.info("Step 21-23: Adding records to Distribution List tab...");
 		sopMaster.addDistributionList(distDept1, distCopies1);
 		sopMaster.createNewSubrecord();
@@ -187,11 +213,9 @@ public class VerificationOfSOPMaster extends BaseTest {
 		sopMaster.crossErrorPopupIfDisplayed();
 		toolbar.hitRequeryButton();
 
-		// --------------------------------------------------------------------------------------------------
-		// Step 28 to 29: Complete Digital Signature on Prepared By Sign
-		// --------------------------------------------------------------------------------------------------
 		log.info("Step 28-29: Signing Prepared By Sign field...");
 		sopMaster.completeDigitalSignature("PreparedBy", engUserDept, password);
+		sopMaster.verifyDigitalSignature("PreparedBy", engUser, engUserDept);
 
 		// --------------------------------------------------------------------------------------------------
 		// Step 30 to 34: Document Action Complete -> Assign to EngReviewer -> Status: 'Internal Reviewal'
@@ -209,12 +233,7 @@ public class VerificationOfSOPMaster extends BaseTest {
 		sopMaster.crossErrorPopupIfDisplayed();
 		dashboard.clickLogout();
 
-		// ==================================================================================================
 		// STAGE 1: Internal Reviewal (EngReviewer)
-		// 1. EngReviewer previews report, rejects workflow (Answer = No) -> Status: 'Not Approved'
-		// 2. Initiator (EngUser) re-signs Prepared By & re-assigns to EngReviewer -> Status: 'Internal Reviewal'
-		// 3. EngReviewer previews report, signs Checked By & approves workflow (Answer = Yes) -> Assign to EngManager
-		// ==================================================================================================
 		log.info("Stage 1 - Step 36-40: Logging in with EngReviewer [{}] and zooming to SOP record [{}]...", engReviewer, sopDocNo);
 		loginPage.login(engReviewer, password);
 		clientAndRole.selectClientAndRole(client, engReviewerRole);
@@ -264,13 +283,7 @@ public class VerificationOfSOPMaster extends BaseTest {
 		sopMaster.verifySOPStatus("Department Approval");
 		dashboard.clickLogout();
 
-		// ==================================================================================================
 		// STAGE 2: Department Approval (EngManager)
-		// 1. EngManager previews report, rejects workflow (Answer = No) -> Status: 'Not Approved'
-		// 2. Initiator (EngUser) re-signs Prepared By & re-assigns to EngReviewer -> Status: 'Internal Reviewal'
-		// 3. EngReviewer re-signs Checked By & assigns to EngManager -> Status: 'Department Approval'
-		// 4. EngManager previews report, signs Reviewed By & approves workflow (Answer = Yes) -> Status: 'QA Approval'
-		// ==================================================================================================
 		log.info("Stage 2 - Step 50-52: EngManager [{}] logs in, previews report and rejects workflow (Answer: No)...", engManager);
 		loginPage.login(engManager, password);
 		clientAndRole.selectClientAndRole(client, engManagerRole);
@@ -334,14 +347,7 @@ public class VerificationOfSOPMaster extends BaseTest {
 		sopMaster.verifySOPStatus("QA Approval");
 		dashboard.clickLogout();
 
-		// ==================================================================================================
 		// STAGE 3: QA Approval (QAReviewer)
-		// 1. QAReviewer previews report, rejects workflow (Answer = No) -> Status: 'Not Approved'
-		// 2. Initiator (EngUser) re-signs Prepared By & re-assigns to EngReviewer -> Status: 'Internal Reviewal'
-		// 3. EngReviewer re-signs Checked By & assigns to EngManager -> Status: 'Department Approval'
-		// 4. EngManager re-signs Reviewed By & approves to QA Approval -> Status: 'QA Approval'
-		// 5. QAReviewer previews report, signs Approver & approves workflow (Answer = Yes) -> Status: 'Approved'
-		// ==================================================================================================
 		log.info("Stage 3 - Step 60-62: QAReviewer [{}] logs in, previews report and rejects workflow (Answer: No)...", qaReviewer);
 		loginPage.login(qaReviewer, password);
 		clientAndRole.selectClientAndRole(client, qaReviewerRole);
@@ -377,7 +383,8 @@ public class VerificationOfSOPMaster extends BaseTest {
 		sopMaster.verifySOPStatus("Internal Reviewal");
 		dashboard.clickLogout();
 
-		log.info("Stage 3 - Step 64: EngReviewer [{}] signs Checked By and assigns to EngManager [{}]...", engReviewer, engManager);
+		log.info("Stage 3 - Step 64: EngReviewer [{}] signs Checked By and assigns to EngManager [{}]...", engReviewer,
+				engManager);
 		loginPage.login(engReviewer, password);
 		clientAndRole.selectClientAndRole(client, engReviewerRole);
 
@@ -385,11 +392,13 @@ public class VerificationOfSOPMaster extends BaseTest {
 		workflowActivities.clickOnAssignedSOPRecord("Internal Review", sopDocNo);
 		workflowActivities.zoomToRecord();
 		sopMaster.completeDigitalSignature("CheckedBy", engReviewerDept, password);
+		sopMaster.verifyDigitalSignature("CheckedBy", engReviewer, engReviewerDept);
 		sopMaster.performDocActionWithAnswer("Yes", engManager);
 		sopMaster.verifySOPStatus("Department Approval");
 		dashboard.clickLogout();
 
-		log.info("Stage 3 - Step 65: EngManager [{}] signs Reviewed By and approves workflow -> 'QA Approval'...", engManager);
+		log.info("Stage 3 - Step 65: EngManager [{}] signs Reviewed By and approves workflow -> 'QA Approval'...",
+				engManager);
 		loginPage.login(engManager, password);
 		clientAndRole.selectClientAndRole(client, engManagerRole);
 
@@ -398,11 +407,13 @@ public class VerificationOfSOPMaster extends BaseTest {
 		workflowActivities.zoomToRecord();
 		sopMaster.verifySOPStatus("Department Approval");
 		sopMaster.completeDigitalSignature("ReviewedBy", engManagerDept, password);
+		sopMaster.verifyDigitalSignature("ReviewedBy", engManager, engManagerDept);
 		sopMaster.performDocActionWithAnswer("Yes", null);
 		sopMaster.verifySOPStatus("QA Approval");
 		dashboard.clickLogout();
 
-		log.info("Stage 3 - Step 66-69: QAReviewer [{}] signs Approver Sign and approves workflow -> 'Approved'...", qaReviewer);
+		log.info("Stage 3 - Step 66-69: QAReviewer [{}] signs Approver Sign and approves workflow -> 'Approved'...",
+				qaReviewer);
 		loginPage.login(qaReviewer, password);
 		clientAndRole.selectClientAndRole(client, qaReviewerRole);
 
@@ -414,14 +425,16 @@ public class VerificationOfSOPMaster extends BaseTest {
 		printReport.verifyPrintReport();
 		sopMaster.ensureOnSOPMasterHeader(sopDocNo);
 		sopMaster.completeDigitalSignature("Approver", qaReviewerDept, password);
+		sopMaster.verifyDigitalSignature("Approver", qaReviewer, qaReviewerDept);
 		sopMaster.performDocActionWithAnswer("Yes", null);
 		sopMaster.verifySOPStatus("Approved");
+		sopMaster.verifyApprovedCheckbox(true);
 		dashboard.clickLogout();
 
 		// --------------------------------------------------------------------------------------------------
-		// Step 70 to 74: Login with QAManager, preview Report (Master Copy stamp check), and test DMS validation
+		// Step 70 to 74: Login with QAManager, preview Report (Master Copy stamp check), and approve SOP
 		// --------------------------------------------------------------------------------------------------
-		log.info("Step 70-74: QAManager [{}] verifies Master Copy stamp and DMS document requirement...", qaManager);
+		log.info("Step 70-74: QAManager [{}] verifies Master Copy stamp and approves SOP with Effective Date...", qaManager);
 		loginPage.login(qaManager, password);
 		clientAndRole.selectClientAndRole(client, qaManagerRole);
 
@@ -429,85 +442,191 @@ public class VerificationOfSOPMaster extends BaseTest {
 		workflowActivities.clickOnAssignedSOPRecord("QA Manager Approval", sopDocNo);
 		workflowActivities.zoomToRecord();
 		sopMaster.verifySOPStatus("Approved");
+		sopMaster.verifyApprovedCheckbox(true);
 		sopMaster.clickPreview();
 		printReport.verifyReportOpened();
 		printReport.verifyMasterCopyStamp(true);
 		printReport.verifyNoSectionOverlap();
 		printReport.verifyNoTextOverlap();
 		printReport.closeReportTab();
-		sopMaster.ensureOnSOPMasterHeader(sopDocNo);
 
-		// Attempt Document Action with Effective Date before uploading DMS document -> Expect Error
+		// --------------------------------------------------------------------------------------------------
+		// Step 75: Document Action with Effective Date -> Status: 'Effective' (No DMS upload required when TNI Check = 'N')
+		// --------------------------------------------------------------------------------------------------
+		log.info("Step 75: Approving SOP with Effective Date (No DMS upload required as SOP_Effective_TNI_Check = 'N')...");
 		String effectiveDate = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
 		sopMaster.approveWithEffectiveDate(effectiveDate);
-		sopMaster.verifyErrorMessageAndClose("Error: Document not uploaded in DMS for Content type Training Completion Report");
+		sopMaster.verifySOPStatus("Effective");
+		sopMaster.verifyProcessedCheckbox(true);
 
-//		// --------------------------------------------------------------------------------------------------
-//		// Step 75 to 80: Document Explorer -> Upload Training Completion Report
-//		// --------------------------------------------------------------------------------------------------
-//		log.info("Step 75-80: Uploading Training Completion Report via Document Explorer...");
-//		documentExplorer.openDocumentExplorer();
-//		documentExplorer.uploadContent(dmsFilePath, dmsContentType);
-//		documentExplorer.closeDocumentExplorer();
-//
-//		// --------------------------------------------------------------------------------------------------
-//		// Step 81 to 82: Document Action with Effective Date -> Status: 'Effective'
-//		// --------------------------------------------------------------------------------------------------
-//		log.info("Step 81-82: Approving SOP with Effective Date after DMS upload...");
-//		sopMaster.approveWithEffectiveDate(effectiveDate);
-//		sopMaster.verifySOPStatus("Effective");
-//		dashboard.clickLogout();
-//
-//		// --------------------------------------------------------------------------------------------------
-//		// Step 83 to 90: Login with QAReviewer -> Revise SOP -> New Revision 1 created in Drafted status
-//		// --------------------------------------------------------------------------------------------------
-//		log.info("Step 83-90: Starting Revise SOP workflow to create Revision 1...");
-//		loginPage.login(qaReviewer, password);
-//		clientAndRole.selectClientAndRole(client, qaReviewerRole);
-//
-//		sopMaster.navigateToSOPMasterWindow();
-//		sopMaster.clickReviseSOP();
-//		sopMaster.openRevisedSOPLink();
-//
-//		sopMaster.verifyRevisionNo("1");
-//		sopMaster.verifySOPStatus("Drafted");
-//
-//		// --------------------------------------------------------------------------------------------------
-//		// Step 91 to 94: Revise Annexure Format on Annexure tab
-//		// --------------------------------------------------------------------------------------------------
-//		log.info("Step 91-94: Revising Format on Annexure tab...");
-//		sopMaster.goToAnnexureTab();
-//		sopMaster.reviseAnnexureFormat();
-//		sopMaster.saveRecord();
-//
-//		// --------------------------------------------------------------------------------------------------
-//		// Step 95 to 98: Revise Format on SOP Formats tab
-//		// --------------------------------------------------------------------------------------------------
-//		log.info("Step 95-98: Revising Format on SOP Formats tab...");
-//		sopMaster.goToSOPFormatTab();
-//		sopMaster.reviseSOPFormat();
-//		sopMaster.saveRecord();
-//
-//		// --------------------------------------------------------------------------------------------------
-//		// Step 101 to 102: Revision History Tab -> Enter Revision 1 details
-//		// --------------------------------------------------------------------------------------------------
-//		log.info("Step 101-102: Recording details in Revision History tab...");
-//		String revReason = ExcelReader.getOrDefault("sop.revision.reason", "Annual Review & building maintenance checklist update");
-//		String revCCNo = ExcelReader.getOrDefault("sop.revision.changeControlNo", "CC-2026-001");
-//		sopMaster.addRevisionHistory("1", revReason, revCCNo);
-//
-//		// --------------------------------------------------------------------------------------------------
-//		// Step 108 to 109: Verify Previous Version is Superseded with 'Supersede Copy' stamp
-//		// --------------------------------------------------------------------------------------------------
-//		log.info("Step 108-109: Verifying Previous SOP record has 'Supersede Copy' stamp...");
-//		sopMaster.navigateBackOnSOPHeader();
-//		sopMaster.clickPreview();
-//		printReport.verifyReportOpened();
-//		printReport.verifySupersedeCopyStamp(true);
-//		printReport.closeReportTab();
+		// 1. After made effective SOP verify Next review date is Review After (Month) + Effective Date
+		log.info("Requirement 1: Verifying Next Review Date = Effective Date + Review After (Month)...");
+		sopMaster.verifyNextReviewDate(effectiveDate);
+
+		sopMaster.clickPreview();
+		printReport.verifyReportOpened();
+		printReport.verifyMasterCopyStamp(true);
+		printReport.verifyNoSectionOverlap();
+		printReport.verifyNoTextOverlap();
+		printReport.closeReportTab();
+
+		log.info("Effective Stage: Previewing Annexure print report...");
+		sopMaster.goToAnnexureTab();
+		sopMaster.clickPreview();
+		printReport.verifyAnnexureReport(annexureName, true);
+
+		log.info("Effective Stage: Previewing SOP Formats print report...");
+		sopMaster.goToSOPFormatTab();
+		sopMaster.clickPreview();
+		printReport.verifySOPFormatReport(formatName, true);
+		sopMaster.navigateBackOnSOPHeader();
+
+		dashboard.clickLogout();
+
+		// -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// Step 83 to 90: Login with QA Reviewer -> Revise SOP -> New Revision 1 created in Drafted status
+		// -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		log.info("Step 83-90: Starting Revise SOP workflow to create Revision 1...");
+		loginPage.login(qaReviewer, password);
+		clientAndRole.selectClientAndRole(client, qaReviewerRole);
+
+		sopMaster.navigateToSOPrecord(sopDocNo);
+		sopMaster.clickReviseSOP();
+		sopMaster.openRevisedSOPLink();
+
+		// 2. When SOP is revised then new SOP record window will opened then go back to old one & verify SOP Status is In Revision.
+		log.info("Requirement 2: Going back to old SOP record window and verifying SOP Status is 'In Revision'...");
+		sopMaster.switchToOldSOPRecordTab();
+		sopMaster.verifySOPStatus("In Revision");
+		sopMaster.verifyProcessedCheckbox(true);
+		sopMaster.closeFirstSOPTab();
+
+		// 3. In new one record ie. revised then create a revision history record.
+		log.info("Requirement 3: Switching to new SOP record (Revision 1) window and creating Revision History record...");
+		sopMaster.switchToNewSOPRecordTab();
+		sopMaster.verifyRevisionNo("1");
+		sopMaster.verifySOPStatus("Drafted");
+		sopMaster.verifyProcessedCheckbox(false);
+		sopMaster.verifyApprovedCheckbox(false);
+
+		String revReason = ExcelReader.getOrDefault("sop.revision.reason",
+				"Annual Review & building maintenance checklist update");
+		String revCCNo = ExcelReader.getOrDefault("sop.revision.changeControlNo", "CC-2026-001");
+		sopMaster.addRevisionHistory("1", revReason, revCCNo);
+		sopMaster.navigateBackOnSOPHeader();
+		sopMaster.saveRecord();
+
+		log.info("Revising Annexure format on Revision 1...");
+		sopMaster.goToAnnexureTab();
+		toolbar.checkGridView();
+		sopMaster.clickReviseSOPAnnexure(); /* Annexure revised */
+		toolbar.clickOnRequeryButton();
+		sopMaster.verifyRefrenceFieldsOnAnnexure(annexureName, sopDocNo);
+		sopMaster.verifyAnnexureRevisedCheckbox(true);
+
+		log.info("Revising SOP Formats format on Revision 1...");
+		sopMaster.goToSOPFormatTab();
+		toolbar.checkGridView();
+		sopMaster.clickReviseSOPFormat(); /* Format revised */
+		toolbar.clickOnRequeryButton();
+		sopMaster.verifyRefrenceFieldsOnFormat(formatName, sopDocNo);
+		sopMaster.verifyFormatRevisedCheckbox(true);
+		sopMaster.navigateBackOnSOPHeader();
+		dashboard.clickLogout();
+
+		// Complete Document Actions on Revision 1 up to Effective stage:
+		// Step 4.1: Initiator signs Prepared By & submits to EngReviewer
+		log.info("Revision 1 - Signing Prepared By and assigning to EngReviewer [{}]...", engReviewer);
+		loginPage.login(engUser, password);
+		clientAndRole.selectClientAndRole(client, engUserRole);
+
+		sopMaster.navigateToSOPrecord(sopDocNo);
+		sopMaster.completeDigitalSignature("PreparedBy", engUserDept, password);
+		sopMaster.completeDocActionAndAssignTo(engReviewer);
+		sopMaster.verifySOPStatus("Internal Reviewal");
+		dashboard.clickLogout();
+
+		// Step 4.2: EngReviewer signs Checked By & assigns to EngManager
+		log.info("Revision 1 - EngReviewer [{}] signs Checked By and assigns to EngManager [{}]...", engReviewer,
+				engManager);
+		loginPage.login(engReviewer, password);
+		clientAndRole.selectClientAndRole(client, engReviewerRole);
+		workflowActivities.navigateToWorkflowActivities();
+		workflowActivities.clickOnAssignedSOPRecord("Internal Review", sopDocNo);
+		workflowActivities.zoomToRecord();
+		sopMaster.completeDigitalSignature("CheckedBy", engReviewerDept, password);
+		sopMaster.performDocActionWithAnswer("Yes", engManager);
+		sopMaster.verifySOPStatus("Department Approval");
+		dashboard.clickLogout();
+
+		// Step 4.3: EngManager signs Reviewed By & approves to QA Approval
+		log.info("Revision 1 - EngManager [{}] signs Reviewed By and approves workflow -> 'QA Approval'...",
+				engManager);
+		loginPage.login(engManager, password);
+		clientAndRole.selectClientAndRole(client, engManagerRole);
+		workflowActivities.navigateToWorkflowActivities();
+		workflowActivities.clickOnAssignedSOPRecord("Department Approval", sopDocNo);
+		workflowActivities.zoomToRecord();
+		sopMaster.verifySOPStatus("Department Approval");
+		sopMaster.completeDigitalSignature("ReviewedBy", engManagerDept, password);
+		sopMaster.performDocActionWithAnswer("Yes", null);
+		sopMaster.verifySOPStatus("QA Approval");
+		dashboard.clickLogout();
+
+		// Step 4.4: QAReviewer signs Approver & approves to Approved
+		log.info("Revision 1 - QAReviewer [{}] signs Approver and approves workflow -> 'Approved'...", qaReviewer);
+		loginPage.login(qaReviewer, password);
+		clientAndRole.selectClientAndRole(client, qaReviewerRole);
+		workflowActivities.navigateToWorkflowActivities();
+		workflowActivities.clickOnAssignedSOPRecord("QA Approval", sopDocNo);
+		workflowActivities.zoomToRecord();
+		sopMaster.verifySOPStatus("QA Approval");
+		sopMaster.completeDigitalSignature("Approver", qaReviewerDept, password);
+		sopMaster.performDocActionWithAnswer("Yes", null);
+		sopMaster.verifySOPStatus("Approved");
+		sopMaster.verifyApprovedCheckbox(true);
+		dashboard.clickLogout();
+
+		// Step 4.5: QAManager approves with Effective Date -> Effective (No DMS upload required)
+		log.info("Revision 1 - QAManager [{}] approves SOP with Effective Date -> 'Effective'...", qaManager);
+		loginPage.login(qaManager, password);
+		clientAndRole.selectClientAndRole(client, qaManagerRole);
+		workflowActivities.navigateToWorkflowActivities();
+		workflowActivities.clickOnAssignedSOPRecord("QA Manager Approval", sopDocNo);
+		workflowActivities.zoomToRecord();
+		sopMaster.verifySOPStatus("Approved");
+		sopMaster.verifyApprovedCheckbox(true);
+
+		String effectiveDate1 = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
+		sopMaster.approveWithEffectiveDate(effectiveDate1);
+		sopMaster.verifySOPStatus("Effective");
+		sopMaster.verifyProcessedCheckbox(true);
+		sopMaster.verifyNextReviewDate(effectiveDate1);
+		sopMaster.verifyRevisionNo("1");
+
+		// --------------------------------------------------------------------------------------------------
+		// Requirement 3: After new revised SOP made effective then From header zoom to Previous version field
+		// & verify sop status updated to Revised & on print report Superseded copy stamp is displaying.
+		// --------------------------------------------------------------------------------------------------
+		log.info("Requirement 3: Zooming to Previous Version field from SOP header...");
+		sopMaster.zoomToPreviousVersion();
+		sopMaster.closeFirstSOPTab();
+		sopMaster.switchToNewSOPRecordTab();
+		sopMaster.verifySOPStatus("Revised");
+		sopMaster.verifyRevisionNo("0");
+		sopMaster.verifyActiveCheckbox(false);
+		log.info(
+				"Requirement 3: Previewing Print Report for Previous Version and verifying 'Superseded copy' stamp...");
+		sopMaster.clickPreview();
+		printReport.verifyReportOpened();
+		printReport.verifySupersedeCopyStamp(true);
+		printReport.verifyNoSectionOverlap();
+		printReport.verifyNoTextOverlap();
+		printReport.closeReportTab();
 
 		log.info("================================================================================");
 		log.info("========== ✅ Test PHX-3499 Verification of SOP Master Passed Successfully! ==========");
 		log.info("================================================================================");
 	}
+
 }

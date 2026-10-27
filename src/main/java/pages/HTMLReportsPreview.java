@@ -10,6 +10,9 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.BoundingBox;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
+import base.BaseTest;
+import utils.CustomSoftAssert;
+
 public class HTMLReportsPreview {
 
 	private static final Logger log = LogManager.getLogger(HTMLReportsPreview.class);
@@ -26,6 +29,24 @@ public class HTMLReportsPreview {
 		this.dashboard = dashboard;
 	}
 
+	private void softAssertNotNull(Object object, String message) {
+		CustomSoftAssert sa = BaseTest.getSoftAssert();
+		if (sa != null) {
+			sa.assertNotNull(object, message);
+		} else {
+			Assert.assertNotNull(object, message);
+		}
+	}
+
+	private void softAssertFail(String message) {
+		CustomSoftAssert sa = BaseTest.getSoftAssert();
+		if (sa != null) {
+			sa.fail(message);
+		} else {
+			Assert.fail(message);
+		}
+	}
+
 	/**
 	 * Verifies that header, content, and footer do not overlap across all pages of
 	 * the HTML report preview.
@@ -33,12 +54,13 @@ public class HTMLReportsPreview {
 	public void checkOverlapIssue() {
 		log.info("Checking for header/content/footer overlap issues in HTML Report Preview...");
 
-		FrameLocator reportFrame = page.frameLocator("//iframe[@class='z-iframe']");
+		FrameLocator reportFrame = page.frameLocator("iframe.z-iframe:not(.dashboard-report-iframe)");
 		Locator lastPage = reportFrame.locator("(//div[@data-page-number])[last()]");
 		lastPage.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(15000));
 
 		String pageNumAttr = lastPage.getAttribute("data-page-number");
-		Assert.assertNotNull(pageNumAttr, "Failed to retrieve 'data-page-number' from report preview.");
+		softAssertNotNull(pageNumAttr, "Failed to retrieve 'data-page-number' from report preview.");
+		if (pageNumAttr == null) return;
 
 		int totalPages = Integer.parseInt(pageNumAttr.trim());
 		log.info("Total pages detected in report: [{}]", totalPages);
@@ -58,7 +80,8 @@ public class HTMLReportsPreview {
 
 			if (headerBox == null || contentBox == null || footerBox == null) {
 				log.error("Unable to calculate bounding box for Page [{}]", i);
-				Assert.fail("Unable to get bounding box for Header/Content/Footer on Page " + i);
+				softAssertFail("Unable to get bounding box for Header/Content/Footer on Page " + i);
+				continue;
 			}
 
 			// Header coordinates
@@ -77,14 +100,14 @@ public class HTMLReportsPreview {
 			if (headerBottom > contentTop) {
 				double overlap = headerBottom - contentTop;
 				log.error("❌ HEADER / CONTENT OVERLAP detected on Page [{}] by {} px", i, overlap);
-				Assert.fail("HEADER / CONTENT OVERLAP on Page " + i + " by " + overlap + " px");
+				softAssertFail("HEADER / CONTENT OVERLAP on Page " + i + " by " + overlap + " px");
 			}
 
 			// Check Content vs Footer overlap
 			if (contentBottom > footerTop) {
 				double overlap = contentBottom - footerTop;
 				log.error("❌ CONTENT / FOOTER OVERLAP detected on Page [{}] by {} px", i, overlap);
-				Assert.fail("CONTENT / FOOTER OVERLAP on Page " + i + " by " + overlap + " px");
+				softAssertFail("CONTENT / FOOTER OVERLAP on Page " + i + " by " + overlap + " px");
 			}
 		}
 
@@ -97,12 +120,13 @@ public class HTMLReportsPreview {
 	public void checkTextOverlapIssue() {
 		log.info("Checking for text overlap issues in HTML Report Preview...");
 
-		Locator iframeLoc = page.locator("//iframe[@class='z-iframe']").first();
+		Locator iframeLoc = page.locator("iframe.z-iframe:not(.dashboard-report-iframe)").first();
 		try {
 			iframeLoc.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED).setTimeout(15000));
 		} catch (Exception e) {
 			log.warn("Report iframe wait timed out: {}", e.getMessage());
-			Assert.fail("Report iframe not found for text overlap verification.");
+			softAssertFail("Report iframe not found for text overlap verification.");
+			return;
 		}
 
 		String jsScript =
@@ -161,7 +185,7 @@ public class HTMLReportsPreview {
 		String result = (String) iframeLoc.evaluate(jsScript);
 		if (result != null && !result.trim().isEmpty()) {
 			log.error("❌ Text overlap detected in HTML report preview: {}", result);
-			Assert.fail("Text overlap detected in HTML report preview: " + result);
+			softAssertFail("Text overlap detected in HTML report preview: " + result);
 		}
 		log.info("✅ HTML Report Preview text overlap verification passed for all pages.");
 	}

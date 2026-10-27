@@ -11,6 +11,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.WaitForSelectorState;
 
+import utils.FileUtils;
 import utils.WaitUtils;
 
 /**
@@ -34,15 +35,15 @@ public class DocumentExplorer {
 
 	public DocumentExplorer(Page page) {
 		this.page = page;
-		this.docExplorerToolbarBtn = page.locator("//a[@title='Document Explorer']");
-		this.docExplorerDialog = page.locator("//div[contains(@class,'z-window') and contains(.,'Document Explorer')]");
-		this.uploadContentBtn = page.locator("//div[contains(@class,'z-window') and contains(.,'Document Explorer')]//button[@title='Upload Content']");
-		this.uploadContentDialog = page.locator("//div[contains(@class,'z-window') and contains(.,'Upload Content')]");
-		this.fileInput = page.locator("//div[contains(@class,'z-window') and contains(.,'Upload Content')]//input[@type='file']");
-		this.dmsContentTypeInput = page.locator("//div[contains(@class,'z-window') and contains(.,'Upload Content')]//input[contains(@class,'z-combobox-input')]");
-		this.uploadOkBtn = page.locator("//div[contains(@class,'z-window') and contains(.,'Upload Content')]//button[@title='OK']");
-		this.uploadCloseBtn = page.locator("//div[contains(@class,'z-window') and contains(.,'Upload Content')]//button[contains(@class,'z-window-close')]");
-		this.docExplorerCloseBtn = page.locator("//div[contains(@class,'z-window') and contains(.,'Document Explorer')]//button[contains(@class,'z-window-close')]");
+		this.docExplorerToolbarBtn = page.locator("//a[@title='Document Explorer']").first();
+		this.docExplorerDialog = page.locator("//div[contains(@class,'z-window') and contains(.,'Document Explorer')]").first();
+		this.uploadContentBtn = page.locator("//div[contains(@class,'z-window') and contains(.,'Document Explorer')]//button[@title='Upload Content']").first();
+		this.uploadContentDialog = page.locator("//div[contains(@class,'z-window') and contains(.,'Upload Content')]").first();
+		this.fileInput = page.locator("//div[contains(@class,'z-window') and contains(.,'Upload Content')]//input[@type='file']").first();
+		this.dmsContentTypeInput = page.locator("//div[contains(@class,'z-window') and contains(.,'Upload Content')]//input[contains(@class,'z-combobox-input')]").first();
+		this.uploadOkBtn = page.locator("//div[contains(@class,'z-window') and contains(.,'Upload Content')]//button[@title='OK']").first();
+		this.uploadCloseBtn = page.locator("//div[contains(@class,'z-window') and contains(.,'Upload Content')]//button[contains(@class,'z-window-close')]").first();
+		this.docExplorerCloseBtn = page.locator("//div[contains(@class,'z-window') and contains(.,'Document Explorer')]//button[contains(@class,'z-window-close')] | //div[contains(@class,'z-window') and contains(.,'Document Explorer')]//i[contains(@class,'z-icon-times')]").first();
 	}
 
 	/**
@@ -50,6 +51,16 @@ public class DocumentExplorer {
 	 */
 	public void openDocumentExplorer() {
 		log.info("Opening Document Explorer from toolbar...");
+		// Clear any unexpected modal popup or mask if present before clicking
+		Locator mask = page.locator("div.z-modal-mask, div.z-window-modal-mask");
+		if (mask.count() > 0 && mask.first().isVisible()) {
+			log.warn("Modal mask detected before opening Document Explorer. Dismissing modal...");
+			Locator modalBtn = page.locator("//div[contains(@class,'z-messagebox') or contains(@class,'z-window-highlighted') or contains(@class,'z-window-modal')]//button | //div[contains(@class,'z-window-modal') or contains(@class,'z-window-highlighted')]//div[contains(@class,'z-window-close')]").first();
+			if (modalBtn.count() > 0 && modalBtn.isVisible()) {
+				modalBtn.click(new Locator.ClickOptions().setForce(true));
+				page.waitForTimeout(1000);
+			}
+		}
 		docExplorerToolbarBtn.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		docExplorerToolbarBtn.click();
 		page.waitForTimeout(1000);
@@ -59,9 +70,19 @@ public class DocumentExplorer {
 	}
 
 	/**
+	 * Dynamically resolves the DMS file path by delegating to FileUtils.
+	 *
+	 * @param fileName Name or relative path of the DMS file (e.g. "Training_Completion_Report.pdf")
+	 * @return Absolute path of the resolved DMS file
+	 */
+	public static String getDynamicDmsFilePath(String fileName) {
+		return utils.FileUtils.getDynamicDmsFilePath(fileName);
+	}
+
+	/**
 	 * Uploads a document with the specified DMS Content Type into Document Explorer.
 	 *
-	 * @param relativeOrAbsolutePath File path to upload (e.g. "src/test/resources/Training_Completion_Report.pdf")
+	 * @param relativeOrAbsolutePath File path or file name to upload (e.g. "Training_Completion_Report.pdf")
 	 * @param contentType            DMS Content Type (e.g. "Training Completion Report")
 	 */
 	public void uploadContent(String relativeOrAbsolutePath, String contentType) {
@@ -73,9 +94,8 @@ public class DocumentExplorer {
 
 		uploadContentDialog.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 
-		// Resolve absolute path
-		File f = new File(relativeOrAbsolutePath);
-		String absPath = f.getAbsolutePath();
+		// Resolve path dynamically using FileUtils
+		String absPath = FileUtils.getDynamicDmsFilePath(relativeOrAbsolutePath);
 
 		// Attach file to <input type="file">
 		fileInput.setInputFiles(Paths.get(absPath));

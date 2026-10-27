@@ -55,7 +55,8 @@ public class WorkflowActivities {
 		Locator menuItem = page.locator(
 				"//div[contains(@class,'z-bandbox-popup')]//tr[contains(.,'Workflow Activities')] | //div[contains(@class,'z-bandbox-popup')]//span[text()='Workflow Activities']");
 		try {
-			menuItem.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+			menuItem.first()
+					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
 			menuItem.first().click();
 		} catch (Exception e) {
 			log.warn("Menu item not clicked, pressing Enter: {}", e.getMessage());
@@ -67,9 +68,11 @@ public class WorkflowActivities {
 	}
 
 	/**
-	 * Scrolls to and selects the assigned SOP record matching the given status and document number.
+	 * Scrolls to and selects the assigned SOP record matching the given status and
+	 * document number.
 	 *
-	 * @param nodeStatus Expected status (e.g. "Internal Review", "Department Approval", "QA Approval", "Draft")
+	 * @param nodeStatus Expected status (e.g. "Internal Review", "Department
+	 *                   Approval", "QA Approval", "Draft")
 	 * @param docNo      Document Number (e.g. "1000714")
 	 */
 	public void clickOnAssignedSOPRecord(String nodeStatus, String docNo) {
@@ -78,7 +81,8 @@ public class WorkflowActivities {
 		clickReQuery();
 		page.waitForTimeout(1000);
 
-		Locator listbox = page.locator("//div[@class='adform-content z-window-content']//div[@class='z-listbox-body']").first();
+		Locator listbox = page.locator("//div[@class='adform-content z-window-content']//div[@class='z-listbox-body']")
+				.first();
 		if (listbox.count() > 0 && listbox.isVisible()) {
 			listbox.click();
 			page.waitForTimeout(300);
@@ -95,12 +99,13 @@ public class WorkflowActivities {
 		Locator matchingRow = page.locator(
 				"//div[contains(@class,'z-listbox')]//tr[contains(.,'" + docNo + "')]");
 		try {
-			matchingRow.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+			matchingRow.first()
+					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 			matchingRow.first().click();
 			log.info("Selected Assigned SOP Record matching Doc No: [{}]", docNo);
 		} catch (Exception e) {
 			log.warn("Direct row match not visible yet, clicking last visible item: {}", e.getMessage());
-			Assert.fail("Assigned record not found on workflow activities" +e);
+			Assert.fail("Assigned record not found on workflow activities" + e);
 		}
 		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
@@ -113,7 +118,8 @@ public class WorkflowActivities {
 	 */
 	public void selectAnswer(String answer) {
 		log.info("Selecting Answer: [{}] in Workflow Activities...", answer);
-		answerSelect.first().waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		answerSelect.first()
+				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		answerSelect.first().selectOption(answer);
 		page.waitForTimeout(500);
 		log.info("Selected answer: [{}]", answer);
@@ -136,7 +142,9 @@ public class WorkflowActivities {
 	 */
 	public void zoomToRecord() {
 		log.info("Clicking Zoom button to open SOP Master record...");
-		Locator zoomBtn = page.locator("//button[@title='Zoom'] | //button[contains(@class,'z-button') and contains(@title,'Zoom')] | //button[contains(.,'Zoom')]").first();
+		Locator zoomBtn = page.locator(
+				"//button[@title='Zoom'] | //button[contains(@class,'z-button') and contains(@title,'Zoom')] | //button[contains(.,'Zoom')]")
+				.first();
 
 		// Ensure row selection activated the zoom button
 		for (int i = 0; i < 15; i++) {
@@ -148,7 +156,7 @@ public class WorkflowActivities {
 			} catch (Exception ignored) {
 				Assert.fail("Zoom button is not enabled on Workflow Activities" + ignored);
 			}
-			
+
 		}
 
 		try {
