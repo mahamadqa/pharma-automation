@@ -32,6 +32,17 @@ public class VerificationOfSOPMasterFlow extends BaseTest {
 
 	private static final Logger log = LogManager.getLogger(VerificationOfSOPMasterFlow.class);
 
+	private static volatile String effectiveRevisedSOPNo;
+	private static volatile String effectiveRevisedSOPDocNo;
+
+	public static String getEffectiveRevisedSOPNo() {
+		return effectiveRevisedSOPNo;
+	}
+
+	public static String getEffectiveRevisedSOPDocNo() {
+		return effectiveRevisedSOPDocNo;
+	}
+
 	@Test(groups = { "advance",
 			"sop" }, alwaysRun = true, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
 	public void verificationOfSOPMasterLifecycle() {
@@ -603,6 +614,22 @@ public class VerificationOfSOPMasterFlow extends BaseTest {
 		sopMaster.verifyProcessedCheckbox(true);
 		sopMaster.verifyNextReviewDate(effectiveDate1);
 		sopMaster.verifyRevisionNo("1");
+
+		// Capture effective revised SOP number for downstream test classes (PHX-3503, PHX-3504)
+		effectiveRevisedSOPDocNo = sopMaster.getDocumentNo();
+		String revNo = sopMaster.getRevisionNo();
+		if (revNo == null || revNo.trim().isEmpty()) {
+			revNo = "1";
+		}
+		if (effectiveRevisedSOPDocNo != null && effectiveRevisedSOPDocNo.contains("_")) {
+			effectiveRevisedSOPNo = effectiveRevisedSOPDocNo;
+		} else {
+			effectiveRevisedSOPNo = effectiveRevisedSOPDocNo + "_" + revNo;
+		}
+		System.setProperty("effective.revised.sop.no", effectiveRevisedSOPNo);
+		System.setProperty("effective.revised.sop.docno", effectiveRevisedSOPDocNo);
+		log.info("Captured Effective Revised SOP Number for downstream tests: [{}] (DocNo: [{}])",
+				effectiveRevisedSOPNo, effectiveRevisedSOPDocNo);
 
 		// --------------------------------------------------------------------------------------------------
 		// Requirement 3: After new revised SOP made effective then From header zoom to Previous version field

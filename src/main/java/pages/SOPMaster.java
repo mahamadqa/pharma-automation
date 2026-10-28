@@ -2021,6 +2021,17 @@ public class SOPMaster {
 		log.info("✅ Revision No verified as: [{}]", actual);
 	}
 
+	public String getRevisionNo() {
+		Locator revInp = getVisibleInput(revisionNoInput);
+		try {
+			if (revInp.isVisible()) {
+				return revInp.inputValue().trim();
+			}
+		} catch (Exception ignored) {
+		}
+		return "";
+	}
+
 	/**
 	 * Verifies that Next Review Date equals Effective Date + Review After (Month).
 	 * Dynamically reads Review After (Month) and Next Review Date directly from UI fields.

@@ -41,6 +41,8 @@ import pages.WorkflowActivities;
 import pages.PrintReport;
 import pages.DocumentExplorer;
 import pages.SystemConfiguration;
+import pages.SOPRequest;
+import pages.SOPFormatRequest;
 import utils.ConfigReader;
 import utils.CustomSoftAssert;
 import utils.ExtentManager;
@@ -85,6 +87,8 @@ public class BaseTest {
 	protected PrintReport printReport;
 	protected DocumentExplorer documentExplorer;
 	protected SystemConfiguration systemConfiguration;
+	protected SOPRequest sopRequest;
+	protected SOPFormatRequest sopFormatRequest;
 
 	protected static ExtentReports extent;
 	protected static ExtentSparkReporter sparkReporter;
@@ -220,6 +224,8 @@ public class BaseTest {
 		printReport = new PrintReport(page);
 		documentExplorer = new DocumentExplorer(page);
 		systemConfiguration = new SystemConfiguration(page);
+		sopRequest = new SOPRequest(page);
+		sopFormatRequest = new SOPFormatRequest(page);
 
 		loginPage.navigateToMainLoginPage();
 		loginPage.checkLogoOnLogin();

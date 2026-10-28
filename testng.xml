@@ -31,17 +31,30 @@
     <!--
         Parallel Execution Configuration:
         - parallel="classes" : Runs test classes concurrently across worker threads
-        - thread-count="4"   : Number of concurrent threads
+        - thread-count="4"   : Number of concurrent worker threads
         - Execution Flow:
-          * baseModules classes and sop.VerificationOfSOPMasterFlow run in parallel
-          * sop.VerifySOPMasterFlowIfEffectivenessCheckRequired starts only after
-            sop.VerificationOfSOPMasterFlow has fully completed (enforced via dependsOnMethods)
+          1. Root SOP Flow: sop.VerificationOfSOPMasterFlow runs first among SOP tests (alongside baseModules in parallel)
+          2. Dependent SOP Flows: Once sop.VerificationOfSOPMasterFlow completes and makes Revision 1 effective,
+             the 3 dependent classes execute concurrently in PARALLEL across worker threads:
+             - sop.VerifySOPMasterFlowIfEffectivenessCheckRequired
+             - sop.VerificationOfSOPRequestAndIssueFlow
+             - sop.VerificationOfSOPFormatRequestAndIssueFlow
+             (enforced via dependsOnMethods="sop.VerificationOfSOPMasterFlow.verificationOfSOPMasterLifecycle")
     -->
     <test name="Pharma Modules Test" parallel="classes" thread-count="4">
-        <packages>
-            <package name="baseModules"/>
-            <package name="sop"/>
-        </packages>
+        <classes>
+            <!-- Root SOP Master Lifecycle Flow -->
+            <class name="sop.VerificationOfSOPMasterFlow"/>
+
+            <!-- Dependent SOP Flows (Run concurrently in parallel once root flow completes) -->
+            <class name="sop.VerifySOPMasterFlowIfEffectivenessCheckRequired"/>
+            <class name="sop.VerificationOfSOPRequestAndIssueFlow"/>
+            <class name="sop.VerificationOfSOPFormatRequestAndIssueFlow"/>
+
+            <!-- Base Modules (Run concurrently in parallel across worker threads) -->
+            <class name="baseModules.CreateGRNFromPOFlow"/>
+            <class name="baseModules.VerifySOShipmentInvoiceFlow"/>
+        </classes>
     </test>
 
 </suite>

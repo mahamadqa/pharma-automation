@@ -126,6 +126,85 @@ public class Dashboard {
 	}
 
 	/**
+	 * Switches focus back to the Home / Dashboard tab.
+	 */
+	public void clickHomeTab() {
+		log.info("Switching to Home / Dashboard tab...");
+		Locator homeTab = page.locator("//li[contains(@class,'z-tab')]//span[contains(text(),'Home')]");
+		if (homeTab.count() > 0 && homeTab.first().isVisible()) {
+			homeTab.first().click();
+			page.waitForTimeout(1000);
+			WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		}
+	}
+
+	/**
+	 * Searches for a window in Menu Search and clicks the '+' (New) icon next to it.
+	 *
+	 * @param menuName Window title to search and initialize new record for
+	 */
+	public void menuSearchAndClickNew(String menuName) {
+		log.info("Searching [{}] in menu searchbox and clicking '+' icon...", menuName);
+		clickHomeTab();
+		menuSearchInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		menuSearchInput.click();
+		menuSearchInput.fill(menuName);
+		page.waitForTimeout(3000);
+
+		Locator newIcon = page.locator(
+				"//div[contains(@class,'z-bandbox-popup')]//tr[contains(.,'" + menuName + "')]//a[@title='New'] | "
+						+ "//tr[contains(.,'" + menuName + "')]//a[@title='New'] | "
+						+ "//span[contains(text(),'" + menuName + "')]/ancestor::tr//a[@title='New']").first();
+		try {
+			newIcon.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+			newIcon.click();
+		} catch (Exception e) {
+			log.warn("New '+' icon not clicked directly for [{}], attempting Enter: {}", menuName, e.getMessage());
+			menuSearchInput.press("Enter");
+		}
+		page.waitForTimeout(2000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		log.info("Navigated to [{}] window with new record.", menuName);
+	}
+
+	/**
+	 * Clicks a document status indicator under the Activities widget on Dashboard.
+	 *
+	 * @param indicatorName Indicator title (e.g. "SOP Request", "SOP Format Request")
+	 */
+	public void clickDocumentStatusIndicator(String indicatorName) {
+		log.info("Clicking on [{}] document status indicator from Activities dashboard...", indicatorName);
+		clickHomeTab();
+
+		// Refresh activities widget if refresh icon is present
+		Locator refreshBtn = page.locator(
+				"//div[contains(@class,'dashboard-widget') and .//div[contains(.,'Activities')]]//a[@title='ReQuery']");
+		if (refreshBtn.count() > 0 && refreshBtn.first().isVisible()) {
+			try {
+				refreshBtn.first().click();
+				page.waitForTimeout(1000);
+				WaitUtils.waitForLoadingIndicatorToDisappear(page);
+			} catch (Exception ignored) {
+			}
+		}
+
+		Locator indicator = page.locator(
+				"//div[contains(@class,'activities-box')]//span[contains(text(),'" + indicatorName + "')] | "
+						+ "//div[contains(@class,'activities-box')]//div[contains(.,'" + indicatorName + "')] | "
+						+ "//span[contains(@class,'z-label') and contains(text(),'" + indicatorName + "')]").first();
+		try {
+			indicator.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
+			indicator.click();
+		} catch (Exception e) {
+			log.warn("Activity indicator click fallback: {}", e.getMessage());
+			indicator.click(new Locator.ClickOptions().setForce(true));
+		}
+		page.waitForTimeout(3000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		log.info("Clicked on [{}] document status indicator.", indicatorName);
+	}
+
+	/**
 	 * Closes the currently active window tab.
 	 */
 	public void closeWindow() {
