@@ -51,9 +51,9 @@ import utils.ExcelReader;
 public class VerificationOfSOPFormatRequestAndIssueFlow extends BaseTest {
 
 	private static final Logger log = LogManager.getLogger(VerificationOfSOPFormatRequestAndIssueFlow.class);
-//dependsOnMethods = "sop.VerificationOfSOPMasterFlow.verificationOfSOPMasterLifecycle",
+
 	@Test(groups = { "advance",
-			"sop" },  description = "PHX-3504: Verification of SOP Format Request and Issue Lifecycle")
+			"sop" }, dependsOnMethods = "sop.VerificationOfSOPMasterFlow.verificationOfSOPMasterLifecycle", description = "PHX-3504: Verification of SOP Format Request and Issue Lifecycle")
 	public void verificationOfSOPFormatRequestAndIssue() {
 
 		log.info("================================================================================");
