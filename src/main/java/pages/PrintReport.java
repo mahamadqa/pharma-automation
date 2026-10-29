@@ -257,6 +257,66 @@ public class PrintReport {
 	}
 
 	/**
+	 * Returns the count of visible 'Display' / 'Display Copy' stamps on the report.
+	 */
+	public int getVisibleDisplayStampsCount() {
+		FrameLocator reportFrame = getReportFrame();
+		Locator stampLoc = reportFrame.locator(
+				"//div[contains(@class,'stamp') and contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'DISPLAY')] | " +
+				"//span[contains(@class,'stamp') and contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'DISPLAY')] | " +
+				"//div[contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'DISPLAY COPY') or contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'DISPLAY')] | " +
+				"//span[contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'DISPLAY COPY') or contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'DISPLAY')] | " +
+				"//*[contains(@class,'stamp') and contains(translate(normalize-space(.), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'DISPLAY')]");
+
+		int visibleStamps = 0;
+		try {
+			for (Locator loc : stampLoc.all()) {
+				try {
+					if (loc.isVisible()) {
+						visibleStamps++;
+					}
+				} catch (Exception ignored) {
+				}
+			}
+		} catch (Exception e) {
+			log.warn("Exception counting visible display stamps: {}", e.getMessage());
+		}
+		return visibleStamps;
+	}
+
+	/**
+	 * Verifies whether the 'Display' stamp is displayed on the SOP report.
+	 *
+	 * @param expectedVisible true if stamp is expected, false otherwise.
+	 */
+	public void verifyDisplayStamp(boolean expectedVisible) {
+		log.info("Verifying 'Display' stamp. Expected visible: [{}]", expectedVisible);
+		int visibleStamps = getVisibleDisplayStampsCount();
+		log.info("Detected [{}] visible 'Display' stamp(s).", visibleStamps);
+
+		if (expectedVisible) {
+			softAssertTrue(visibleStamps > 0, "Expected 'Display' stamp to be visible on Report, but it was not found.");
+			if (visibleStamps > 0) {
+				log.info("✅ 'Display' stamp verified successfully on [{}] page(s).", visibleStamps);
+			}
+		} else {
+			softAssertEquals(visibleStamps, 0, "Expected 'Display' stamp NOT to be displayed, but found [" + visibleStamps + "] visible stamp(s).");
+			if (visibleStamps == 0) {
+				log.info("✅ Verified 'Display' stamp is NOT displayed.");
+			}
+		}
+	}
+
+	/**
+	 * Alias for verifyDisplayStamp.
+	 *
+	 * @param expectedVisible true if stamp is expected, false otherwise.
+	 */
+	public void verifyDisplayCopyStamp(boolean expectedVisible) {
+		verifyDisplayStamp(expectedVisible);
+	}
+
+	/**
 	 * Verifies that the report contains header details and content sections.
 	 *
 	 * @param docNo       SOP Document Number

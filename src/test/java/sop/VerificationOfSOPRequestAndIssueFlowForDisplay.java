@@ -10,14 +10,14 @@ import utils.DataManager;
 import utils.ExcelReader;
 
 /**
- * Test Case PHX-3503: Verification of SOP Request and Issue.
+ * Test Case PHX-3506: Verification of SOP Request and Issue with Issue Type 'Display'.
  *
- * Covers end-to-end verification of SOP Request & SOP Issue lifecycle:
+ * Covers end-to-end verification of SOP Request & SOP Issue lifecycle for Display copy:
  * Step 1: Login with EngUser user and Engineer Role.
  * Step 2: Search "SOP Request" in Menu Searchbox and click on '+' icon next to SOP Request label.
  *         Verify all fields are displaying.
  * Step 3: Enter Document Type : SOP Request, SOP : Approved/Effective SOP, Department : Maintenance,
- *         Issue Type : Controlled, and click on Save. Document No auto-generated, Status is Drafted.
+ *         Issue Type : Display, and click on Save. Document No auto-generated, Status is Drafted.
  * Step 4-5: Click Document Action, select Prepare, click Ok -> Status updates to In Progress.
  * Step 6: Logout EngUser and Login with QAUser and QA Role.
  * Step 7: Click on "SOP Request" document status indicator from Activities dashboard -> SOP Issue window
@@ -25,23 +25,23 @@ import utils.ExcelReader;
  * Step 8: Enter Control Sequence, Issue Date, Issued By and Save -> Print No : 0, Control Sequence : Read only,
  *         Printed : False.
  * Step 9-10: Click on Settings button from toolbar -> select Print SOP -> Confirm "Do you want to start the Process?".
- * Step 11: Report : SOP window opens with Master Copy stamp and Controlled Copy stamp.
+ * Step 11: Report : SOP window opens with Master Copy stamp and Display stamp.
  * Step 12-13: Click Print button -> Print Copies popup -> Click Cancel to close popup.
  * Step 14: Navigate back on SOP Issue window and click ReQuery -> Print No updates to 1, Printed checkbox becomes true.
+ *          Reprint -> verify mandatory reason error -> fill reason -> reprint -> verify Display stamp -> Print No: 2.
  * Step 15-16: Document Action -> Complete -> Document Status updates to Completed, Processed flag becomes true.
  * Step 17-18: Document Action -> Close -> Confirm popup -> Document Status updates to Closed,
  *             Retrieved On auto set to current date, Retrieved By auto set to current user.
  */
-public class VerificationOfSOPRequestAndIssueFlow extends BaseTest {
+public class VerificationOfSOPRequestAndIssueFlowForDisplay extends BaseTest {
 
-	private static final Logger log = LogManager.getLogger(VerificationOfSOPRequestAndIssueFlow.class);
-
+	private static final Logger log = LogManager.getLogger(VerificationOfSOPRequestAndIssueFlowForDisplay.class);
 	@Test(groups = { "advance",
-			"sop" },dependsOnMethods = "sop.VerificationOfSOPMasterFlow.verificationOfSOPMasterLifecycle", alwaysRun = true, description = "PHX-3503: Verification of SOP Request and Issue Lifecycle")
-	public void verificationOfSOPRequestAndIssue() {
+			"sop" },dependsOnMethods = "sop.VerificationOfSOPMasterFlow.verificationOfSOPMasterLifecycle", alwaysRun = true, description = "PHX-3506: Verification of SOP Request and Issue Lifecycle for Display Copy")
+	public void verificationOfSOPRequestAndIssueForDisplay() {
 
 		log.info("================================================================================");
-		log.info("========== Starting Test: PHX-3503 Verification of SOP Request and Issue ==========");
+		log.info("========== Starting Test: PHX-3506 Verification of SOP Request and Issue (Display) ==========");
 		log.info("================================================================================");
 
 		// Initialize Test Data
@@ -64,19 +64,19 @@ public class VerificationOfSOPRequestAndIssueFlow extends BaseTest {
 			targetSOP = ExcelReader.getOrDefault("sop.request.targetSOP",
 					DataManager.getOrDefault("sop.request.targetSOP", "1000703"));
 		}
-		log.info("Target SOP selected for SOP Request: [{}]", targetSOP);
+		log.info("Target SOP selected for SOP Request (Display): [{}]", targetSOP);
 
 		// SOP Request Data from Properties / Defaults
 		String docType = ExcelReader.getOrDefault("sop.request.docType",
 				DataManager.getOrDefault("sop.request.docType", "SOP Request"));
 		String department = ExcelReader.getOrDefault("sop.request.department",
 				DataManager.getOrDefault("sop.request.department", "Maintenance"));
-		String issueType = ExcelReader.getOrDefault("sop.request.issueType",
-				DataManager.getOrDefault("sop.request.issueType", "Controlled"));
+		String issueType = ExcelReader.getOrDefault("sop.request.display.issueType",
+				DataManager.getOrDefault("sop.request.display.issueType", "Display"));
 		String controlSequence = ExcelReader.getOrDefault("sop.request.controlSequence",
 				DataManager.getOrDefault("sop.request.controlSequence", "101"));
 		String remark = ExcelReader.getOrDefault("sop.request.remark",
-				DataManager.getOrDefault("sop.request.remark", "Playwright Automation SOP Request"));
+				DataManager.getOrDefault("sop.request.remark", "Playwright Automation SOP Request for Display"));
 
 		// --------------------------------------------------------------------------------------------------
 		// Step 1: Login with EngUser user and Engineer Role
@@ -94,12 +94,12 @@ public class VerificationOfSOPRequestAndIssueFlow extends BaseTest {
 		sopRequest.verifySOPRequestFieldsDisplaying(engUser);
 
 		// --------------------------------------------------------------------------------------------------
-		// Step 3: Enter details (DocType, SOP, Department, Issue Type, Remark) and Save
+		// Step 3: Enter details (DocType, SOP, Department, Issue Type: Display, Remark) and Save
 		// --------------------------------------------------------------------------------------------------
-		log.info("Step 3: Entering SOP Request details and saving...");
+		log.info("Step 3: Entering SOP Request details with Issue Type [{}] and saving...", issueType);
 		sopRequest.fillSOPRequestAndSave(docType, targetSOP, department, issueType, remark);
 		String sopReqDocNo = sopRequest.getDocumentNo();
-		log.info("SOP Request record created successfully with Document No: [{}]", sopReqDocNo);
+		log.info("SOP Request record (Display) created successfully with Document No: [{}]", sopReqDocNo);
 
 		// --------------------------------------------------------------------------------------------------
 		// Step 4 & 5: Document Action -> Prepare -> Status updates to In Progress
@@ -134,25 +134,25 @@ public class VerificationOfSOPRequestAndIssueFlow extends BaseTest {
 		// --------------------------------------------------------------------------------------------------
 		log.info("Step 9-10: Clicking Settings (Process) button and selecting Print SOP...");
 		sopRequest.clickSettingsAndSelectPrintSOP();
-		sopRequest.confirmPrintControlledSOPDialog();
+		sopRequest.confirmPrintSOPDialog(issueType);
 
 		// --------------------------------------------------------------------------------------------------
-		// Step 11: Report : SOP window opens with Master Copy stamp and Controlled Copy stamp
+		// Step 11: Report : SOP window opens with Master Copy stamp and Display stamp
 		// --------------------------------------------------------------------------------------------------
-		log.info("Step 11: Verifying Report : SOP window, Master Copy stamp and Controlled Copy stamp...");
+		log.info("Step 11: Verifying Report : SOP window, Master Copy stamp and Display stamp...");
 		printReport.verifyReportOpened();
 		printReport.verifyMasterCopyStamp(true);
-		printReport.verifyControlledCopyStamp(true);
+		printReport.verifyDisplayStamp(true);
 
 		// --------------------------------------------------------------------------------------------------
 		// Step 12 & 13: Click on Print button -> Cancel popup
 		// --------------------------------------------------------------------------------------------------
 		log.info("Step 12-13: Clicking Print button and dismissing printer popup...");
 		printReport.clickPrintAndCancel();
-		/*Refresh page*/
+		/* Refresh page */
 		dashboard.clickDocumentStatusIndicator("SOP Request");
 		sopRequest.verifySOPIssueRequestedRecord(sopReqDocNo);
-		
+
 		// --------------------------------------------------------------------------------------------------
 		// Step 14: Navigate back on SOP Issue window and click ReQuery -> Print No: 1, Printed: True
 		// --------------------------------------------------------------------------------------------------
@@ -160,20 +160,22 @@ public class VerificationOfSOPRequestAndIssueFlow extends BaseTest {
 		printReport.closeReportTab();
 		sopRequest.navigateBackToSOPIssueAndRequery();
 		sopRequest.verifyPrintNoAndPrintedStatus("1", true);
-		
-		//Reprint
+
+		// Reprint Flow
+		log.info("Verifying reprint flow with mandatory reason check and Display stamp...");
 		sopRequest.clickSettingsAndSelectPrintSOP();
-		sopRequest.confirmPrintControlledSOPDialog();
+		sopRequest.confirmPrintSOPDialog(issueType);
 		sopRequest.verifyReprintError();
 		sopRequest.fillReprintReason();
 		sopRequest.clickSettingsAndSelectPrintSOP();
-		sopRequest.confirmPrintControlledSOPDialog();
+		sopRequest.confirmPrintSOPDialog(issueType);
 		printReport.verifyReportOpened();
+		printReport.verifyDisplayStamp(true);
 		printReport.clickPrintAndCancel();
-		/*Refresh page*/
+		/* Refresh page */
 		dashboard.clickDocumentStatusIndicator("SOP Request");
 		sopRequest.verifySOPIssueRequestedRecord(sopReqDocNo);
-		
+
 		sopRequest.navigateBackToSOPIssueAndRequery();
 		sopRequest.verifyPrintNoAndPrintedStatus("2", true);
 
@@ -190,7 +192,7 @@ public class VerificationOfSOPRequestAndIssueFlow extends BaseTest {
 		sopRequest.closeDocumentAction(qaUser);
 
 		log.info("================================================================================");
-		log.info("========== Completed Test: PHX-3503 Verification of SOP Request and Issue Successfully ==========");
+		log.info("========== Completed Test: PHX-3506 Verification of SOP Request and Issue (Display) Successfully ==========");
 		log.info("================================================================================");
 	}
 }

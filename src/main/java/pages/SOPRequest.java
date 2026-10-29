@@ -503,10 +503,10 @@ public class SOPRequest {
 	}
 
 	/**
-	 * Step 10 & 11: Verifies "Do you want to start the Process?" dialog and clicks OK.
+	 * Verifies "Do you want to start the Process?" dialog, fills issue type if required, and clicks OK.
 	 */
-	public void confirmPrintControlledSOPDialog() {
-		log.info("Verifying Print Controlled SOP dialogue popup message...");
+	public void confirmPrintSOPDialog(String issueType) {
+		log.info("Verifying Print SOP dialog popup message for Issue Type [{}]...", issueType);
 		Locator dialog = page.locator(
 				"//div[contains(@class,'process-modal-dialog') or contains(@class,'popup-dialog') or contains(@class,'z-window-overlapped')][contains(.,'Do you want to start the Process?')]")
 				.first();
@@ -517,9 +517,13 @@ public class SOPRequest {
 					"Print dialog should contain message: 'Do you want to start the Process?'");
 			log.info("Dialog popup message verified: [{}]", text.trim());
 
+			if (issueType != null && !issueType.isEmpty() && page.locator("//span[@instancename='PHX_IssueType']").isVisible()) {
+				page.locator("//span[@instancename='PHX_IssueType']//input").fill(issueType);
+			}
+
 			Locator okBtn = dialog.locator("button[title='OK'], button:has-text('OK'), button.btn-primary").first();
 			okBtn.click();
-			log.info("Clicked OK on Print Controlled SOP dialogue popup.");
+			log.info("Clicked OK on Print SOP dialogue popup.");
 		} catch (Exception e) {
 			log.warn("Dialog confirmation note: {}", e.getMessage());
 			// Fallback click on OK button in any active dialog
@@ -527,6 +531,13 @@ public class SOPRequest {
 		}
 		page.waitForTimeout(3000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+	}
+
+	/**
+	 * Step 10 & 11: Verifies "Do you want to start the Process?" dialog and clicks OK.
+	 */
+	public void confirmPrintControlledSOPDialog() {
+		confirmPrintSOPDialog("Controlled");
 	}
 
 	/**

@@ -117,9 +117,10 @@ public class SOPFormatRequest {
 		this.activeCheckbox = page.locator("//span[@instancename='PHX_SOPFormatRequest0IsActive']//input");
 		this.docActionButton = page.locator("//button[@instancename='PHX_SOPFormatRequest0DocAction']");
 
-		// Subtab - SOP Format Copy
+		// Subtab - SOP Format Copy / Annexure Copy
 		this.formatCopyTab = page.locator(
-				"//ul[@role='tablist']//span[text()='SOP Format Copy'] | //div[contains(@class,'adwindow-detailpane')]//span[text()='SOP Format Copy']");
+				"//ul[@role='tablist']//span[text()='SOP Format Copy' or text()='Annexure Copy' or contains(text(),'Copy')] | "
+						+ "//div[contains(@class,'adwindow-detailpane')]//span[text()='SOP Format Copy' or text()='Annexure Copy' or contains(text(),'Copy')]");
 		this.copyDocNoInput = page.locator("//input[@instancename='PHX_SOPFormatCopy0DocumentNo']");
 		this.copyRetrievedOnInput = page
 				.locator("//span[@instancename='PHX_SOPFormatCopy0PHX_RetrievedOn']//input[not(contains(@class,'z-timebox-input'))]");
@@ -139,7 +140,7 @@ public class SOPFormatRequest {
 				"//div[contains(@class,'adwindow-toolbar')]//a[contains(@title,'Process') and not(contains(@class,'trash'))] | //a[contains(@title,'Process    Alt+O')]");
 		this.menuSearchInput = page.locator("//input[@class='z-bandbox-input']");
 		this.headerBreadcrumb = page.locator(
-				"(//div[@instancename='breadcrumb']//a[contains(text(),'Format Issue') or contains(text(),'Format Request') or contains(@class,'z-a')])[1]");
+				"(//div[@instancename='breadcrumb']//a[contains(text(),'Format Issue') or contains(text(),'Annexure Issue') or contains(text(),'Format Request') or contains(text(),'Annexure Request') or contains(@class,'z-a')])[1]");
 	}
 
 	private void softAssertTrue(boolean condition, String message) {
@@ -386,6 +387,93 @@ public class SOPFormatRequest {
 		saveRecord();
 	}
 
+	/**
+	 * Selects Document Type as "Annexure Request" and verifies Annexure field enables and becomes mandatory.
+	 */
+	public void selectDocTypeAsAnnexureRequest() {
+		log.info("Selecting Document Type as 'Annexure Request'...");
+		Locator dt = getVisible(docTypeInput);
+		dt.fill("Annexure Request");
+		dt.press("Tab");
+		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+		// Annexure field will enable and becomes mandatory
+		Locator ann = getVisible(annexureInput);
+		softAssertTrue(!ann.isDisabled(), "Annexure field should be enabled when Document Type is Annexure Request.");
+		log.info("Verified Annexure field is enabled.");
+	}
+
+	/**
+	 * Selects SOP and Annexure of that SOP, and saves the record.
+	 */
+	public void selectSOPAndAnnexureAndSave(String targetSOP, String targetAnnexure) {
+		log.info("Selecting SOP [{}] and Annexure [{}] and saving...", targetSOP, targetAnnexure);
+
+		// 1. Select SOP
+		Locator sop = getVisible(sopInput);
+		if (targetSOP != null && !targetSOP.isEmpty()) {
+			sop.fill(targetSOP);
+			page.waitForTimeout(500);
+			Locator matchingItem = page.locator(
+					".z-combobox-popup:not([style*='display: none']) .z-comboitem:has-text('" + targetSOP + "')")
+					.first();
+			try {
+				if (matchingItem.isVisible()) {
+					matchingItem.click();
+				} else {
+					sop.press("Tab");
+				}
+			} catch (Exception e) {
+				sop.press("Tab");
+			}
+		} else {
+			Locator sopBtn = page.locator(
+					"//span[@instancename='PHX_SOPFormatRequest0PHX_SOP_ID']//*[contains(@class,'z-combobox-button')]").first();
+			sopBtn.click();
+			page.waitForTimeout(1000);
+			Locator firstItem = page.locator(".z-combobox-popup:not([style*='display: none']) .z-comboitem").first();
+			firstItem.click();
+		}
+		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+		// 2. Select Annexure of selected SOP
+		Locator ann = getVisible(annexureInput);
+		ann.click();
+		Locator annBtn = page.locator(
+				"//span[@instancename='PHX_SOPFormatRequest0PHX_SOPAnnexure_ID']//*[contains(@class,'z-combobox-button')]").first();
+		try {
+			if (annBtn.isVisible()) {
+				annBtn.click();
+				page.waitForTimeout(1000);
+				Locator annItem = (targetAnnexure != null && !targetAnnexure.isEmpty())
+						? page.locator(".z-combobox-popup:not([style*='display: none']) .z-comboitem:has-text('" + targetAnnexure + "')").first()
+						: page.locator(".z-combobox-popup:not([style*='display: none']) .z-comboitem").first();
+				if (annItem.isVisible()) {
+					annItem.click();
+				} else {
+					Locator fallbackItem = page.locator(".z-combobox-popup:not([style*='display: none']) .z-comboitem").first();
+					fallbackItem.click();
+				}
+			} else if (targetAnnexure != null && !targetAnnexure.isEmpty()) {
+				ann.fill(targetAnnexure);
+				ann.press("Tab");
+			}
+		} catch (Exception e) {
+			log.warn("Annexure dropdown selection fallback: {}", e.getMessage());
+			if (targetAnnexure != null && !targetAnnexure.isEmpty()) {
+				ann.fill(targetAnnexure);
+				ann.press("Tab");
+			}
+		}
+		page.waitForTimeout(500);
+
+		// Click Save
+		log.info("Saving record with Annexure selected...");
+		saveRecord();
+	}
+
 	public void fillDepartment(String department) {
 		Locator dept = getVisible(departmentInput);
 		dept.fill(department);
@@ -592,12 +680,33 @@ public class SOPFormatRequest {
 		proc.click();
 		page.waitForTimeout(1500);
 
-		Locator printFmtOption = page.locator("//div[contains(@class,'z-menupopup-open')]//*[contains(text(),'Print SOP Format') or contains(text(),'Print Format')]")
+		Locator printFmtOption = page.locator(
+				"//div[contains(@class,'z-menupopup-open')]//*[contains(text(),'Print SOP Format') or contains(text(),'Print Format') or contains(text(),'Print SOP Annexure') or contains(text(),'Print Annexure')]")
 				.first();
 		printFmtOption.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		softAssertTrue(printFmtOption.isVisible(), "Print SOP Format option should display in Settings menu.");
 		log.info("Clicking Print SOP Format option (Step 16)...");
 		printFmtOption.click();
+		page.waitForTimeout(2000);
+	}
+
+	/**
+	 * Clicks Settings button and selects "Print SOP Annexure" / "Print Annexure".
+	 */
+	public void clickSettingsAndSelectPrintAnnexure() {
+		log.info("Clicking Settings / Process button from upper toolbar for Annexure...");
+		Locator proc = getVisible(processButton);
+		proc.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		proc.click();
+		page.waitForTimeout(1500);
+
+		Locator printAnnOption = page.locator(
+				"//div[contains(@class,'z-menupopup-open')]//*[contains(text(),'Print SOP Annexure') or contains(text(),'Print Annexure') or contains(text(),'Print SOP Format') or contains(text(),'Print Format')]")
+				.first();
+		printAnnOption.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		softAssertTrue(printAnnOption.isVisible(), "Print Annexure option should display in Settings menu.");
+		log.info("Clicking Print Annexure option: [{}]...", printAnnOption.innerText().trim());
+		printAnnOption.click();
 		page.waitForTimeout(2000);
 	}
 
@@ -620,7 +729,6 @@ public class SOPFormatRequest {
 				page.locator("//span[@instancename='PHX_IssueType']//input").fill(IssueType);
 			}
 			
-			
 			Locator okBtn = dialog.locator("button[title='OK'], button:has-text('OK'), button.btn-primary").first();
 			okBtn.click();
 		} catch (Exception e) {
@@ -631,12 +739,16 @@ public class SOPFormatRequest {
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 	}
 
+	public void confirmPrintAnnexureDialog(String issueType) {
+		confirmPrintSOPFormatDialog(issueType);
+	}
+
 	/**
-	 * Step 20: Navigates back on SOP Format Issue window and clicks Requery button.
+	 * Step 20: Navigates back on SOP Format / Annexure Issue window and clicks Requery button.
 	 */
 	public void navigateBackToSOPFormatIssueAndRequery() {
-		log.info("Navigating back on SOP Format Issue window and clicking ReQuery (Step 20)...");
-		Locator fmtTab = page.locator("//li[contains(@class,'z-tab')]//span[contains(text(),'Format Issue')]").first();
+		log.info("Navigating back on Issue window and clicking ReQuery (Step 20)...");
+		Locator fmtTab = page.locator("//li[contains(@class,'z-tab')]//span[contains(text(),'Format Issue') or contains(text(),'Annexure Issue') or contains(text(),'Issue')]").first();
 		if (fmtTab.count() > 0 && fmtTab.isVisible()) {
 			fmtTab.click();
 			page.waitForTimeout(1000);
@@ -645,7 +757,7 @@ public class SOPFormatRequest {
 		req.click();
 		page.waitForTimeout(2500);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
-		log.info("SOP Format Issue record re-queried successfully.");
+		log.info("Issue record re-queried successfully.");
 	}
 
 	/**
@@ -1025,11 +1137,12 @@ public class SOPFormatRequest {
 		log.info("Verifying error message containing: [{}]...", expectedText);
 		page.waitForTimeout(1000);
 
-		if(page.locator("//span[text()='All format copy are not received back']").isVisible()) {
-			log.info(expectedText);
-		}
-		else {
-			softAssertTrue(page.locator("//span[text()='All format copy are not received back']").isVisible(), "All format copy are not received back..");
+		Locator err = page.locator(
+				"//span[contains(text(),'not received back') or contains(text(),'All format copy are not received back') or contains(text(),'All annexure copy are not received back')]");
+		if (err.count() > 0 && err.first().isVisible()) {
+			log.info("Detected error message: [{}]", err.first().innerText().trim());
+		} else {
+			softAssertTrue(err.isVisible(), "Expected error message indicating copies not received back.");
 		}
 		
 //		Locator msgBox = page.locator(

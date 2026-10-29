@@ -205,6 +205,33 @@ public class Dashboard {
 	}
 
 	/**
+	 * Clicks a document status indicator under Activities, falling back to an alternate name if not found.
+	 *
+	 * @param primaryIndicator Primary indicator title (e.g. "Annexure Request")
+	 * @param fallbackIndicator Fallback indicator title (e.g. "SOP Format Request")
+	 */
+	public void clickDocumentStatusIndicator(String primaryIndicator, String fallbackIndicator) {
+		log.info("Attempting to click [{}] indicator with fallback to [{}]...", primaryIndicator, fallbackIndicator);
+		clickHomeTab();
+		Locator primary = page.locator(
+				"//div[contains(@class,'activities-box')]//span[contains(text(),'" + primaryIndicator + "')] | "
+						+ "//div[contains(@class,'activities-box')]//div[contains(.,'" + primaryIndicator + "')] | "
+						+ "//span[contains(@class,'z-label') and contains(text(),'" + primaryIndicator + "')]").first();
+		try {
+			if (primary.isVisible()) {
+				primary.click();
+				page.waitForTimeout(3000);
+				WaitUtils.waitForLoadingIndicatorToDisappear(page);
+				log.info("Clicked on primary [{}] document status indicator.", primaryIndicator);
+				return;
+			}
+		} catch (Exception ignored) {
+		}
+		log.info("Primary indicator [{}] not found/visible, falling back to [{}]...", primaryIndicator, fallbackIndicator);
+		clickDocumentStatusIndicator(fallbackIndicator);
+	}
+
+	/**
 	 * Closes the currently active window tab.
 	 */
 	public void closeWindow() {

@@ -48,7 +48,8 @@
 
             <!-- Dependent SOP Flows (Run concurrently in parallel once root flow completes) -->
             <class name="sop.VerifySOPMasterFlowIfEffectivenessCheckRequired"/>
-            <class name="sop.VerificationOfSOPRequestAndIssueFlow"/>
+            <class name="sop.VerificationOfSOPRequestAndIssueFlowControlled"/>
+            <class name="sop.VerificationOfSOPRequestAndIssueFlowForDisplay"/>
             <class name="sop.VerificationOfSOPFormatRequestAndIssueFlow"/>
 
             <!-- Base Modules (Run concurrently in parallel across worker threads) -->
