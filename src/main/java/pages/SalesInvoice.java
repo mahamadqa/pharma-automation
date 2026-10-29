@@ -260,7 +260,7 @@ public class SalesInvoice {
 		verifyFieldFilled(targetDocTypeInput, "Target Document Type", "AR Invoice");
 
 		// 5. Price List
-		verifyFieldFilled(priceListInput, "Price List", DataManager.getOrDefault("so.priceList", "5.00"));
+		verifyFieldFilled(priceListInput, "Price List", DataManager.getOrDefault("so.priceListType", "Prime"));
 
 		// 6. Sales Representative
 		verifyFieldFilled(salesRepInput, "Sales Representative", DataManager.getData("so.salesRep", "salesRep"));

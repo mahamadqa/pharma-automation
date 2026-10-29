@@ -53,7 +53,7 @@
             <class name="sop.VerificationOfSOPRequestAndIssueFlowControlled"/>
             <class name="sop.VerificationOfSOPRequestAndIssueFlowForDisplay"/>
             <class name="sop.VerificationOfSOPFormatRequestAndIssueFlow"/>
-            <class name="sop.VerificationOfSOPAnnexureRequestAndIssueFlow"/>
+            
 
             <!-- Base Modules (Run concurrently in parallel across worker threads) -->
             <class name="baseModules.CreateGRNFromPOFlow"/>
