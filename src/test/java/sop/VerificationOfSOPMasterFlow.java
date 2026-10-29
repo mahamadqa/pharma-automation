@@ -46,9 +46,9 @@ public class VerificationOfSOPMasterFlow extends BaseTest {
 	public static void setEffectiveRevisedSOPDocNo(String docNo) {
 		effectiveRevisedSOPDocNo = docNo;
 	}
-
+	//dependsOnMethods = "sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle",
 	@Test(groups = { "advance",
-			"sop" }, dependsOnMethods = "sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle", alwaysRun = true, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
+			"sop" },  alwaysRun = true, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
 	public void verificationOfSOPMasterLifecycle() {
 
 		log.info("================================================================================");
@@ -165,9 +165,8 @@ public class VerificationOfSOPMasterFlow extends BaseTest {
 		// Step 2 & 3: Navigate to SOP Master window via Menu Search '+' icon, add Resource & Equipment, fill Header and Save
 		// --------------------------------------------------------------------------------------------------
 		log.info("Step 2-3: Opening SOP Master window, populating Resource & Equipment, and filling Header fields...");
-		
-		sopMaster.fillHeaderAndSave(docType, description, department, respDept, masterCopyOwner);
 		sopMaster.navigateToSOPMasterWindow();
+		sopMaster.fillHeaderAndSave(docType, description, department, respDept, masterCopyOwner);
 		sopMaster.addResourceAndEquipment();
 		sopMaster.saveRecord();
 		String sopDocNo = sopMaster.getDocumentNo();

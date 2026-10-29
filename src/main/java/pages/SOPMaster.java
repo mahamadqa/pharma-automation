@@ -407,6 +407,7 @@ public class SOPMaster {
 	 */
 	public void addResource() {
 		log.info("Adding Resource on SOP Master window...");
+		page.waitForTimeout(2000);
 		if (resourceMoreBtn.count() > 0 && resourceMoreBtn.first().isVisible()) {
 			resourceMoreBtn.first().click();
 		} else {
@@ -447,6 +448,7 @@ public class SOPMaster {
 	 */
 	public void addEquipment() {
 		log.info("Adding Equipment on SOP Master window...");
+		page.waitForTimeout(2000);
 		if (equipmentMoreBtn.count() > 0 && equipmentMoreBtn.first().isVisible()) {
 			equipmentMoreBtn.first().click();
 		} else {
