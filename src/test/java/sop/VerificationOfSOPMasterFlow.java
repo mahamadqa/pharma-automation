@@ -46,9 +46,9 @@ public class VerificationOfSOPMasterFlow extends BaseTest {
 	public static void setEffectiveRevisedSOPDocNo(String docNo) {
 		effectiveRevisedSOPDocNo = docNo;
 	}
-	//dependsOnMethods = "sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle",
+
 	@Test(groups = { "advance",
-			"sop" },  alwaysRun = true, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
+			"sop" }, dependsOnMethods = "sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle", alwaysRun = true, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
 	public void verificationOfSOPMasterLifecycle() {
 
 		log.info("================================================================================");
