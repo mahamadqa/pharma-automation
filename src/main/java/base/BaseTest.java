@@ -189,18 +189,18 @@ public class BaseTest {
 		// Fresh CustomSoftAssert for every test thread — collects all failed assertions
 		softAssertTL.set(new CustomSoftAssert());
 
+		String className = result.getTestClass().getRealClass().getSimpleName();
+		String methodName = result.getMethod().getMethodName();
+		String testDisplayName = className + " - " + methodName;
+
 		// Initialize ExtentTest via ExtentManager
 		ExtentTest currentTest = ExtentManager.getTest();
-		if (currentTest == null) {
-			String className = result.getTestClass().getRealClass().getSimpleName();
-			String methodName = result.getMethod().getMethodName();
-			String testDisplayName = className + " - " + methodName;
+		if (currentTest == null || !testDisplayName.equals(currentTest.getModel().getName())) {
 			currentTest = ExtentManager.createTest(
 					testDisplayName,
 					result.getMethod().getDescription());
 			if (currentTest != null) {
-				currentTest.assignAuthor(ExtentManager.getReportUser());
-				currentTest.assignCategory(className);
+				currentTest.assignAuthor(ExtentManager.capitalizeWord(ExtentManager.getReportUser()));
 				for (String group : result.getMethod().getGroups()) {
 					if (group != null && !group.trim().isEmpty()) {
 						currentTest.assignCategory(group.trim());
@@ -294,6 +294,7 @@ public class BaseTest {
 			contextTL.remove();
 			browserTL.remove();
 			playwrightTL.remove();
+			ExtentManager.removeTest();
 		}
 
 		// 4. Finally call sa.assertAll() if there were soft assertion failures

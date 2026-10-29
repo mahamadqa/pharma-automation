@@ -478,7 +478,7 @@ public class SOPFormatRequest {
 		Locator dept = getVisible(departmentInput);
 		dept.fill(department);
 		dept.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(1000);
 	}
 	
 	/**
@@ -492,13 +492,13 @@ public class SOPFormatRequest {
 			Locator it = getVisible(issueTypeInput);
 			it.fill(issueType);
 			it.press("Tab");
-			page.waitForTimeout(400);
+			page.waitForTimeout(1000);
 		}
 
 		Locator copies = getVisible(requestedCopiesInput);
 		copies.fill(requestedCopies);
 		copies.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(1000);
 
 		saveRecord();
 
@@ -648,7 +648,7 @@ public class SOPFormatRequest {
 		if (ib.isVisible() && !ib.isDisabled() && issuedBy != null && !issuedBy.isEmpty()) {
 			ib.fill(issuedBy);
 			ib.press("Tab");
-			page.waitForTimeout(400);
+			page.waitForTimeout(1000);
 		}
 
 		Locator idDate = getVisible(issueDateInput);
@@ -657,14 +657,14 @@ public class SOPFormatRequest {
 					: LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 			idDate.fill(targetDate);
 			idDate.press("Tab");
-			page.waitForTimeout(400);
+			page.waitForTimeout(1000);
 		}
 
 		Locator ic = getVisible(issuedCopiesInput);
 		if (ic.isVisible() && !ic.isDisabled() && issuedCopies != null && !issuedCopies.isEmpty()) {
 			ic.fill(issuedCopies);
 			ic.press("Tab");
-			page.waitForTimeout(400);
+			page.waitForTimeout(1000);
 		}
 
 		saveRecord();
@@ -1082,7 +1082,7 @@ public class SOPFormatRequest {
 		Locator retOn = getVisible(copyRetrievedOnInput);
 		retOn.fill(targetDate);
 		retOn.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(1000);
 		saveRecord();
 		
 		log.info("Retrieved On date filled for both format copy records.");

@@ -171,7 +171,7 @@ public class PurchaseOrder {
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poMenuSearchInput.click();
 		poMenuSearchInput.fill("Purchase Order");
-		page.waitForTimeout(3000);
+		page.waitForTimeout(5000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 
 		Locator targetItem = searchPOWindowItem.first();
@@ -197,7 +197,7 @@ public class PurchaseOrder {
 		orgInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		orgInput.fill(orgName);
 		orgInput.press("Tab");
-		page.waitForTimeout(300);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(orgInput, "Organization", orgName);
 	}
@@ -208,11 +208,12 @@ public class PurchaseOrder {
 	}
 
 	public void selecTtargetDocType(String docType) {
+		page.waitForTimeout(1000);
 		targetDocTypeInput
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		targetDocTypeInput.fill(docType);
 		targetDocTypeInput.press("Tab");
-		page.waitForTimeout(300);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(targetDocTypeInput, "Target Document Type", docType);
 	}
@@ -230,7 +231,7 @@ public class PurchaseOrder {
 		bPartnerInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		bPartnerInput.fill(partnerName);
 		bPartnerInput.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(bPartnerInput, "Business Partner", partnerName);
 	}
@@ -244,7 +245,7 @@ public class PurchaseOrder {
 		salesRepInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		salesRepInput.fill(repName);
 		salesRepInput.press("Tab");
-		page.waitForTimeout(300);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(salesRepInput, "Sales Representative", repName);
 	}
@@ -254,10 +255,11 @@ public class PurchaseOrder {
 	}
 
 	public void selectWarehouse(String warehouseName) {
+		page.waitForTimeout(1000);
 		warehouseInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		warehouseInput.fill(warehouseName);
 		warehouseInput.press("Tab");
-		page.waitForTimeout(300);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(warehouseInput, "Warehouse", warehouseName);
 	}
@@ -270,7 +272,7 @@ public class PurchaseOrder {
 	public void clickOnPOLineTab() {
 		poLineTab.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poLineTab.click();
-		page.waitForTimeout(400);
+		page.waitForTimeout(3000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		ensurePOLineFormView();
 		log.info("Navigated to 'PO Line' tab.");
@@ -282,10 +284,10 @@ public class PurchaseOrder {
 	 */
 	public void ensurePOLineFormView() {
 		try {
-			page.waitForTimeout(300);
+			page.waitForTimeout(2000);
 			if (page.locator("(//div[@class='z-frozen'])[1]").isVisible()) {
 				page.locator("//a[@title='Grid Toggle    Alt+T']").click();
-				page.waitForTimeout(400);
+				page.waitForTimeout(2000);
 				WaitUtils.waitForLoadingIndicatorToDisappear(page);
 			}
 		} catch (Exception e) {
@@ -294,10 +296,11 @@ public class PurchaseOrder {
 	}
 
 	public void enterProdct(String productName) {
+		page.waitForTimeout(1000);
 		productInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		productInput.fill(productName);
 		productInput.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(productInput, "Product", productName);
 
@@ -316,11 +319,12 @@ public class PurchaseOrder {
 	}
 
 	public void enterQtyEntered(String qty) {
+		page.waitForTimeout(1000);
 		qtyEnteredInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		qtyEnteredInput.click();
 		qtyEnteredInput.fill(qty);
 		qtyEnteredInput.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(qtyEnteredInput, "QtyEntered", qty);
 	}
@@ -395,13 +399,14 @@ public class PurchaseOrder {
 	}
 
 	public void enterPriceEntered(String price) {
+		page.waitForTimeout(1000);
 		priceEnteredInput
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		priceEnteredInput.click();
 		priceEnteredInput.press("Control+A");
 		priceEnteredInput.fill(price);
 		priceEnteredInput.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(priceEnteredInput, "PriceEntered", price);
 	}
@@ -411,12 +416,13 @@ public class PurchaseOrder {
 	}
 
 	public void enterPriceList(String priceList) {
+		page.waitForTimeout(1000);
 		priceListInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		priceListInput.click();
 		priceListInput.press("Control+A");
 		priceListInput.fill(priceList);
 		priceListInput.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(priceListInput, "PriceList", priceList);
 	}
@@ -438,7 +444,7 @@ public class PurchaseOrder {
 	 * files.
 	 */
 	public void handlePriceAndPriceListAutoSet() {
-		page.waitForTimeout(300);
+		page.waitForTimeout(1500);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 
 		boolean priceAutoSet = isPriceAutoPopulated(priceEnteredInput);
@@ -495,11 +501,12 @@ public class PurchaseOrder {
 	}
 
 	public void selectTax(String taxName) {
+		page.waitForTimeout(1000);
 		taxInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		taxInput.click();
 		taxInput.fill(taxName);
 		taxInput.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(taxInput, "Tax", taxName);
 	}
@@ -556,7 +563,7 @@ public class PurchaseOrder {
 	}
 
 	public void verifyLineNetAmt() {
-		page.waitForTimeout(300);
+		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		lineNetAmtInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualAmtStr = lineNetAmtInput.inputValue().trim();
@@ -643,7 +650,7 @@ public class PurchaseOrder {
 		poHeaderBreadcrumb
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		poHeaderBreadcrumb.click();
-		page.waitForTimeout(400);
+		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Navigated back to Purchase Order header.");
 	}

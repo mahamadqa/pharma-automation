@@ -159,7 +159,7 @@ public class SalesOrder {
 		orgInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		orgInput.fill(orgName);
 		orgInput.press("Tab");
-		page.waitForTimeout(300);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(orgInput, "Organization", orgName);
 	}
@@ -170,11 +170,12 @@ public class SalesOrder {
 	}
 
 	public void selectTargetDocType(String docType) {
+		page.waitForTimeout(1000);
 		targetDocTypeInput
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		targetDocTypeInput.fill(docType);
 		targetDocTypeInput.press("Tab");
-		page.waitForTimeout(300);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(targetDocTypeInput, "Target Document Type", docType);
 	}
@@ -201,7 +202,7 @@ public class SalesOrder {
 		bPartnerInput.click();
 		bPartnerInput.fill(partnerName);
 		bPartnerInput.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 
 		// Warning popup may display after selecting bpartner — fetch data and remove
@@ -224,7 +225,7 @@ public class SalesOrder {
 		salesRepInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		salesRepInput.fill(repName);
 		salesRepInput.press("Tab");
-		page.waitForTimeout(300);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(salesRepInput, "Sales Representative", repName);
 	}
@@ -239,7 +240,7 @@ public class SalesOrder {
 		warehouseInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		warehouseInput.fill(warehouseName);
 		warehouseInput.press("Tab");
-		page.waitForTimeout(300);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		handleWarningPopup();
 		verifyFieldFilled(warehouseInput, "Warehouse", warehouseName);
@@ -263,7 +264,7 @@ public class SalesOrder {
 		try {
 			int attempts = 0;
 			while (attempts < 3) {
-				page.waitForTimeout(300);
+				page.waitForTimeout(500);
 				Locator popup = page.locator(
 						"//div[(contains(@class,'popup-dialog') or contains(@class,'z-messagebox') or contains(@class,'z-window-modal')) and not(contains(@style,'display: none')) and not(contains(@style,'display:none'))]")
 						.first();
@@ -302,7 +303,7 @@ public class SalesOrder {
 					page.keyboard().press("Enter");
 				}
 
-				page.waitForTimeout(400);
+				page.waitForTimeout(1000);
 				try {
 					Locator modalMask = page.locator(".z-modal-mask");
 					if (modalMask.count() > 0 && modalMask.first().isVisible()) {
@@ -419,7 +420,7 @@ public class SalesOrder {
 		orderLineTab.first()
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		orderLineTab.first().click();
-		page.waitForTimeout(1000);
+		page.waitForTimeout(3000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		ensureOrderLineFormView();
 		log.info("Navigated to 'Order Line' tab.");
@@ -430,12 +431,12 @@ public class SalesOrder {
 	 */
 	public void ensureOrderLineFormView() {
 		try {
-			page.waitForTimeout(500);
+			page.waitForTimeout(2000);
 			if (page.locator("(//div[@class='z-frozen'])[1]").isVisible()) {
 				Locator toggleBtn = page
 						.locator("//a[@title='Grid Toggle    Alt+T'] | //a[contains(@title,'Shift+Alt+T')]").first();
 				toggleBtn.click();
-				page.waitForTimeout(500);
+				page.waitForTimeout(2000);
 				WaitUtils.waitForLoadingIndicatorToDisappear(page);
 			}
 		} catch (Exception e) {
@@ -448,11 +449,11 @@ public class SalesOrder {
 	 */
 	public void handleInventoryWarningPopup() {
 		try {
-			page.waitForTimeout(300);
+			page.waitForTimeout(1000);
 			if (inventoryWarningPopupOkButton.first().isVisible()) {
 				log.info("Detected 'No Inventory Available' popup dialog. Clicking OK to proceed...");
 				inventoryWarningPopupOkButton.first().click();
-				page.waitForTimeout(400);
+				page.waitForTimeout(1500);
 				WaitUtils.waitForLoadingIndicatorToDisappear(page);
 			}
 		} catch (Exception ignored) {
@@ -725,13 +726,14 @@ public class SalesOrder {
 	}
 
 	public void enterPriceEntered(String price) {
+		page.waitForTimeout(1000);
 		priceEnteredInput
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		priceEnteredInput.click();
 		priceEnteredInput.press("Control+A");
 		priceEnteredInput.fill(price);
 		priceEnteredInput.press("Tab");
-		page.waitForTimeout(300);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(priceEnteredInput, "PriceEntered", price);
 	}
@@ -742,12 +744,13 @@ public class SalesOrder {
 	}
 
 	public void enterPriceList(String priceList) {
+		page.waitForTimeout(1000);
 		priceListInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		priceListInput.click();
 		priceListInput.press("Control+A");
 		priceListInput.fill(priceList);
 		priceListInput.press("Tab");
-		page.waitForTimeout(300);
+		page.waitForTimeout(2000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		verifyFieldFilled(priceListInput, "PriceList", priceList);
 	}
@@ -758,7 +761,7 @@ public class SalesOrder {
 	}
 
 	public void handlePriceAndPriceListAutoSet() {
-		page.waitForTimeout(400);
+		page.waitForTimeout(1500);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 
 		if (!isPriceAutoPopulated(priceEnteredInput)) {
@@ -771,6 +774,7 @@ public class SalesOrder {
 
 	public void selectTax(String taxName) {
 		try {
+			page.waitForTimeout(1000);
 			taxInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 
 			Locator comboItem = page.locator(
@@ -782,7 +786,7 @@ public class SalesOrder {
 			taxInput.click();
 			taxInput.press("Control+A");
 			taxInput.fill(taxName);
-			page.waitForTimeout(300);
+			page.waitForTimeout(1000);
 
 			if (comboItem.count() > 0 && comboItem.isVisible()) {
 				comboItem.click();
@@ -791,7 +795,7 @@ public class SalesOrder {
 				taxInput.press("Tab");
 			}
 
-			page.waitForTimeout(400);
+			page.waitForTimeout(2000);
 			WaitUtils.waitForLoadingIndicatorToDisappear(page);
 			handleWarningPopup();
 
@@ -850,7 +854,7 @@ public class SalesOrder {
 		orderHeaderBreadcrumb
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		orderHeaderBreadcrumb.click();
-		page.waitForTimeout(500);
+		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Navigated back to Sales Order Header.");
 	}
@@ -865,7 +869,7 @@ public class SalesOrder {
 	public void verifySecondOrderLineAfterPrepare(String expectedFreeLineQty) {
 		log.info("========== Verifying second Order Line created after Prepare action ==========");
 		clickOnOrderLineTab();
-		page.waitForTimeout(400);
+		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 
 		// If current view is grid, check number of rows
@@ -917,7 +921,7 @@ public class SalesOrder {
 				page.keyboard().press("Shift+Alt+ArrowRight");
 			}
 
-			page.waitForTimeout(400);
+			page.waitForTimeout(1000);
 			WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		}
 
@@ -1035,7 +1039,7 @@ public class SalesOrder {
 	}
 
 	public void verifyHeaderTotalLineAmt(double expectedLineAmt) {
-		page.waitForTimeout(400);
+		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		totalLinesAmt.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		String actualStr = totalLinesAmt.inputValue().trim();

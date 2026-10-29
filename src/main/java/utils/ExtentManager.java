@@ -50,20 +50,13 @@ public class ExtentManager {
 
 				extent.setSystemInfo("OS", System.getProperty("os.name"));
 				extent.setSystemInfo("Java Version", System.getProperty("java.version"));
-				extent.setSystemInfo("User", getReportUser());
-
-				try {
-					String jenkinsBuild = System.getenv("BUILD_NUMBER");
-					if (jenkinsBuild != null && !jenkinsBuild.trim().isEmpty()) {
-						extent.setSystemInfo("Jenkins Build", "#" + jenkinsBuild.trim());
-					}
-				} catch (Exception ignored) {
-				}
+				extent.setSystemInfo("User", capitalizeWord(getReportUser()));
+				extent.setSystemInfo("Jenkins Build No", getJenkinsBuildNo());
 
 				try {
 					String browser = ConfigReader.get("browser");
 					if (browser != null && !browser.isEmpty()) {
-						extent.setSystemInfo("Browser", browser);
+						extent.setSystemInfo("Browser", capitalizeWord(browser));
 					}
 				} catch (Exception ignored) {
 				}
@@ -71,7 +64,7 @@ public class ExtentManager {
 				try {
 					String region = DataManager.getRegion();
 					if (region != null && !region.isEmpty()) {
-						extent.setSystemInfo("Region / Profile", region);
+						extent.setSystemInfo("Region / Profile", capitalizeWord(region));
 					}
 				} catch (Exception ignored) {
 				}
@@ -86,16 +79,22 @@ public class ExtentManager {
 
 	/**
 	 * Updates ExtentReports System/Environment information with Test Class summary metrics.
+	 * Strictly records Total Test Classes, Test Classes Passed, Test Classes Failed,
+	 * Test Classes Skipped, and Class Pass Rate.
 	 */
 	public static synchronized void updateClassSummary() {
-		if (extent != null && TestClassTracker.getTotalClasses() > 0) {
-			extent.setSystemInfo("Total Test Classes", String.valueOf(TestClassTracker.getTotalClasses()));
-			extent.setSystemInfo("Test Classes Passed", String.valueOf(TestClassTracker.getPassedClassesCount()));
-			extent.setSystemInfo("Test Classes Failed", String.valueOf(TestClassTracker.getFailedClassesCount()));
-			if (TestClassTracker.getSkippedClassesCount() > 0) {
-				extent.setSystemInfo("Test Classes Skipped", String.valueOf(TestClassTracker.getSkippedClassesCount()));
-			}
-			extent.setSystemInfo("Class Pass Rate", String.format("%.1f%%", TestClassTracker.getClassPassRate()));
+		if (extent != null) {
+			int total = TestClassTracker.getTotalClasses();
+			int passed = TestClassTracker.getPassedClassesCount();
+			int failed = TestClassTracker.getFailedClassesCount();
+			int skipped = TestClassTracker.getSkippedClassesCount();
+			double passRate = TestClassTracker.getClassPassRate();
+
+			extent.setSystemInfo("Total Test Classes", String.valueOf(total));
+			extent.setSystemInfo("Test Classes Passed", String.valueOf(passed));
+			extent.setSystemInfo("Test Classes Failed", String.valueOf(failed));
+			extent.setSystemInfo("Test Classes Skipped", String.valueOf(skipped));
+			extent.setSystemInfo("Class Pass Rate", String.format("%.1f%%", passRate));
 		}
 	}
 
@@ -273,6 +272,39 @@ public class ExtentManager {
 		}
 
 		return isValidUser(osUser) ? osUser.trim() : "Automation User";
+	}
+
+	/**
+	 * Resolves the Jenkins build number to display in Extent Report.
+	 * Checks system properties (-DbuildNumber, -DBUILD_NUMBER, -Djenkins.build)
+	 * and Jenkins environment variables (BUILD_NUMBER).
+	 *
+	 * @return resolved Jenkins build number (e.g. "#14") or "N/A (Local Run)"
+	 */
+	public static String getJenkinsBuildNo() {
+		String buildNo = System.getProperty("buildNumber");
+		if (buildNo == null || buildNo.trim().isEmpty()) {
+			buildNo = System.getProperty("BUILD_NUMBER");
+		}
+		if (buildNo == null || buildNo.trim().isEmpty()) {
+			buildNo = System.getProperty("jenkins.build");
+		}
+		if (buildNo == null || buildNo.trim().isEmpty()) {
+			buildNo = System.getenv("BUILD_NUMBER");
+		}
+		if (buildNo != null && !buildNo.trim().isEmpty()) {
+			buildNo = buildNo.trim();
+			return buildNo.startsWith("#") ? buildNo : ("#" + buildNo);
+		}
+		return "N/A (Local Run)";
+	}
+
+	public static String capitalizeWord(String str) {
+		if (str == null || str.trim().isEmpty()) {
+			return str;
+		}
+		str = str.trim();
+		return Character.toUpperCase(str.charAt(0)) + str.substring(1);
 	}
 
 	private static boolean isValidUser(String name) {

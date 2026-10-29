@@ -363,15 +363,15 @@ public class SOPMaster {
 		docTypeInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		docTypeInput.fill(docType);
 		docTypeInput.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(1000);
 
 		descriptionInput.fill(description);
 		descriptionInput.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(1000);
 
 		departmentInput.fill(department);
 		departmentInput.press("Tab");
-		page.waitForTimeout(400);
+		page.waitForTimeout(1000);
 
 		// Select Responsible Departments via multi-select popup
 		if (respDepts != null && !respDepts.isEmpty()) {
@@ -381,7 +381,7 @@ public class SOPMaster {
 		if (masterCopyOwner != null && !masterCopyOwner.isEmpty()) {
 			masterCopyOwnerInput.fill(masterCopyOwner);
 			masterCopyOwnerInput.press("Tab");
-			page.waitForTimeout(400);
+			page.waitForTimeout(1000);
 		}
 
 		saveRecord();

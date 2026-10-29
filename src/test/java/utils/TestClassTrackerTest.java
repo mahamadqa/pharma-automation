@@ -90,6 +90,7 @@ public class TestClassTrackerTest {
 		Assert.assertTrue(content.contains("Classes Failed"), "Should contain Classes Failed card");
 		Assert.assertTrue(content.contains("Test Classes Execution Breakdown"), "Should contain breakdown table");
 		Assert.assertTrue(content.contains("VerificationOfSOPMasterFlow"), "Should contain class name");
+		Assert.assertTrue(content.contains("Jenkins Build No"), "Should contain Jenkins Build No in System/Environment");
 
 		Files.deleteIfExists(tempReport);
 	}

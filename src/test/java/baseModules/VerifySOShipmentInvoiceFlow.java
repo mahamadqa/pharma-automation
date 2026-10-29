@@ -130,7 +130,7 @@ public class VerifySOShipmentInvoiceFlow extends BaseTest {
 		log.info("Step 14: Performing Prepare document action on Shipment Header...");
 		toolbar.performDocAction("Prepare");
 		toolbar.verifyDocStatus("In Progress");
-
+		toolbar.clickRequery();
 		// Step 15: Complete Document Action on Shipment Header
 		log.info("Step 15: Performing Complete document action on Shipment Header...");
 		toolbar.performDocAction("Complete");

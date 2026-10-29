@@ -33,11 +33,10 @@ public class MyListener implements ITestListener, ISuiteListener {
 		String testDisplayName = className + " - " + methodName;
 
 		ExtentTest currentTest = ExtentManager.getTest();
-		if (currentTest == null) {
+		if (currentTest == null || !testDisplayName.equals(currentTest.getModel().getName())) {
 			currentTest = ExtentManager.createTest(testDisplayName, result.getMethod().getDescription());
 			if (currentTest != null) {
-				currentTest.assignAuthor(ExtentManager.getReportUser());
-				currentTest.assignCategory(className);
+				currentTest.assignAuthor(ExtentManager.capitalizeWord(ExtentManager.getReportUser()));
 				for (String group : result.getMethod().getGroups()) {
 					if (group != null && !group.trim().isEmpty()) {
 						currentTest.assignCategory(group.trim());
@@ -61,6 +60,7 @@ public class MyListener implements ITestListener, ISuiteListener {
 			test.pass("Test Passed");
 		}
 		log.info("✅ Test Passed: " + className + "." + result.getName());
+		ExtentManager.removeTest();
 	}
 
 	@Override
@@ -82,6 +82,7 @@ public class MyListener implements ITestListener, ISuiteListener {
 			// Capture failure screenshot (delegates to BaseTest for deduplication & visible <img> rendering)
 			BaseTest.captureFailureScreenshot(className + "_" + result.getName());
 		}
+		ExtentManager.removeTest();
 	}
 
 	@Override
@@ -89,13 +90,17 @@ public class MyListener implements ITestListener, ISuiteListener {
 		TestClassTracker.onTestSkipped(result);
 
 		String className = result.getTestClass().getRealClass().getSimpleName();
+		String methodName = result.getMethod().getMethodName();
+		String testDisplayName = className + " - " + methodName;
 		boolean isRetrying = RetryAnalyzer.isRetrying(result);
 		ExtentTest test = ExtentManager.getTest();
 
 		if (isRetrying) {
 			log.warn("🔄 Test failed and is being retried, discarding prior attempt from ExtentReport: " + className + "." + result.getName());
-			if (test != null) {
+			if (test != null && testDisplayName.equals(test.getModel().getName())) {
 				ExtentManager.removeTest(test);
+			} else {
+				ExtentManager.removeTest();
 			}
 			return;
 		}
@@ -107,6 +112,7 @@ public class MyListener implements ITestListener, ISuiteListener {
 				test.skip(result.getThrowable());
 			}
 		}
+		ExtentManager.removeTest();
 	}
 
 	@Override

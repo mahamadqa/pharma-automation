@@ -102,7 +102,7 @@ public class Toolbar {
 	public void saveRecord() {
 		saveButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		saveButton.click();
-		page.waitForTimeout(300);
+		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 		log.info("Record saved successfully.");
 	}
@@ -110,7 +110,7 @@ public class Toolbar {
 	public void closeWindow() {
 		closeWindow.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		closeWindow.click();
-		page.waitForTimeout(400);
+		page.waitForTimeout(1000);
 		WaitUtils.waitForLoadingIndicatorToDisappear(page);
 	}
 
@@ -186,6 +186,7 @@ public class Toolbar {
 	}
 
 	public void performDocAction(String action) {
+		page.waitForTimeout(1000);
 		docActionButton.first()
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		docActionButton.first().click();
@@ -196,7 +197,7 @@ public class Toolbar {
 		dropdown.first().selectOption(new SelectOption().setLabel(action));
 		page.click("//div[@instancename='documentAction']//button[@title='OK']");
 		WaitUtils.waitForBigLoadingIndicatorToDisappear(page);
-		page.waitForTimeout(400);
+		page.waitForTimeout(2000);
 	}
 
 
@@ -225,6 +226,7 @@ public void checkGridView() {
 
 	
 	public void verifyDocStatus(String status) {
+		page.waitForTimeout(2500);
 		Locator DocStatus = page.locator(
 				"//span[contains(@instancename,'DocStatus')]//input | //div[contains(@instancename,'DocStatus')]//input | //input[contains(@instancename,'DocStatus')]");
 		String actualStatus = DocStatus.first().inputValue();

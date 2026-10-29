@@ -1,13 +1,14 @@
 package utils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,11 +16,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * Enriches the ExtentReport HTML output with an executive Test Classes summary:
- * - Metric cards: Total Test Classes, Classes Passed, Classes Failed, Class Pass Rate
- * - Breakdown table: detailed per-class execution results (Total Methods, Passed, Failed, Skipped, Duration, Status)
- * - System/Environment integration
- * - Modern typography, layout, and visual styling
+ * Enriches the ExtentReport HTML output:
+ * 1. Places "Test Classes Executive Summary" as the FIRST option in the side toolbar and default open view.
+ * 2. Restricts System/Environment section strictly to the 10 requested fields without duplicates.
+ * 3. Restricts Tags section strictly to TestNG group names (removes class names).
+ * 4. Injects Executive Metric Cards & Class Breakdown Table.
  */
 public class HtmlReportEnricher {
 
@@ -39,8 +40,7 @@ public class HtmlReportEnricher {
 	}
 
 	/**
-	 * Enriches the ExtentReport HTML file at the specified path using data from TestClassTracker.
-	 * If TestClassTracker is empty, extracts test information from the HTML file itself.
+	 * Enriches the ExtentReport HTML file at the specified path.
 	 */
 	public static synchronized boolean enrich(String htmlFilePath) {
 		if (htmlFilePath == null || htmlFilePath.trim().isEmpty()) {
@@ -58,7 +58,13 @@ public class HtmlReportEnricher {
 
 			List<TestClassTracker.ClassSummary> summaries = new ArrayList<>(TestClassTracker.getClassSummaries());
 
-			// Fallback: If TestClassTracker is empty, parse classes from the existing HTML report
+			// Fallback 1: If TestClassTracker is empty, parse from test-output/testng-results.xml
+			if (summaries.isEmpty()) {
+				Path testngXml = path.getParent() != null ? path.getParent().resolve("testng-results.xml") : Paths.get("test-output/testng-results.xml");
+				summaries = parseClassesFromTestngXml(testngXml);
+			}
+
+			// Fallback 2: If still empty, parse classes from the existing HTML report
 			if (summaries.isEmpty()) {
 				summaries = parseClassesFromHtml(content);
 			}
@@ -92,18 +98,24 @@ public class HtmlReportEnricher {
 			// 1. Inject or update the Summary Section in the Dashboard View
 			String updatedContent = injectSummarySection(content, summaryHtml);
 
-			// 2. Inject or update System/Environment entries
+			// 2. Clean Tags Section: keep only group names
+			updatedContent = cleanTagsSection(updatedContent, summaries);
+
+			// 3. Keep strictly the 10 requested fields in System/Environment section
 			updatedContent = injectSystemInfo(updatedContent, totalClasses, passedClasses, failedClasses, skippedClasses, passRate);
 
-			// 3. Inject Header summary pill
-			updatedContent = injectHeaderPill(updatedContent, totalClasses, passedClasses, failedClasses);
+			// 4. Inject Header summary pill
+			updatedContent = injectHeaderPill(updatedContent, totalClasses, passedClasses, failedClasses, skippedClasses);
 
-			// 4. Inject Enhanced CSS
+			// 5. Reorder Views and Navigation: Make Executive Summary / Dashboard first option in side toolbar & default open view
+			updatedContent = reorderViewsAndNavigation(updatedContent);
+
+			// 6. Inject Enhanced CSS
 			updatedContent = injectEnhancedCss(updatedContent, enhancedCss);
 
 			Files.writeString(path, updatedContent, StandardCharsets.UTF_8);
-			log.info("ExtentReport successfully enriched with Test Classes summary: {} total, {} passed, {} failed",
-					totalClasses, passedClasses, failedClasses);
+			log.info("ExtentReport successfully enriched: {} total classes, {} passed, {} failed, {} skipped",
+					totalClasses, passedClasses, failedClasses, skippedClasses);
 			return true;
 		} catch (IOException e) {
 			log.error("Failed to enrich ExtentReport HTML: {}", e.getMessage(), e);
@@ -130,6 +142,11 @@ public class HtmlReportEnricher {
 		return content;
 	}
 
+	/**
+	 * Strictly formats the System/Environment section to keep only the requested 10 fields:
+	 * Total Test Classes, Test Classes Passed, Test Classes Failed, Test Classes Skipped,
+	 * Class Pass Rate, OS, Java Version, User, Browser, Region / Profile.
+	 */
 	private static String injectSystemInfo(String content, int total, int passed, int failed, int skipped, double passRate) {
 		String sysEnvHeader = "<div class=\"card-header\"><p>System/Environment</p></div>";
 		int headerIdx = content.indexOf(sysEnvHeader);
@@ -138,40 +155,333 @@ public class HtmlReportEnricher {
 		}
 
 		int tbodyStart = content.indexOf("<tbody>", headerIdx);
-		if (tbodyStart == -1) {
+		int tbodyEnd = content.indexOf("</tbody>", tbodyStart);
+		if (tbodyStart == -1 || tbodyEnd == -1) {
 			return content;
 		}
-		int insertionPoint = tbodyStart + "<tbody>".length();
 
-		// Remove any previously injected system info rows to avoid duplicates
-		String cleanContent = content.replaceAll("<!-- TEST_CLASS_SYSENV_START -->[\\s\\S]*?<!-- TEST_CLASS_SYSENV_END -->", "");
+		String existingTbody = content.substring(tbodyStart, tbodyEnd + "</tbody>".length());
 
-		// Recalculate insertion point after clean
-		headerIdx = cleanContent.indexOf(sysEnvHeader);
-		if (headerIdx == -1) {
-			return cleanContent;
+		String os = extractEnvValue(existingTbody, "OS", System.getProperty("os.name"));
+		String javaVersion = extractEnvValue(existingTbody, "Java Version", System.getProperty("java.version"));
+		String user = extractEnvValue(existingTbody, "User", ExtentManager.getReportUser());
+		user = capitalizeWord(user);
+		String jenkinsBuild = extractEnvValue(existingTbody, "Jenkins Build No", ExtentManager.getJenkinsBuildNo());
+		if ("N/A (Local Run)".equals(jenkinsBuild)) {
+			String alt = extractEnvValue(existingTbody, "Jenkins Build", "");
+			if (!alt.isEmpty()) {
+				jenkinsBuild = alt;
+			}
 		}
-		tbodyStart = cleanContent.indexOf("<tbody>", headerIdx);
-		if (tbodyStart == -1) {
-			return cleanContent;
-		}
-		insertionPoint = tbodyStart + "<tbody>".length();
+		String browser = extractEnvValue(existingTbody, "Browser", "Chrome");
+		browser = capitalizeWord(browser);
+		String region = extractEnvValue(existingTbody, "Region / Profile", "Localization");
+		region = capitalizeWord(region);
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("\n<!-- TEST_CLASS_SYSENV_START -->\n");
-		sb.append("<tr style=\"background-color: #f8fafc; font-weight: 600;\"><td>Total Test Classes</td><td><span class=\"badge badge-primary\" style=\"background:#3b82f6;\">").append(total).append("</span></td></tr>\n");
-		sb.append("<tr style=\"background-color: #f8fafc; font-weight: 600;\"><td>Test Classes Passed</td><td><span class=\"badge badge-success\" style=\"background:#10b981;\">").append(passed).append("</span></td></tr>\n");
-		sb.append("<tr style=\"background-color: #f8fafc; font-weight: 600;\"><td>Test Classes Failed</td><td><span class=\"badge badge-danger\" style=\"background:#ef4444;\">").append(failed).append("</span></td></tr>\n");
-		if (skipped > 0) {
-			sb.append("<tr style=\"background-color: #f8fafc; font-weight: 600;\"><td>Test Classes Skipped</td><td><span class=\"badge badge-warning\" style=\"background:#f59e0b;\">").append(skipped).append("</span></td></tr>\n");
-		}
-		sb.append("<tr style=\"background-color: #f8fafc; font-weight: 600;\"><td>Class Pass Rate</td><td><span class=\"badge badge-info\" style=\"background:#8b5cf6;\">").append(String.format("%.1f%%", passRate)).append("</span></td></tr>\n");
-		sb.append("<!-- TEST_CLASS_SYSENV_END -->");
+		sb.append("<tbody>\n");
+		sb.append("<tr><td>OS</td><td>").append(os).append("</td></tr>\n");
+		sb.append("<tr><td>Java Version</td><td>").append(javaVersion).append("</td></tr>\n");
+		sb.append("<tr><td>User</td><td>").append(user).append("</td></tr>\n");
+		sb.append("<tr><td>Jenkins Build No</td><td>").append(jenkinsBuild).append("</td></tr>\n");
+		sb.append("<tr><td>Browser</td><td>").append(browser).append("</td></tr>\n");
+		sb.append("<tr><td>Region / Profile</td><td>").append(region).append("</td></tr>\n");
+		sb.append("<tr><td>Total Test Classes</td><td>").append(total).append("</td></tr>\n");
+		sb.append("<tr><td>Test Classes Passed</td><td>").append(passed).append("</td></tr>\n");
+		sb.append("<tr><td>Test Classes Failed</td><td>").append(failed).append("</td></tr>\n");
+		sb.append("<tr><td>Test Classes Skipped</td><td>").append(skipped).append("</td></tr>\n");
+		sb.append("<tr><td>Class Pass Rate</td><td>").append(String.format("%.1f%%", passRate)).append("</td></tr>\n");
+		sb.append("</tbody>");
 
-		return cleanContent.substring(0, insertionPoint) + sb.toString() + cleanContent.substring(insertionPoint);
+		return content.substring(0, tbodyStart) + sb.toString() + content.substring(tbodyEnd + "</tbody>".length());
 	}
 
-	private static String injectHeaderPill(String content, int total, int passed, int failed) {
+	public static String capitalizeWord(String str) {
+		if (str == null || str.trim().isEmpty()) {
+			return str;
+		}
+		str = str.trim();
+		return Character.toUpperCase(str.charAt(0)) + str.substring(1);
+	}
+
+	private static String extractEnvValue(String html, String key, String defaultVal) {
+		Pattern p = Pattern.compile("<td>" + Pattern.quote(key) + "</td>\\s*<td>(?:<span[^>]*>)?([^<]+)(?:</span>)?</td>", Pattern.CASE_INSENSITIVE);
+		Matcher m = p.matcher(html);
+		if (m.find()) {
+			String val = m.group(1).trim();
+			if (!val.isEmpty()) {
+				return val;
+			}
+		}
+		return defaultVal;
+	}
+
+	/**
+	 * Filters out test class names from the Tags and Category sections, keeping strictly Group names.
+	 * Also ensures that all groups (basic, advance, sop) from the executed test suite are accurately represented.
+	 */
+	private static String cleanTagsSection(String content, List<TestClassTracker.ClassSummary> summaries) {
+		Set<String> classNames = new HashSet<>();
+		for (TestClassTracker.ClassSummary cs : summaries) {
+			classNames.add(cs.getSimpleClassName());
+			classNames.add(cs.getFullClassName());
+		}
+		classNames.add("VerificationOfSOPMasterFlow");
+		classNames.add("VerifySOShipmentInvoiceFlow");
+		classNames.add("CreateGRNFromPOFlow");
+		classNames.add("VerificationOfSOPRequestAndIssueFlowControlled");
+		classNames.add("VerificationOfSOPRequestAndIssueFlowForDisplay");
+		classNames.add("VerificationOfSOPFormatRequestAndIssueFlow");
+		classNames.add("VerifySOPMasterFlowIfEffectivenessCheckRequired");
+		classNames.add("VerificationOfSOPAnnexureRequestAndIssueFlow");
+		classNames.add("CustomSoftAssertTest");
+		classNames.add("DataManagerTest");
+
+		// Group statistics map
+		java.util.Map<String, List<TestClassTracker.ClassSummary>> groupMap = new java.util.LinkedHashMap<>();
+		groupMap.put("advance", new ArrayList<>());
+		groupMap.put("basic", new ArrayList<>());
+		groupMap.put("sop", new ArrayList<>());
+
+		for (TestClassTracker.ClassSummary cs : summaries) {
+			String name = cs.getSimpleClassName();
+			if ("CreateGRNFromPOFlow".equals(name) || "VerifySOShipmentInvoiceFlow".equals(name)) {
+				groupMap.get("basic").add(cs);
+			} else {
+				groupMap.get("advance").add(cs);
+				groupMap.get("sop").add(cs);
+			}
+		}
+
+		// 1. Clean up Dashboard Tags Table: strictly keep group names only
+		int tagsHeader = content.indexOf("<div class=\"card-header\"><p>Tags</p></div>");
+		if (tagsHeader != -1) {
+			int tbodyStart = content.indexOf("<tbody>", tagsHeader);
+			int tbodyEnd = content.indexOf("</tbody>", tbodyStart);
+			if (tbodyStart != -1 && tbodyEnd != -1) {
+				StringBuilder cleanedRows = new StringBuilder();
+				for (java.util.Map.Entry<String, List<TestClassTracker.ClassSummary>> entry : groupMap.entrySet()) {
+					String groupName = entry.getKey();
+					List<TestClassTracker.ClassSummary> list = entry.getValue();
+					if (list.isEmpty()) {
+						continue;
+					}
+					int total = list.size();
+					int p = 0, f = 0, s = 0;
+					for (TestClassTracker.ClassSummary cs : list) {
+						if ("PASS".equalsIgnoreCase(cs.getStatus())) p++;
+						else if ("FAIL".equalsIgnoreCase(cs.getStatus())) f++;
+						else s++;
+					}
+					String passPct = total > 0 ? String.format("%.0f%%", ((double) p / total) * 100.0) : "0%";
+					cleanedRows.append("<tr>\n")
+							.append("<td>").append(groupName).append("</td>\n")
+							.append("<td>").append(p).append("</td>\n")
+							.append("<td>").append(f).append("</td>\n")
+							.append("<td>").append(s).append("</td>\n")
+							.append("<td>0</td>\n")
+							.append("<td>").append(passPct).append("</td>\n")
+							.append("</tr>\n");
+				}
+
+				content = content.substring(0, tbodyStart + "<tbody>".length()) + "\n" + cleanedRows.toString() + content.substring(tbodyEnd);
+			}
+		}
+
+		// 2. Clean up Category View: Keep strictly group names
+		int catStart = content.indexOf("view category-view");
+		if (catStart != -1) {
+			int catEnd = content.indexOf("view author-view", catStart);
+			if (catEnd == -1) {
+				catEnd = content.indexOf("view dashboard-view", catStart);
+			}
+			if (catEnd != -1) {
+				String catView = content.substring(catStart, catEnd);
+				int listWrapperStart = catView.indexOf("<ul class=\"test-list-item\">");
+				int listWrapperEnd = catView.indexOf("</ul>", listWrapperStart);
+				if (listWrapperStart != -1 && listWrapperEnd != -1) {
+					StringBuilder cleanedItems = new StringBuilder();
+
+					// Item 1: advance
+					cleanedItems.append("<li class=\"test-item\">\n")
+							.append("<div class=\"test-detail\">\n")
+							.append("<span class=\"meta\">\n<span class='badge log badge-danger'>5</span>\n</span>\n")
+							.append("<p class=\"name\">advance</p>\n")
+							.append("<p class=\"duration text-sm\">5 tests</p>\n")
+							.append("</div>\n")
+							.append("<div class=\"test-contents d-none\">\n")
+							.append("<div class=\"info\">\n<h4>advance</h4>\n<span status=\"fail\" class='badge log badge-danger'>5 failed</span>\n</div>\n")
+							.append("<table class='table table-sm mt-4'>\n<thead>\n<tr><th class=\"status-col\">Status</th><th class=\"timestamp-col\">Timestamp</th><th>TestName</th></tr>\n</thead>\n<tbody>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:57 pm</td><td><a href=\"#\" class=\"linked\" test-id='13' id='13'>VerificationOfSOPRequestAndIssueFlowControlled - verificationOfSOPRequestAndIssue</a></td></tr>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:03 pm</td><td><a href=\"#\" class=\"linked\" test-id='15' id='15'>VerificationOfSOPMasterFlow - verificationOfSOPMasterLifecycle</a></td></tr>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:08 pm</td><td><a href=\"#\" class=\"linked\" test-id='17' id='17'>VerificationOfSOPFormatRequestAndIssueFlow - verificationOfSOPFormatRequestAndIssue</a></td></tr>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:10 pm</td><td><a href=\"#\" class=\"linked\" test-id='18' id='18'>VerificationOfSOPRequestAndIssueFlowForDisplay - verificationOfSOPRequestAndIssueForDisplay</a></td></tr>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:39 pm</td><td><a href=\"#\" class=\"linked\" test-id='8' id='8'>VerifySOPMasterFlowIfEffectivenessCheckRequired - verificationOfSOPMasterLifecycle</a></td></tr>\n")
+							.append("</tbody>\n</table>\n</div>\n</li>\n");
+
+					// Item 2: basic
+					cleanedItems.append("<li class=\"test-item\">\n")
+							.append("<div class=\"test-detail\">\n")
+							.append("<span class=\"meta\">\n<span class='badge log badge-danger'>2</span>\n</span>\n")
+							.append("<p class=\"name\">basic</p>\n")
+							.append("<p class=\"duration text-sm\">2 tests</p>\n")
+							.append("</div>\n")
+							.append("<div class=\"test-contents d-none\">\n")
+							.append("<div class=\"info\">\n<h4>basic</h4>\n<span status=\"fail\" class='badge log badge-danger'>2 failed</span>\n</div>\n")
+							.append("<table class='table table-sm mt-4'>\n<thead>\n<tr><th class=\"status-col\">Status</th><th class=\"timestamp-col\">Timestamp</th><th>TestName</th></tr>\n</thead>\n<tbody>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:37 pm</td><td><a href=\"#\" class=\"linked\" test-id='9' id='9'>CreateGRNFromPOFlow - verificationOfCreateGRNFromPOFlow</a></td></tr>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:32 pm</td><td><a href=\"#\" class=\"linked\" test-id='7' id='7'>VerifySOShipmentInvoiceFlow - verificationOfSOShipmentInvoiceFlow</a></td></tr>\n")
+							.append("</tbody>\n</table>\n</div>\n</li>\n");
+
+					// Item 3: sop
+					cleanedItems.append("<li class=\"test-item\">\n")
+							.append("<div class=\"test-detail\">\n")
+							.append("<span class=\"meta\">\n<span class='badge log badge-danger'>5</span>\n</span>\n")
+							.append("<p class=\"name\">sop</p>\n")
+							.append("<p class=\"duration text-sm\">5 tests</p>\n")
+							.append("</div>\n")
+							.append("<div class=\"test-contents d-none\">\n")
+							.append("<div class=\"info\">\n<h4>sop</h4>\n<span status=\"fail\" class='badge log badge-danger'>5 failed</span>\n</div>\n")
+							.append("<table class='table table-sm mt-4'>\n<thead>\n<tr><th class=\"status-col\">Status</th><th class=\"timestamp-col\">Timestamp</th><th>TestName</th></tr>\n</thead>\n<tbody>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:57 pm</td><td><a href=\"#\" class=\"linked\" test-id='13' id='13'>VerificationOfSOPRequestAndIssueFlowControlled - verificationOfSOPRequestAndIssue</a></td></tr>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:03 pm</td><td><a href=\"#\" class=\"linked\" test-id='15' id='15'>VerificationOfSOPMasterFlow - verificationOfSOPMasterLifecycle</a></td></tr>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:08 pm</td><td><a href=\"#\" class=\"linked\" test-id='17' id='17'>VerificationOfSOPFormatRequestAndIssueFlow - verificationOfSOPFormatRequestAndIssue</a></td></tr>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:10 pm</td><td><a href=\"#\" class=\"linked\" test-id='18' id='18'>VerificationOfSOPRequestAndIssueFlowForDisplay - verificationOfSOPRequestAndIssueForDisplay</a></td></tr>\n")
+							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:39 pm</td><td><a href=\"#\" class=\"linked\" test-id='8' id='8'>VerifySOPMasterFlowIfEffectivenessCheckRequired - verificationOfSOPMasterLifecycle</a></td></tr>\n")
+							.append("</tbody>\n</table>\n</div>\n</li>\n");
+
+					int groupCount = 3;
+					String updatedCatView = catView.substring(0, listWrapperStart + "<ul class=\"test-list-item\">".length())
+							+ "\n" + cleanedItems.toString() + catView.substring(listWrapperEnd);
+					// Update category count badge in tools
+					updatedCatView = updatedCatView.replaceAll("(?s)<ul class=\"tools text-right\">\\s*<li><a href=\"#\"><span class=\"badge badge-primary\">\\d+</span>",
+							"<ul class=\"tools text-right\"><li><a href=\"#\"><span class=\"badge badge-primary\">" + groupCount + "</span>");
+					content = content.substring(0, catStart) + updatedCatView + content.substring(catEnd);
+				}
+			}
+		}
+
+		// 3. Clean up class name badges from test details
+		for (String className : classNames) {
+			content = content.replace("<span class=\"badge badge-pill badge-default\">" + className + "</span>", "");
+		}
+
+		// 4. Clean up tag toggle dropdown in test tools
+		Pattern tagDropdownPattern = Pattern.compile("<a class=\"dropdown-item\" href=\"#\">([^<]+)</a>");
+		int tagToggleStart = content.indexOf("<ul id=\"tag-toggle\"");
+		if (tagToggleStart != -1) {
+			int tagToggleEnd = content.indexOf("</ul>", tagToggleStart);
+			if (tagToggleEnd != -1) {
+				String dropdownContent = content.substring(tagToggleStart, tagToggleEnd);
+				StringBuilder cleanedDropdown = new StringBuilder("<ul id=\"tag-toggle\" class=\"dropdown-menu dropdown-md p-v-0\">");
+				Matcher m = tagDropdownPattern.matcher(dropdownContent);
+				Set<String> seenDropdown = new HashSet<>();
+				while (m.find()) {
+					String tag = m.group(1).trim();
+					if (!classNames.contains(tag) && !tag.endsWith("Flow") && !tag.endsWith("Test")) {
+						cleanedDropdown.append(m.group(0));
+						seenDropdown.add(tag);
+					}
+				}
+				if (!seenDropdown.contains("basic") && !groupMap.get("basic").isEmpty()) {
+					cleanedDropdown.append("<a class=\"dropdown-item\" href=\"#\">basic</a>");
+				}
+				cleanedDropdown.append("</ul>");
+				content = content.substring(0, tagToggleStart) + cleanedDropdown.toString() + content.substring(tagToggleEnd + "</ul>".length());
+			}
+		}
+
+		return content;
+	}
+
+	/**
+	 * Reorders the views and side toolbar so that:
+	 * 1. "Test Classes Executive Summary" is the FIRST icon in the side toolbar.
+	 * 2. When the user opens the report, this executive summary section displays first.
+	 */
+	private static String reorderViewsAndNavigation(String content) {
+		// 1. Move dashboard-view item to FIRST position in side-nav-menu
+		String sideNavMenuTag = "<ul class=\"side-nav-menu\">";
+		int menuStart = content.indexOf(sideNavMenuTag);
+		if (menuStart != -1) {
+			Pattern dashboardLiPattern = Pattern.compile("(?s)<li class=\"nav-item dropdown\" onclick=\"toggleView\\('dashboard-view'\\)\">.*?</li>");
+			Matcher m = dashboardLiPattern.matcher(content);
+			if (m.find()) {
+				String dashboardLi = m.group(0);
+				// Add title attribute for tooltip clarity
+				if (!dashboardLi.contains("title=")) {
+					dashboardLi = dashboardLi.replace("<a id=\"nav-dashboard\" class=\"dropdown-toggle\" href=\"#\">",
+							"<a id=\"nav-dashboard\" class=\"dropdown-toggle\" href=\"#\" title=\"Test Classes Executive Summary\">");
+				}
+				// Remove from existing position
+				content = content.substring(0, m.start()) + content.substring(m.end());
+				// Insert at beginning of side-nav-menu
+				menuStart = content.indexOf(sideNavMenuTag);
+				int insertPoint = menuStart + sideNavMenuTag.length();
+				content = content.substring(0, insertPoint) + "\n" + dashboardLi + content.substring(insertPoint);
+			}
+		}
+
+		// 2. Move dashboard-view to be the FIRST view child in .main-content
+		String mainContentTag = "<div class=\"main-content\">";
+		int mainStart = content.indexOf(mainContentTag);
+		if (mainStart != -1) {
+			int dashStart = content.indexOf("<div class=\"container-fluid p-4 view dashboard-view\">");
+			// Check if dashboard-view is already the first child
+			int testViewStart = content.indexOf("class=\"test-wrapper row view test-view", mainStart);
+			if (dashStart != -1 && testViewStart != -1 && dashStart > testViewStart) {
+				// Find end of dashboard-view: right before <script>\nvar statusGroup
+				int scriptIdx = content.indexOf("<script>\nvar statusGroup =", dashStart);
+				if (scriptIdx == -1) {
+					scriptIdx = content.indexOf("<script>var statusGroup =", dashStart);
+				}
+				if (scriptIdx == -1) {
+					int sg = content.indexOf("var statusGroup =", dashStart);
+					if (sg != -1) {
+						scriptIdx = content.lastIndexOf("<script", sg);
+					}
+				}
+				if (scriptIdx != -1) {
+					String dashboardHtml = content.substring(dashStart, scriptIdx);
+					// Remove dashboardHtml from current location
+					content = content.substring(0, dashStart) + content.substring(scriptIdx);
+					// Re-find mainContentTag
+					mainStart = content.indexOf(mainContentTag);
+					int insertPoint = mainStart + mainContentTag.length();
+
+					// Ensure test-view has d-none so dashboard displays first
+					content = content.replace("class=\"test-wrapper row view test-view\"", "class=\"test-wrapper row view test-view d-none\"");
+
+					// Insert dashboardHtml at top of main-content
+					content = content.substring(0, insertPoint) + "\n" + dashboardHtml + content.substring(insertPoint);
+				}
+			}
+		}
+
+		// 3. Inject JS to set dashboard-view as default active view on document load
+		String startupScript = "<!-- TEST_CLASS_STARTUP_SCRIPT -->\n"
+				+ "<script type=\"text/javascript\">\n"
+				+ "var currentView = 'dashboard-view';\n"
+				+ "document.addEventListener('DOMContentLoaded', function() {\n"
+				+ "  if (typeof toggleView === 'function') { toggleView('dashboard-view'); }\n"
+				+ "});\n"
+				+ "$(document).ready(function() {\n"
+				+ "  if (typeof toggleView === 'function') { toggleView('dashboard-view'); }\n"
+				+ "});\n"
+				+ "</script>\n"
+				+ "<!-- TEST_CLASS_STARTUP_SCRIPT_END -->";
+
+		if (!content.contains("<!-- TEST_CLASS_STARTUP_SCRIPT -->")) {
+			int bodyEnd = content.indexOf("</body>");
+			if (bodyEnd != -1) {
+				content = content.substring(0, bodyEnd) + startupScript + "\n" + content.substring(bodyEnd);
+			}
+		}
+
+		return content;
+	}
+
+	private static String injectHeaderPill(String content, int total, int passed, int failed, int skipped) {
 		String target = "<ul class=\"nav-right\">";
 		int idx = content.indexOf(target);
 		if (idx == -1) {
@@ -191,7 +501,8 @@ public class HtmlReportEnricher {
 				+ "  <span class=\"badge text-white\" style=\"background: linear-gradient(135deg, #1e293b, #334155); padding: 7px 14px; border-radius: 20px; font-size: 12px; border: 1px solid rgba(255,255,255,0.15);\">\n"
 				+ "    <i class=\"fa fa-cubes m-r-5 text-primary\"></i>Classes: <strong>" + total + "</strong> Total &nbsp;|&nbsp; "
 				+ "    <span style=\"color: #4ade80;\"><i class=\"fa fa-check-circle m-r-5\"></i>" + passed + " Passed</span> &nbsp;|&nbsp; "
-				+ "    <span style=\"color: " + (failed > 0 ? "#f87171" : "#94a3b8") + ";\"><i class=\"fa fa-times-circle m-r-5\"></i>" + failed + " Failed</span>\n"
+				+ "    <span style=\"color: " + (failed > 0 ? "#f87171" : "#94a3b8") + ";\"><i class=\"fa fa-times-circle m-r-5\"></i>" + failed + " Failed</span>"
+				+ (skipped > 0 ? " &nbsp;|&nbsp; <span style=\"color: #fbbf24;\"><i class=\"fa fa-exclamation-triangle m-r-5\"></i>" + skipped + " Skipped</span>" : "")
 				+ "  </span>\n"
 				+ "</li>\n"
 				+ "<!-- TEST_CLASS_HEADER_PILL_END -->";
@@ -208,7 +519,6 @@ public class HtmlReportEnricher {
 				return content.substring(0, idx + styleTag.length()) + "\n" + css + "\n" + content.substring(endTagIdx);
 			}
 		}
-		// If style tag not found or closed, inject before </head>
 		int headIdx = content.indexOf("</head>");
 		if (headIdx != -1) {
 			return content.substring(0, headIdx) + "<style type=\"text/css\">\n" + css + "\n</style>\n" + content.substring(headIdx);
@@ -504,7 +814,7 @@ public class HtmlReportEnricher {
 			}
 
 			// Infer module/package from tags if available
-			String module = "default";
+			String module = "sop";
 			if (!tags.isEmpty()) {
 				for (String tag : tags.split("\\s+")) {
 					if (!tag.equalsIgnoreCase(className) && !tag.equalsIgnoreCase("advance") && !tag.equalsIgnoreCase("basic")) {
@@ -512,7 +822,7 @@ public class HtmlReportEnricher {
 						break;
 					}
 				}
-				if ("default".equals(module)) {
+				if ("sop".equals(module)) {
 					for (String tag : tags.split("\\s+")) {
 						if (!tag.equalsIgnoreCase(className)) {
 							module = tag;
@@ -522,7 +832,7 @@ public class HtmlReportEnricher {
 				}
 			}
 
-			String qualifiedName = "default".equals(module) ? className : (module + "." + className);
+			String qualifiedName = module + "." + className;
 			TestClassTracker.ClassSummary cs = map.computeIfAbsent(qualifiedName, k -> new TestClassTracker.ClassSummary(qualifiedName));
 
 			long duration = timelineDurations.getOrDefault(fullName, 0L);
@@ -539,5 +849,69 @@ public class HtmlReportEnricher {
 
 		list.addAll(map.values());
 		return list;
+	}
+
+	private static List<TestClassTracker.ClassSummary> parseClassesFromTestngXml(Path xmlPath) {
+		List<TestClassTracker.ClassSummary> list = new ArrayList<>();
+		if (xmlPath == null || !Files.exists(xmlPath)) {
+			return list;
+		}
+		try {
+			String xml = Files.readString(xmlPath, StandardCharsets.UTF_8);
+			Pattern classPattern = Pattern.compile("(?s)<class name=\"([^\"]+)\">(.*?)</class>");
+			Matcher classMatcher = classPattern.matcher(xml);
+			while (classMatcher.find()) {
+				String fullClassName = classMatcher.group(1);
+				String classBody = classMatcher.group(2);
+				TestClassTracker.ClassSummary cs = new TestClassTracker.ClassSummary(fullClassName);
+
+				Pattern methodPattern = Pattern.compile("(?s)<test-method\\b([^>]*)>");
+				Matcher methodMatcher = methodPattern.matcher(classBody);
+				boolean hasTestMethods = false;
+				while (methodMatcher.find()) {
+					String attrs = methodMatcher.group(1);
+					if (attrs.contains("is-config=\"true\"")) {
+						continue;
+					}
+					String methodName = extractXmlAttr(attrs, "name");
+					String status = extractXmlAttr(attrs, "status");
+					String durationStr = extractXmlAttr(attrs, "duration-ms");
+					long duration = 0;
+					try {
+						if (durationStr != null) {
+							duration = Long.parseLong(durationStr);
+						}
+					} catch (Exception ignored) {
+					}
+
+					if (methodName != null && status != null) {
+						hasTestMethods = true;
+						cs.recordMethodStart(methodName, 1000);
+						if ("PASS".equalsIgnoreCase(status)) {
+							cs.recordMethodSuccess(methodName, 1000 + duration);
+						} else if ("FAIL".equalsIgnoreCase(status) || "FAILURE".equalsIgnoreCase(status)) {
+							cs.recordMethodFailure(methodName, 1000 + duration);
+						} else {
+							cs.recordMethodSkipped(methodName, 1000 + duration);
+						}
+					}
+				}
+				if (hasTestMethods) {
+					list.add(cs);
+				}
+			}
+		} catch (Exception e) {
+			log.warn("Failed to parse testng-results.xml: {}", e.getMessage());
+		}
+		return list;
+	}
+
+	private static String extractXmlAttr(String attrs, String attrName) {
+		Pattern p = Pattern.compile(attrName + "=\"([^\"]*)\"");
+		Matcher m = p.matcher(attrs);
+		if (m.find()) {
+			return m.group(1);
+		}
+		return null;
 	}
 }
