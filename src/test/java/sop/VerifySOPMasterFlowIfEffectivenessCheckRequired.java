@@ -32,8 +32,27 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 
 	private static final Logger log = LogManager.getLogger(VerifySOPMasterFlowIfEffectivenessCheckRequired.class);
 
+	private static volatile String effectiveRevisedSOPNo;
+	private static volatile String effectiveRevisedSOPDocNo;
+
+	public static String getEffectiveRevisedSOPNo() {
+		return effectiveRevisedSOPNo;
+	}
+
+	public static String getEffectiveRevisedSOPDocNo() {
+		return effectiveRevisedSOPDocNo;
+	}
+
+	public static void setEffectiveRevisedSOPNo(String no) {
+		effectiveRevisedSOPNo = no;
+	}
+
+	public static void setEffectiveRevisedSOPDocNo(String docNo) {
+		effectiveRevisedSOPDocNo = docNo;
+	}
+
 	@Test(groups = { "advance",
-			"sop" },alwaysRun = true, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
+			"sop" }, alwaysRun = true, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
 	public void verificationOfSOPMasterLifecycle() {
 
 		log.info("================================================================================");
@@ -649,7 +668,7 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 		sopMaster.verifyRevisionNo("1");
 
 		// Capture effective revised SOP number for downstream test classes (PHX-3499, PHX-3503, PHX-3504, etc.)
-		String effectiveRevisedSOPDocNo = sopMaster.getDocumentNo();
+		effectiveRevisedSOPDocNo = sopMaster.getDocumentNo();
 		if (effectiveRevisedSOPDocNo == null || effectiveRevisedSOPDocNo.trim().isEmpty()) {
 			effectiveRevisedSOPDocNo = sopDocNo;
 		}
@@ -657,7 +676,6 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 		if (revNo == null || revNo.trim().isEmpty()) {
 			revNo = "1";
 		}
-		String effectiveRevisedSOPNo;
 		if (effectiveRevisedSOPDocNo != null && effectiveRevisedSOPDocNo.contains("_")) {
 			effectiveRevisedSOPNo = effectiveRevisedSOPDocNo;
 		} else {

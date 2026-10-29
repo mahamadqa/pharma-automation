@@ -71,8 +71,11 @@ public class VerificationOfSOPFormatRequestAndIssueFlow extends BaseTest {
 		String qaUser = ConfigReader.get("SOPQAReviewer");
 		String qaUserRole = ConfigReader.get("SOPQAReviewerRole");
 
-		// Target SOP: Dynamically taken from VerificationOfSOPMasterFlow's new revised SOP made effective
-		String targetSOP = VerificationOfSOPMasterFlow.getEffectiveRevisedSOPNo();
+		// Target SOP: Dynamically taken from root class in testng.xml (VerifySOPMasterFlowIfEffectivenessCheckRequired)
+		String targetSOP = VerifySOPMasterFlowIfEffectivenessCheckRequired.getEffectiveRevisedSOPNo();
+		if (targetSOP == null || targetSOP.trim().isEmpty()) {
+			targetSOP = VerificationOfSOPMasterFlow.getEffectiveRevisedSOPNo();
+		}
 		if (targetSOP == null || targetSOP.trim().isEmpty()) {
 			targetSOP = System.getProperty("effective.revised.sop.no");
 		}
