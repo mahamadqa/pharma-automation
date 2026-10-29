@@ -53,7 +53,7 @@ public class VerificationOfSOPFormatRequestAndIssueFlow extends BaseTest {
 	private static final Logger log = LogManager.getLogger(VerificationOfSOPFormatRequestAndIssueFlow.class);
 
 	@Test(groups = { "advance",
-			"sop" }, dependsOnMethods = "sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle", description = "PHX-3504: Verification of SOP Format Request and Issue Lifecycle")
+			"sop" }, dependsOnMethods = "sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle", alwaysRun = true, description = "PHX-3504: Verification of SOP Format Request and Issue Lifecycle")
 	public void verificationOfSOPFormatRequestAndIssue() {
 
 		log.info("================================================================================");

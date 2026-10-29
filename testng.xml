@@ -33,15 +33,15 @@
         - parallel="classes" : Runs test classes concurrently across worker threads
         - thread-count="4"   : Number of concurrent worker threads
         - Execution Flow:
-          1. Root SOP Flow: sop.VerificationOfSOPMasterFlow runs first among SOP tests (alongside baseModules in parallel)
-          2. Dependent SOP Flows: Once sop.VerificationOfSOPMasterFlow completes and makes Revision 1 effective,
-             the 5 dependent classes execute concurrently in PARALLEL across worker threads:
-             - sop.VerifySOPMasterFlowIfEffectivenessCheckRequired
+          1. Root SOP Flow: sop.VerifySOPMasterFlowIfEffectivenessCheckRequired runs first among SOP tests (alongside baseModules in parallel)
+          2. Dependent SOP Flows: Once sop.VerifySOPMasterFlowIfEffectivenessCheckRequired completes (or even if it fails, via alwaysRun = true),
+             the dependent classes execute concurrently in PARALLEL across worker threads:
+             - sop.VerificationOfSOPMasterFlow
              - sop.VerificationOfSOPRequestAndIssueFlowControlled
              - sop.VerificationOfSOPRequestAndIssueFlowForDisplay
              - sop.VerificationOfSOPFormatRequestAndIssueFlow
              - sop.VerificationOfSOPAnnexureRequestAndIssueFlow
-             (enforced via dependsOnMethods="sop.VerificationOfSOPMasterFlow.verificationOfSOPMasterLifecycle")
+             (enforced via dependsOnMethods="sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle", alwaysRun = true)
     -->
     <test name="Pharma Modules Test" parallel="classes" thread-count="4">
         <classes>

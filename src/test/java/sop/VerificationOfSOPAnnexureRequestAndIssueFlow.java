@@ -51,7 +51,7 @@ public class VerificationOfSOPAnnexureRequestAndIssueFlow extends BaseTest {
 	private static final Logger log = LogManager.getLogger(VerificationOfSOPAnnexureRequestAndIssueFlow.class);
 
 	@Test(groups = { "advance",
-			"sop" },dependsOnMethods = "sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle", description = "PHX-3505: Verification of SOP Annexure Request and Issue Lifecycle")
+			"sop" }, dependsOnMethods = "sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle", alwaysRun = true, description = "PHX-3505: Verification of SOP Annexure Request and Issue Lifecycle")
 	public void verificationOfSOPAnnexureRequestAndIssue() {
 
 		log.info("================================================================================");

@@ -39,12 +39,16 @@ public class VerificationOfSOPMasterFlow extends BaseTest {
 		return effectiveRevisedSOPNo;
 	}
 
-	public static String getEffectiveRevisedSOPDocNo() {
-		return effectiveRevisedSOPDocNo;
+	public static void setEffectiveRevisedSOPNo(String no) {
+		effectiveRevisedSOPNo = no;
+	}
+
+	public static void setEffectiveRevisedSOPDocNo(String docNo) {
+		effectiveRevisedSOPDocNo = docNo;
 	}
 
 	@Test(groups = { "advance",
-			"sop" }, dependsOnMethods = "sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle", description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
+			"sop" }, dependsOnMethods = "sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle", alwaysRun = true, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
 	public void verificationOfSOPMasterLifecycle() {
 
 		log.info("================================================================================");

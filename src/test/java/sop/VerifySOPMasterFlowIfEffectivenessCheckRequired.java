@@ -648,6 +648,28 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 		sopMaster.verifyNextReviewDate(effectiveDate1);
 		sopMaster.verifyRevisionNo("1");
 
+		// Capture effective revised SOP number for downstream test classes (PHX-3499, PHX-3503, PHX-3504, etc.)
+		String effectiveRevisedSOPDocNo = sopMaster.getDocumentNo();
+		if (effectiveRevisedSOPDocNo == null || effectiveRevisedSOPDocNo.trim().isEmpty()) {
+			effectiveRevisedSOPDocNo = sopDocNo;
+		}
+		String revNo = sopMaster.getRevisionNo();
+		if (revNo == null || revNo.trim().isEmpty()) {
+			revNo = "1";
+		}
+		String effectiveRevisedSOPNo;
+		if (effectiveRevisedSOPDocNo != null && effectiveRevisedSOPDocNo.contains("_")) {
+			effectiveRevisedSOPNo = effectiveRevisedSOPDocNo;
+		} else {
+			effectiveRevisedSOPNo = effectiveRevisedSOPDocNo + "_" + revNo;
+		}
+		VerificationOfSOPMasterFlow.setEffectiveRevisedSOPNo(effectiveRevisedSOPNo);
+		VerificationOfSOPMasterFlow.setEffectiveRevisedSOPDocNo(effectiveRevisedSOPDocNo);
+		System.setProperty("effective.revised.sop.no", effectiveRevisedSOPNo);
+		System.setProperty("effective.revised.sop.docno", effectiveRevisedSOPDocNo);
+		log.info("Captured Effective Revised SOP Number for downstream tests: [{}] (DocNo: [{}])",
+				effectiveRevisedSOPNo, effectiveRevisedSOPDocNo);
+
 		// --------------------------------------------------------------------------------------------------
 		// Requirement 3: After new revised SOP made effective then From header zoom to
 		// Previous version field
