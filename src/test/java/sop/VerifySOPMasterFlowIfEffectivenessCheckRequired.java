@@ -33,7 +33,7 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 	private static final Logger log = LogManager.getLogger(VerifySOPMasterFlowIfEffectivenessCheckRequired.class);
 
 	@Test(groups = { "advance",
-			"sop" }, dependsOnMethods = "sop.VerificationOfSOPMasterFlow.verificationOfSOPMasterLifecycle", description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
+			"sop" },alwaysRun = true, description = "PHX-3499: Complete Verification of SOP Master Lifecycle & Revisions")
 	public void verificationOfSOPMasterLifecycle() {
 
 		log.info("================================================================================");
@@ -75,15 +75,10 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 				DataManager.getOrDefault("sop.supersedesNo", "NIL"));
 
 		// SOP Contents Data from Excel (sop_contents.xlsx)
-		String objective = ExcelReader.getOrDefault("Objective", DataManager.getOrDefault("sop.objective",
-				"The purpose of this SOP is to provide stepwise instructions for the Annual Building Maintenance."));
-		String scope = ExcelReader.getOrDefault("Scope", DataManager.getOrDefault("sop.scope",
-				"This Procedure is applicable to Annual Building Maintenance of factory building in the manufacturing plant located at all the Locations."));
-		String responsibility = ExcelReader.getOrDefault("Responsibility", DataManager.getOrDefault(
-				"sop.responsibility",
-				"The engineering officer / designee is responsible to follow the procedure as per SOP of Annual Building Maintenance."));
-		String procedure = ExcelReader.getOrDefault("Procedure", DataManager.getOrDefault("sop.procedure",
-				"Carry Out The Following Activities As Per Yearly or As & When Required Schedule: The area shall be inspected by the respective user department personnel."));
+		String objective = ExcelReader.getOrDefault("Objective", null);
+		String scope = ExcelReader.getOrDefault("Scope", null);
+		String responsibility = ExcelReader.getOrDefault("Responsibility",null);
+		String procedure = ExcelReader.getOrDefault("Procedure", null);
 
 		// Subtabs Data from Excel / Properties
 		String abbrevQAShort = ExcelReader.getOrDefault("sop.abbreviation.qa.short",
@@ -101,8 +96,7 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 				DataManager.getOrDefault("sop.annexure.title", "BUILDING MAINTENANCE SCHEDULE"));
 		String annexurePaper = ExcelReader.getOrDefault("sop.annexure.printPaper",
 				DataManager.getOrDefault("sop.annexure.printPaper", "A4 Landscape"));
-		String annexureContent = ExcelReader.getOrDefault("AnnexureContent",
-				DataManager.getOrDefault("sop.annexure.content", "Facility Room Checklist PLANNED Q Q Q Q ACTUAL"));
+		String annexureContent = ExcelReader.getOrDefault("AnnexureContent",null);
 
 		String formatDocType = ExcelReader.getOrDefault("sop.format.docType",
 				DataManager.getOrDefault("sop.format.docType", "SOP Format"));
@@ -110,8 +104,7 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 				DataManager.getOrDefault("sop.format.name", "PAINT RECORD"));
 		String formatPaper = ExcelReader.getOrDefault("sop.format.printPaper",
 				DataManager.getOrDefault("sop.format.printPaper", "A4 Portrait"));
-		String formatContent = ExcelReader.getOrDefault("FormatContent", DataManager.getOrDefault("sop.format.content",
-				"SR NO. Name of the Area Type of paint Paint Done on Checked by(Sign/Date) Remark"));
+		String formatContent = ExcelReader.getOrDefault("FormatContent", null);
 
 		String distDept1 = ExcelReader.getOrDefault("sop.distribution.dept1",
 				DataManager.getOrDefault("sop.distribution.dept1", "Maintenance"));

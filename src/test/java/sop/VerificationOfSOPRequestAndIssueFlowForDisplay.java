@@ -37,7 +37,7 @@ public class VerificationOfSOPRequestAndIssueFlowForDisplay extends BaseTest {
 
 	private static final Logger log = LogManager.getLogger(VerificationOfSOPRequestAndIssueFlowForDisplay.class);
 	@Test(groups = { "advance",
-			"sop" },dependsOnMethods = "sop.VerificationOfSOPMasterFlow.verificationOfSOPMasterLifecycle", alwaysRun = true, description = "PHX-3506: Verification of SOP Request and Issue Lifecycle for Display Copy")
+			"sop" },dependsOnMethods = "sop.VerifySOPMasterFlowIfEffectivenessCheckRequired.verificationOfSOPMasterLifecycle", alwaysRun = true, description = "PHX-3506: Verification of SOP Request and Issue Lifecycle for Display Copy")
 	public void verificationOfSOPRequestAndIssueForDisplay() {
 
 		log.info("================================================================================");

@@ -54,6 +54,10 @@ public class SOPMaster {
 	private final Locator reviseButton;
 	private final Locator docActionButton;
 	private final Locator effectiveDateInput;
+	private final Locator resourceInput;
+	private final Locator resourceMoreBtn;
+	private final Locator equipmentInput;
+	private final Locator equipmentMoreBtn;
 
 	// Content Section Locators
 	private final Locator objectiveField;
@@ -167,6 +171,16 @@ public class SOPMaster {
 		this.docActionButton = page.locator("//button[@instancename='PHX_SOP0DocAction']");
 		this.effectiveDateInput = page
 				.locator("//span[@instancename='PHX_SOP0DateFrom']//input[not(contains(@class,'z-timebox-input'))]");
+		this.resourceInput = page.locator(
+				"//div[@instancename='PHX_SOP0S_Resource_ID']//input | //span[@instancename='PHX_SOP0S_Resource_ID']//input");
+		this.resourceMoreBtn = page.locator(
+				"//div[@instancename='PHX_SOP0S_Resource_ID']//button[contains(@class,'editor-button') and not(contains(@style,'display:none'))] | "
+						+ "//span[@instancename='PHX_SOP0S_Resource_ID']//button[contains(@class,'editor-button') and not(contains(@style,'display:none'))]");
+		this.equipmentInput = page.locator(
+				"//div[@instancename='PHX_SOP0A_Asset_ID']//input | //span[@instancename='PHX_SOP0A_Asset_ID']//input");
+		this.equipmentMoreBtn = page.locator(
+				"//div[@instancename='PHX_SOP0A_Asset_ID']//button[contains(@class,'editor-button') and not(contains(@style,'display:none'))] | "
+						+ "//span[@instancename='PHX_SOP0A_Asset_ID']//button[contains(@class,'editor-button') and not(contains(@style,'display:none'))]");
 
 		// Content Sections
 		this.objectiveField = page.locator("//div[@instancename='PHX_SOP0PHX_Objective']");
@@ -375,6 +389,104 @@ public class SOPMaster {
 		String generatedDocNo = getDocumentNo();
 		setActiveSOPDocNo(generatedDocNo);
 		log.info("SOP Master Header saved. Generated Document No: [{}]", generatedDocNo);
+	}
+
+	/**
+	 * Populates Resource and Equipment fields on the SOP Master window using their
+	 * lookup modal: clicks the lookup button, hits 'ReQuery', selects the 1st option,
+	 * and confirms with OK.
+	 */
+	public void addResourceAndEquipment() {
+		addResource();
+		addEquipment();
+	}
+
+	/**
+	 * Populates Resource field using lookup modal: clicks more button,
+	 * clicks ReQuery, selects the 1st option, and clicks OK.
+	 */
+	public void addResource() {
+		log.info("Adding Resource on SOP Master window...");
+		if (resourceMoreBtn.count() > 0 && resourceMoreBtn.first().isVisible()) {
+			resourceMoreBtn.first().click();
+		} else {
+			resourceInput.click();
+			resourceInput.press("Enter");
+		}
+		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+		Locator resModal = page.locator("div.z-window-modal, div.z-window-highlighted");
+		resModal.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
+
+		Locator resRequeryBtn = resModal.locator("button:has-text('ReQuery'), button[title*='ReQuery']");
+		resRequeryBtn.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		resRequeryBtn.click();
+		page.waitForTimeout(1500);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+		Locator firstResOption = resModal.locator(".z-listitem .z-listcell").first();
+		firstResOption.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		firstResOption.click();
+		page.waitForTimeout(500);
+
+		Locator resOkBtn = resModal.locator("button:has-text('OK'), button[title='OK'], button.btn-primary, button.btn-ok").first();
+		resOkBtn.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+		resOkBtn.click();
+		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+		String selectedResource = resourceInput.inputValue();
+		log.info("Resource selected and populated: [{}]", selectedResource);
+		Assert.assertFalse(selectedResource.trim().isEmpty(), "Resource should be populated from lookup");
+	}
+
+	/**
+	 * Populates Equipment field using lookup modal: clicks more button,
+	 * clicks ReQuery, selects the 1st option, and clicks OK.
+	 */
+	public void addEquipment() {
+		log.info("Adding Equipment on SOP Master window...");
+		if (equipmentMoreBtn.count() > 0 && equipmentMoreBtn.first().isVisible()) {
+			equipmentMoreBtn.first().click();
+		} else {
+			equipmentInput.click();
+			equipmentInput.press("Enter");
+		}
+		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+		Locator equipModal = page.locator("div.z-window-modal, div.z-window-highlighted");
+		equipModal.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
+
+		Locator equipRequeryBtn = equipModal.locator("button:has-text('ReQuery'), button[title*='ReQuery']");
+		equipRequeryBtn.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		equipRequeryBtn.click();
+		page.waitForTimeout(1500);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+		Locator firstEquipOption = equipModal.locator(".z-listitem .z-listcell").first();
+		firstEquipOption.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+		firstEquipOption.click();
+		page.waitForTimeout(500);
+
+		Locator equipOkBtn = equipModal.locator("button:has-text('OK'), button[title='OK'], button.btn-primary, button.btn-ok").first();
+		equipOkBtn.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(5000));
+		equipOkBtn.click();
+		page.waitForTimeout(1000);
+		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+
+		String selectedEquip = equipmentInput.inputValue();
+		log.info("Equipment selected and populated: [{}]", selectedEquip);
+		Assert.assertFalse(selectedEquip.trim().isEmpty(), "Equipment should be populated from lookup");
+	}
+
+	public String getResource() {
+		return resourceInput.inputValue();
+	}
+
+	public String getEquipment() {
+		return equipmentInput.inputValue();
 	}
 
 	/**

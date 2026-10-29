@@ -42,6 +42,7 @@ public class ExtentManager {
 				sparkReporter.config().setReportName("Playwright Automation Report");
 				sparkReporter.config().setTheme(Theme.STANDARD);
 				sparkReporter.config().setTimeStampFormat("MMM dd, yyyy HH:mm:ss");
+				sparkReporter.config().setCss(getCustomCss());
 
 				extent = new ExtentReports();
 				extent.attachReporter(sparkReporter);
@@ -81,6 +82,21 @@ public class ExtentManager {
 			}
 		}
 		return extent;
+	}
+
+	/**
+	 * Updates ExtentReports System/Environment information with Test Class summary metrics.
+	 */
+	public static synchronized void updateClassSummary() {
+		if (extent != null && TestClassTracker.getTotalClasses() > 0) {
+			extent.setSystemInfo("Total Test Classes", String.valueOf(TestClassTracker.getTotalClasses()));
+			extent.setSystemInfo("Test Classes Passed", String.valueOf(TestClassTracker.getPassedClassesCount()));
+			extent.setSystemInfo("Test Classes Failed", String.valueOf(TestClassTracker.getFailedClassesCount()));
+			if (TestClassTracker.getSkippedClassesCount() > 0) {
+				extent.setSystemInfo("Test Classes Skipped", String.valueOf(TestClassTracker.getSkippedClassesCount()));
+			}
+			extent.setSystemInfo("Class Pass Rate", String.format("%.1f%%", TestClassTracker.getClassPassRate()));
+		}
 	}
 
 	/**
@@ -142,17 +158,34 @@ public class ExtentManager {
 	}
 
 	/**
-	 * Flushes the ExtentReports instance to write out the HTML report.
+	 * Flushes the ExtentReports instance to write out the HTML report
+	 * and enriches the output with the executive Test Classes summary.
 	 */
 	public static synchronized void flush() {
 		if (extent != null) {
 			try {
+				updateClassSummary();
 				extent.flush();
 				log.info("ExtentReports flushed successfully.");
+
+				// Post-enrich HTML report with Executive Test Classes Summary Cards, Table & Modern UI styling
+				String reportPath = System.getProperty("user.dir") + "/test-output/ExtentReport.html";
+				HtmlReportEnricher.enrich(reportPath);
 			} catch (Exception e) {
 				log.error("Error flushing ExtentReports: {}", e.getMessage(), e);
 			}
 		}
+	}
+
+	private static String getCustomCss() {
+		return "body, .app, .card, table { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important; }"
+				+ ".card { border-radius: 10px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.04) !important; }"
+				+ ".card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important; }"
+				+ ".class-metric-card { transition: transform 0.2s ease; }"
+				+ ".class-metric-card:hover { transform: translateY(-3px); }"
+				+ ".table thead th { font-weight: 600 !important; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }"
+				+ ".badge { font-weight: 600; }"
+				+ ".vheader .nav-right .badge-primary { background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; border-radius: 6px; padding: 6px 12px; }";
 	}
 
 	/**

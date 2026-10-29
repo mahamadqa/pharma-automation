@@ -2,6 +2,8 @@ package utils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.testng.ISuite;
+import org.testng.ISuiteListener;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
@@ -11,12 +13,20 @@ import com.aventstack.extentreports.Status;
 
 import base.BaseTest;
 
-public class MyListener implements ITestListener {
+public class MyListener implements ITestListener, ISuiteListener {
 
 	private static final Logger log = LogManager.getLogger(utils.MyListener.class);
 
 	@Override
+	public void onStart(ISuite suite) {
+		TestClassTracker.reset();
+		log.info("Test Suite started: " + suite.getName());
+	}
+
+	@Override
 	public void onTestStart(ITestResult result) {
+		TestClassTracker.onTestStart(result);
+
 		int invocation = result.getMethod().getCurrentInvocationCount();
 		String className = result.getTestClass().getRealClass().getSimpleName();
 		String methodName = result.getMethod().getMethodName();
@@ -43,6 +53,8 @@ public class MyListener implements ITestListener {
 
 	@Override
 	public void onTestSuccess(ITestResult result) {
+		TestClassTracker.onTestSuccess(result);
+
 		String className = result.getTestClass().getRealClass().getSimpleName();
 		ExtentTest test = ExtentManager.getTest();
 		if (test != null && test.getStatus() != Status.FAIL) {
@@ -53,6 +65,8 @@ public class MyListener implements ITestListener {
 
 	@Override
 	public void onTestFailure(ITestResult result) {
+		TestClassTracker.onTestFailure(result);
+
 		String className = result.getTestClass().getRealClass().getSimpleName();
 		log.error("❌ Test Failed: " + className + "." + result.getName());
 		if (result.getThrowable() != null) {
@@ -72,6 +86,8 @@ public class MyListener implements ITestListener {
 
 	@Override
 	public void onTestSkipped(ITestResult result) {
+		TestClassTracker.onTestSkipped(result);
+
 		String className = result.getTestClass().getRealClass().getSimpleName();
 		boolean isRetrying = RetryAnalyzer.isRetrying(result);
 		ExtentTest test = ExtentManager.getTest();
@@ -104,7 +120,15 @@ public class MyListener implements ITestListener {
 				skippedTests.remove();
 			}
 		}
+		ExtentManager.updateClassSummary();
 		ExtentManager.flush();
+	}
+
+	@Override
+	public void onFinish(ISuite suite) {
+		ExtentManager.updateClassSummary();
+		ExtentManager.flush();
+		log.info("Test Suite finished: " + suite.getName());
 	}
 
 }

@@ -46,10 +46,10 @@
     <test name="Pharma Modules Test" parallel="classes" thread-count="4">
         <classes>
             <!-- Root SOP Master Lifecycle Flow -->
-            <class name="sop.VerificationOfSOPMasterFlow"/>
+            <class name="sop.VerifySOPMasterFlowIfEffectivenessCheckRequired"/>
 
             <!-- Dependent SOP Flows (Run concurrently in parallel once root flow completes) -->
-            <class name="sop.VerifySOPMasterFlowIfEffectivenessCheckRequired"/>
+            <class name="sop.VerificationOfSOPMasterFlow"/>
             <class name="sop.VerificationOfSOPRequestAndIssueFlowControlled"/>
             <class name="sop.VerificationOfSOPRequestAndIssueFlowForDisplay"/>
             <class name="sop.VerificationOfSOPFormatRequestAndIssueFlow"/>
