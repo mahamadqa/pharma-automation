@@ -35,10 +35,12 @@
         - Execution Flow:
           1. Root SOP Flow: sop.VerificationOfSOPMasterFlow runs first among SOP tests (alongside baseModules in parallel)
           2. Dependent SOP Flows: Once sop.VerificationOfSOPMasterFlow completes and makes Revision 1 effective,
-             the 3 dependent classes execute concurrently in PARALLEL across worker threads:
+             the 5 dependent classes execute concurrently in PARALLEL across worker threads:
              - sop.VerifySOPMasterFlowIfEffectivenessCheckRequired
-             - sop.VerificationOfSOPRequestAndIssueFlow
+             - sop.VerificationOfSOPRequestAndIssueFlowControlled
+             - sop.VerificationOfSOPRequestAndIssueFlowForDisplay
              - sop.VerificationOfSOPFormatRequestAndIssueFlow
+             - sop.VerificationOfSOPAnnexureRequestAndIssueFlow
              (enforced via dependsOnMethods="sop.VerificationOfSOPMasterFlow.verificationOfSOPMasterLifecycle")
     -->
     <test name="Pharma Modules Test" parallel="classes" thread-count="4">
@@ -51,6 +53,7 @@
             <class name="sop.VerificationOfSOPRequestAndIssueFlowControlled"/>
             <class name="sop.VerificationOfSOPRequestAndIssueFlowForDisplay"/>
             <class name="sop.VerificationOfSOPFormatRequestAndIssueFlow"/>
+            <class name="sop.VerificationOfSOPAnnexureRequestAndIssueFlow"/>
 
             <!-- Base Modules (Run concurrently in parallel across worker threads) -->
             <class name="baseModules.CreateGRNFromPOFlow"/>

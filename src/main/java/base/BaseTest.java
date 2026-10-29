@@ -192,9 +192,21 @@ public class BaseTest {
 		// Initialize ExtentTest via ExtentManager
 		ExtentTest currentTest = ExtentManager.getTest();
 		if (currentTest == null) {
+			String className = result.getTestClass().getRealClass().getSimpleName();
+			String methodName = result.getMethod().getMethodName();
+			String testDisplayName = className + " - " + methodName;
 			currentTest = ExtentManager.createTest(
-					result.getMethod().getMethodName(),
+					testDisplayName,
 					result.getMethod().getDescription());
+			if (currentTest != null) {
+				currentTest.assignAuthor(ExtentManager.getReportUser());
+				currentTest.assignCategory(className);
+				for (String group : result.getMethod().getGroups()) {
+					if (group != null && !group.trim().isEmpty()) {
+						currentTest.assignCategory(group.trim());
+					}
+				}
+			}
 			if (result.getMethod().getCurrentInvocationCount() > 0) {
 				currentTest.info("🔄 Retrying test execution (Attempt "
 						+ (result.getMethod().getCurrentInvocationCount() + 1) + ")");
@@ -258,7 +270,7 @@ public class BaseTest {
 
 			// Capture final screenshot while browser page is still open (if not already captured by soft asserts)
 			if (!hasSoftFailures) {
-				captureFailureScreenshot(result.getMethod().getMethodName());
+				captureFailureScreenshot(result.getTestClass().getRealClass().getSimpleName() + "_" + result.getMethod().getMethodName());
 			}
 		}
 

@@ -1754,7 +1754,7 @@ public class SOPMaster {
 		searchBox.first()
 				.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
 		searchBox.first().fill("SOP Master");
-		page.waitForTimeout(1500);
+		page.waitForTimeout(3000);
 
 		Locator sopMasterOption = page.locator(
 				"//div[contains(@class,'global-search-tabpanel')]//tr[contains(@class,'z-listitem') and contains(.,'SOP Master')] | //span[contains(@class,'highlight') and text()='SOP Master']")

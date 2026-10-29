@@ -18,31 +18,43 @@ public class MyListener implements ITestListener {
 	@Override
 	public void onTestStart(ITestResult result) {
 		int invocation = result.getMethod().getCurrentInvocationCount();
+		String className = result.getTestClass().getRealClass().getSimpleName();
+		String methodName = result.getMethod().getMethodName();
+		String testDisplayName = className + " - " + methodName;
+
 		ExtentTest currentTest = ExtentManager.getTest();
 		if (currentTest == null) {
-			currentTest = ExtentManager.createTest(result.getMethod().getMethodName(), result.getMethod().getDescription());
+			currentTest = ExtentManager.createTest(testDisplayName, result.getMethod().getDescription());
 			if (currentTest != null) {
 				currentTest.assignAuthor(ExtentManager.getReportUser());
+				currentTest.assignCategory(className);
+				for (String group : result.getMethod().getGroups()) {
+					if (group != null && !group.trim().isEmpty()) {
+						currentTest.assignCategory(group.trim());
+					}
+				}
 			}
 			if (invocation > 0) {
 				currentTest.info("🔄 Retrying test execution (Attempt " + (invocation + 1) + ")");
 			}
 		}
-		log.info("Test Started: " + result.getName() + (invocation > 0 ? " (Retry Attempt " + (invocation + 1) + ")" : ""));
+		log.info("Test Started: " + className + "." + result.getName() + (invocation > 0 ? " (Retry Attempt " + (invocation + 1) + ")" : ""));
 	}
 
 	@Override
 	public void onTestSuccess(ITestResult result) {
+		String className = result.getTestClass().getRealClass().getSimpleName();
 		ExtentTest test = ExtentManager.getTest();
 		if (test != null && test.getStatus() != Status.FAIL) {
 			test.pass("Test Passed");
 		}
-		log.info("✅ Test Passed: " + result.getName());
+		log.info("✅ Test Passed: " + className + "." + result.getName());
 	}
 
 	@Override
 	public void onTestFailure(ITestResult result) {
-		log.error("❌ Test Failed: " + result.getName());
+		String className = result.getTestClass().getRealClass().getSimpleName();
+		log.error("❌ Test Failed: " + className + "." + result.getName());
 		if (result.getThrowable() != null) {
 			log.error("Reason: " + result.getThrowable());
 		}
@@ -54,24 +66,25 @@ public class MyListener implements ITestListener {
 			}
 
 			// Capture failure screenshot (delegates to BaseTest for deduplication & visible <img> rendering)
-			BaseTest.captureFailureScreenshot(result.getName());
+			BaseTest.captureFailureScreenshot(className + "_" + result.getName());
 		}
 	}
 
 	@Override
 	public void onTestSkipped(ITestResult result) {
+		String className = result.getTestClass().getRealClass().getSimpleName();
 		boolean isRetrying = RetryAnalyzer.isRetrying(result);
 		ExtentTest test = ExtentManager.getTest();
 
 		if (isRetrying) {
-			log.warn("🔄 Test failed and is being retried, discarding prior attempt from ExtentReport: " + result.getName());
+			log.warn("🔄 Test failed and is being retried, discarding prior attempt from ExtentReport: " + className + "." + result.getName());
 			if (test != null) {
 				ExtentManager.removeTest(test);
 			}
 			return;
 		}
 
-		log.warn("⚠️ Test Skipped: " + result.getName());
+		log.warn("⚠️ Test Skipped: " + className + "." + result.getName());
 		if (test != null) {
 			test.skip("Test Skipped");
 			if (result.getThrowable() != null) {
