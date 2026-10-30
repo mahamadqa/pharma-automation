@@ -160,4 +160,14 @@ public class DataManager {
         }
         return currentRegion;
     }
+
+    public static synchronized void updatePropertyInMemory(String key, String value) {
+        if (testData != null && key != null && value != null) {
+            testData.setProperty(key, value);
+        }
+    }
+
+    public static synchronized void setProperty(String key, String value) {
+        ConfigReader.setProperty(key, value);
+    }
 }
