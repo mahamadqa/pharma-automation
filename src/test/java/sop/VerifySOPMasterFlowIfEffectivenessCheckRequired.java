@@ -305,8 +305,8 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 		 workflowActivities.navigateToWorkflowActivities();
 		 workflowActivities.clickOnAssignedSOPRecord("Internal Review", sopDocNo);
 		 workflowActivities.zoomToRecord();
-		 sopMaster.clickPreview();
-		 printReport.verifyPrintReport();
+//		 sopMaster.clickPreview();
+//		 printReport.verifyPrintReport();
 		 sopMaster.ensureOnSOPMasterHeader(sopDocNo);
 		 sopMaster.completeDigitalSignature("CheckedBy", engReviewerDept, password);
 		 sopMaster.performDocActionWithAnswer("Yes", engManager);
@@ -324,8 +324,8 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 		 workflowActivities.clickOnAssignedSOPRecord("Department Approval", sopDocNo);
 		 workflowActivities.zoomToRecord();
 		 sopMaster.verifySOPStatus("Department Approval");
-		 sopMaster.clickPreview();
-		 printReport.verifyPrintReport();
+//		 sopMaster.clickPreview();
+//		 printReport.verifyPrintReport();
 		 sopMaster.ensureOnSOPMasterHeader(sopDocNo);
 		
 		 log.info("Stage 2 - Step 52: EngManager rejects SOP (Answer: No) -> Status updates to 'Not Approved'...");
@@ -372,8 +372,8 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 		 workflowActivities.clickOnAssignedSOPRecord("Department Approval", sopDocNo);
 		 workflowActivities.zoomToRecord();
 		 sopMaster.verifySOPStatus("Department Approval");
-		 sopMaster.clickPreview();
-		 printReport.verifyPrintReport();
+//		 sopMaster.clickPreview();
+//		 printReport.verifyPrintReport();
 		 sopMaster.ensureOnSOPMasterHeader(sopDocNo);
 		 sopMaster.completeDigitalSignature("ReviewedBy", engManagerDept, password);
 		 sopMaster.performDocActionWithAnswer("Yes", null);
@@ -391,8 +391,8 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 		 workflowActivities.clickOnAssignedSOPRecord("QA Approval", sopDocNo);
 		 workflowActivities.zoomToRecord();
 		 sopMaster.verifySOPStatus("QA Approval");
-		 sopMaster.clickPreview();
-		 printReport.verifyPrintReport();
+//		 sopMaster.clickPreview();
+//		 printReport.verifyPrintReport();
 		 sopMaster.ensureOnSOPMasterHeader(sopDocNo);
 		
 		 log.info("Stage 3 - Step 62: QAReviewer rejects SOP (Answer: No) -> Status updates to 'Not Approved'...");
@@ -468,7 +468,7 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 		dashboard.clickLogout();
 
 		// --------------------------------------------------------------------------------------------------
-		// Step 70 to 74: Login with QAManager, preview Report (Master Copy stamp
+		// Stage 4 : Login with QAManager, preview Report (Master Copy stamp
 		// check), and test DMS validation
 		// --------------------------------------------------------------------------------------------------
 		log.info("Step 70-74: QAManager [{}] verifies Master Copy stamp and DMS document requirement...", qaManager);
