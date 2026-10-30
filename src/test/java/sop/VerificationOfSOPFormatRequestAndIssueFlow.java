@@ -73,16 +73,6 @@ public class VerificationOfSOPFormatRequestAndIssueFlow extends BaseTest {
 
 		// Target SOP: Dynamically taken from root class in testng.xml (VerifySOPMasterFlowIfEffectivenessCheckRequired)
 		String targetSOP = VerifySOPMasterFlowIfEffectivenessCheckRequired.getEffectiveRevisedSOPNo();
-		if (targetSOP == null || targetSOP.trim().isEmpty()) {
-			targetSOP = VerificationOfSOPMasterFlow.getEffectiveRevisedSOPNo();
-		}
-		if (targetSOP == null || targetSOP.trim().isEmpty()) {
-			targetSOP = System.getProperty("effective.revised.sop.no");
-		}
-		if (targetSOP == null || targetSOP.trim().isEmpty()) {
-			targetSOP = ExcelReader.getOrDefault("sop.formatRequest.targetSOP",
-					DataManager.getOrDefault("sop.formatRequest.targetSOP", "1000914_1"));
-		}
 		log.info("Target SOP selected for SOP Format Request: [{}]", targetSOP);
 
 		String formatName = ExcelReader.getOrDefault("sop.format.name",

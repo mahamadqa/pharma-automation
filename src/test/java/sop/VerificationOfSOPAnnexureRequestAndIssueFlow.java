@@ -71,16 +71,6 @@ public class VerificationOfSOPAnnexureRequestAndIssueFlow extends BaseTest {
 
 		// Target SOP: Dynamically taken from root class in testng.xml (VerifySOPMasterFlowIfEffectivenessCheckRequired)
 		String targetSOP = VerifySOPMasterFlowIfEffectivenessCheckRequired.getEffectiveRevisedSOPNo();
-		if (targetSOP == null || targetSOP.trim().isEmpty()) {
-			targetSOP = VerificationOfSOPMasterFlow.getEffectiveRevisedSOPNo();
-		}
-		if (targetSOP == null || targetSOP.trim().isEmpty()) {
-			targetSOP = System.getProperty("effective.revised.sop.no");
-		}
-		if (targetSOP == null || targetSOP.trim().isEmpty()) {
-			targetSOP = ExcelReader.getOrDefault("sop.annexureRequest.targetSOP",
-					DataManager.getOrDefault("sop.annexureRequest.targetSOP", "1000914_1"));
-		}
 		log.info("Target SOP selected for SOP Annexure Request: [{}]", targetSOP);
 
 		String annexureName = ExcelReader.getOrDefault("sop.annexure.name",

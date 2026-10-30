@@ -348,7 +348,7 @@ public class SOPFormatRequest {
 					"//span[@instancename='PHX_SOPFormatRequest0PHX_SOP_ID']//*[contains(@class,'z-combobox-button')]").first();
 			sopBtn.click();
 			page.waitForTimeout(1000);
-			Locator firstItem = page.locator(".z-combobox-popup:not([style*='display: none']) .z-comboitem").first();
+			Locator firstItem = page.locator(".z-combobox-popup:not([style*='display: none']) .z-comboitem").last();
 			firstItem.click();
 		}
 		page.waitForTimeout(1000);
@@ -432,7 +432,7 @@ public class SOPFormatRequest {
 					"//span[@instancename='PHX_SOPFormatRequest0PHX_SOP_ID']//*[contains(@class,'z-combobox-button')]").first();
 			sopBtn.click();
 			page.waitForTimeout(1000);
-			Locator firstItem = page.locator(".z-combobox-popup:not([style*='display: none']) .z-comboitem").first();
+			Locator firstItem = page.locator(".z-combobox-popup:not([style*='display: none']) .z-comboitem").last();
 			firstItem.click();
 		}
 		page.waitForTimeout(1000);

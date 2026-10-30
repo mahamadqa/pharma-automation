@@ -1,4 +1,4 @@
-package sop;
+	package sop;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,7 +56,7 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 	public void verificationOfSOPMasterLifecycle() {
 
 		log.info("================================================================================");
-		log.info("========== Starting Test: PHX-3499 Verification of SOP Master ==========");
+		log.info("========== Starting Test: PHX-3499 Verification of SOP Master Effectiveness Check ==========");
 		log.info("================================================================================");
 
 		// Initialize Test Data

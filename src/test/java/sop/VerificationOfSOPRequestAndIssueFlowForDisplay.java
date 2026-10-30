@@ -57,16 +57,6 @@ public class VerificationOfSOPRequestAndIssueFlowForDisplay extends BaseTest {
 
 		// Target SOP: Dynamically taken from root class in testng.xml (VerifySOPMasterFlowIfEffectivenessCheckRequired)
 		String targetSOP = VerifySOPMasterFlowIfEffectivenessCheckRequired.getEffectiveRevisedSOPNo();
-		if (targetSOP == null || targetSOP.trim().isEmpty()) {
-			targetSOP = VerificationOfSOPMasterFlow.getEffectiveRevisedSOPNo();
-		}
-		if (targetSOP == null || targetSOP.trim().isEmpty()) {
-			targetSOP = System.getProperty("effective.revised.sop.no");
-		}
-		if (targetSOP == null || targetSOP.trim().isEmpty()) {
-			targetSOP = ExcelReader.getOrDefault("sop.request.targetSOP",
-					DataManager.getOrDefault("sop.request.targetSOP", "1000703"));
-		}
 		log.info("Target SOP selected for SOP Request (Display): [{}]", targetSOP);
 
 		// SOP Request Data from Properties / Defaults
