@@ -100,7 +100,7 @@ public class WorkflowActivities {
 				"//div[contains(@class,'z-listbox')]//tr[contains(.,'" + docNo + "')]");
 		try {
 			matchingRow.first()
-					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
+					.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
 			matchingRow.first().click();
 			log.info("Selected Assigned SOP Record matching Doc No: [{}]", docNo);
 		} catch (Exception e) {
