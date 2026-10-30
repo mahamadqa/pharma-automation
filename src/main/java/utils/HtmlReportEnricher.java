@@ -300,62 +300,109 @@ public class HtmlReportEnricher {
 				int listWrapperStart = catView.indexOf("<ul class=\"test-list-item\">");
 				int listWrapperEnd = catView.indexOf("</ul>", listWrapperStart);
 				if (listWrapperStart != -1 && listWrapperEnd != -1) {
+					List<ExtentTestRecord> records = extractTestRecordsFromTestView(content);
+
+					// Fallback if test-view did not yield records
+					if (records.isEmpty() && summaries != null) {
+						int idCounter = 1;
+						for (TestClassTracker.ClassSummary cs : summaries) {
+							ExtentTestRecord rec = new ExtentTestRecord();
+							rec.id = String.valueOf(idCounter++);
+							rec.name = cs.getSimpleClassName() + " - " + cs.getTestedMethodsDisplay();
+							rec.status = "PASS".equalsIgnoreCase(cs.getStatus()) ? "pass" : ("FAIL".equalsIgnoreCase(cs.getStatus()) ? "fail" : "skip");
+							rec.timestamp = new java.text.SimpleDateFormat("HH:mm:ss a").format(new java.util.Date());
+							String cName = cs.getSimpleClassName();
+							if ("CreateGRNFromPOFlow".equals(cName) || "VerifySOShipmentInvoiceFlow".equals(cName)) {
+								rec.tags.add("basic");
+							} else {
+								rec.tags.add("advance");
+								rec.tags.add("sop");
+							}
+							records.add(rec);
+						}
+					}
+
 					StringBuilder cleanedItems = new StringBuilder();
+					int validGroupCount = 0;
 
-					// Item 1: advance
-					cleanedItems.append("<li class=\"test-item\">\n")
-							.append("<div class=\"test-detail\">\n")
-							.append("<span class=\"meta\">\n<span class='badge log badge-danger'>5</span>\n</span>\n")
-							.append("<p class=\"name\">advance</p>\n")
-							.append("<p class=\"duration text-sm\">5 tests</p>\n")
-							.append("</div>\n")
-							.append("<div class=\"test-contents d-none\">\n")
-							.append("<div class=\"info\">\n<h4>advance</h4>\n<span status=\"fail\" class='badge log badge-danger'>5 failed</span>\n</div>\n")
-							.append("<table class='table table-sm mt-4'>\n<thead>\n<tr><th class=\"status-col\">Status</th><th class=\"timestamp-col\">Timestamp</th><th>TestName</th></tr>\n</thead>\n<tbody>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:57 pm</td><td><a href=\"#\" class=\"linked\" test-id='13' id='13'>VerificationOfSOPRequestAndIssueFlowControlled - verificationOfSOPRequestAndIssue</a></td></tr>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:03 pm</td><td><a href=\"#\" class=\"linked\" test-id='15' id='15'>VerificationOfSOPMasterFlow - verificationOfSOPMasterLifecycle</a></td></tr>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:08 pm</td><td><a href=\"#\" class=\"linked\" test-id='17' id='17'>VerificationOfSOPFormatRequestAndIssueFlow - verificationOfSOPFormatRequestAndIssue</a></td></tr>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:10 pm</td><td><a href=\"#\" class=\"linked\" test-id='18' id='18'>VerificationOfSOPRequestAndIssueFlowForDisplay - verificationOfSOPRequestAndIssueForDisplay</a></td></tr>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:39 pm</td><td><a href=\"#\" class=\"linked\" test-id='8' id='8'>VerifySOPMasterFlowIfEffectivenessCheckRequired - verificationOfSOPMasterLifecycle</a></td></tr>\n")
-							.append("</tbody>\n</table>\n</div>\n</li>\n");
+					for (String groupName : groupMap.keySet()) {
+						List<ExtentTestRecord> groupTests = new ArrayList<>();
+						for (ExtentTestRecord r : records) {
+							if (r.tags.contains(groupName.toLowerCase())) {
+								groupTests.add(r);
+							} else if (r.tags.isEmpty()) {
+								if ("basic".equalsIgnoreCase(groupName) && (r.name.contains("CreateGRN") || r.name.contains("ShipmentInvoice"))) {
+									groupTests.add(r);
+								} else if (!"basic".equalsIgnoreCase(groupName) && !r.name.contains("CreateGRN") && !r.name.contains("ShipmentInvoice")) {
+									groupTests.add(r);
+								}
+							}
+						}
 
-					// Item 2: basic
-					cleanedItems.append("<li class=\"test-item\">\n")
-							.append("<div class=\"test-detail\">\n")
-							.append("<span class=\"meta\">\n<span class='badge log badge-danger'>2</span>\n</span>\n")
-							.append("<p class=\"name\">basic</p>\n")
-							.append("<p class=\"duration text-sm\">2 tests</p>\n")
-							.append("</div>\n")
-							.append("<div class=\"test-contents d-none\">\n")
-							.append("<div class=\"info\">\n<h4>basic</h4>\n<span status=\"fail\" class='badge log badge-danger'>2 failed</span>\n</div>\n")
-							.append("<table class='table table-sm mt-4'>\n<thead>\n<tr><th class=\"status-col\">Status</th><th class=\"timestamp-col\">Timestamp</th><th>TestName</th></tr>\n</thead>\n<tbody>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:37 pm</td><td><a href=\"#\" class=\"linked\" test-id='9' id='9'>CreateGRNFromPOFlow - verificationOfCreateGRNFromPOFlow</a></td></tr>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:32 pm</td><td><a href=\"#\" class=\"linked\" test-id='7' id='7'>VerifySOShipmentInvoiceFlow - verificationOfSOShipmentInvoiceFlow</a></td></tr>\n")
-							.append("</tbody>\n</table>\n</div>\n</li>\n");
+						if (groupTests.isEmpty()) {
+							continue;
+						}
+						validGroupCount++;
 
-					// Item 3: sop
-					cleanedItems.append("<li class=\"test-item\">\n")
-							.append("<div class=\"test-detail\">\n")
-							.append("<span class=\"meta\">\n<span class='badge log badge-danger'>5</span>\n</span>\n")
-							.append("<p class=\"name\">sop</p>\n")
-							.append("<p class=\"duration text-sm\">5 tests</p>\n")
-							.append("</div>\n")
-							.append("<div class=\"test-contents d-none\">\n")
-							.append("<div class=\"info\">\n<h4>sop</h4>\n<span status=\"fail\" class='badge log badge-danger'>5 failed</span>\n</div>\n")
-							.append("<table class='table table-sm mt-4'>\n<thead>\n<tr><th class=\"status-col\">Status</th><th class=\"timestamp-col\">Timestamp</th><th>TestName</th></tr>\n</thead>\n<tbody>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:57 pm</td><td><a href=\"#\" class=\"linked\" test-id='13' id='13'>VerificationOfSOPRequestAndIssueFlowControlled - verificationOfSOPRequestAndIssue</a></td></tr>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:03 pm</td><td><a href=\"#\" class=\"linked\" test-id='15' id='15'>VerificationOfSOPMasterFlow - verificationOfSOPMasterLifecycle</a></td></tr>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:08 pm</td><td><a href=\"#\" class=\"linked\" test-id='17' id='17'>VerificationOfSOPFormatRequestAndIssueFlow - verificationOfSOPFormatRequestAndIssue</a></td></tr>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:34:10 pm</td><td><a href=\"#\" class=\"linked\" test-id='18' id='18'>VerificationOfSOPRequestAndIssueFlowForDisplay - verificationOfSOPRequestAndIssueForDisplay</a></td></tr>\n")
-							.append("<tr class=\"tag-test-status\" status=\"fail\"><td><span class=\"badge log fail-bg\">Fail</span></td><td>16:33:39 pm</td><td><a href=\"#\" class=\"linked\" test-id='8' id='8'>VerifySOPMasterFlowIfEffectivenessCheckRequired - verificationOfSOPMasterLifecycle</a></td></tr>\n")
-							.append("</tbody>\n</table>\n</div>\n</li>\n");
+						int p = 0, f = 0, s = 0;
+						for (ExtentTestRecord r : groupTests) {
+							if ("pass".equalsIgnoreCase(r.status)) p++;
+							else if ("fail".equalsIgnoreCase(r.status)) f++;
+							else s++;
+						}
 
-					int groupCount = 3;
+						String metaBadge;
+						if (f > 0) {
+							metaBadge = "<span class='badge log badge-danger'>" + f + "</span>";
+						} else if (p > 0) {
+							metaBadge = "<span class='badge log pass-bg'>" + p + "</span>";
+						} else {
+							metaBadge = "<span class='badge log skip-bg'>" + s + "</span>";
+						}
+
+						StringBuilder infoStatus = new StringBuilder();
+						if (f > 0) {
+							infoStatus.append("<span status=\"fail\" class='badge log badge-danger'>").append(f).append(" failed</span> ");
+						}
+						if (p > 0) {
+							infoStatus.append("<span status=\"pass\" class='badge log pass-bg'>").append(p).append(" passed</span> ");
+						}
+						if (s > 0) {
+							infoStatus.append("<span status=\"skip\" class='badge log skip-bg'>").append(s).append(" skipped</span>");
+						}
+
+						StringBuilder tableRows = new StringBuilder();
+						for (ExtentTestRecord r : groupTests) {
+							String badgeClass = "pass".equalsIgnoreCase(r.status) ? "pass-bg" : ("fail".equalsIgnoreCase(r.status) ? "fail-bg" : "skip-bg");
+							String label = "pass".equalsIgnoreCase(r.status) ? "Pass" : ("fail".equalsIgnoreCase(r.status) ? "Fail" : "Skip");
+							String rowStatus = "pass".equalsIgnoreCase(r.status) ? "pass" : ("fail".equalsIgnoreCase(r.status) ? "fail" : "skip");
+
+							tableRows.append("<tr class=\"tag-test-status\" status=\"").append(rowStatus).append("\">")
+									.append("<td><span class=\"badge log ").append(badgeClass).append("\">").append(label).append("</span></td>")
+									.append("<td>").append(r.timestamp.isEmpty() ? "-" : r.timestamp).append("</td>")
+									.append("<td><a href=\"#\" class=\"linked\" test-id='").append(r.id).append("' id='").append(r.id).append("'>")
+									.append(r.name).append("</a></td>")
+									.append("</tr>\n");
+						}
+
+						cleanedItems.append("<li class=\"test-item\">\n")
+								.append("<div class=\"test-detail\">\n")
+								.append("<span class=\"meta\">\n").append(metaBadge).append("\n</span>\n")
+								.append("<p class=\"name\">").append(groupName).append("</p>\n")
+								.append("<p class=\"duration text-sm\">").append(groupTests.size()).append(" tests</p>\n")
+								.append("</div>\n")
+								.append("<div class=\"test-contents d-none\">\n")
+								.append("<div class=\"info\">\n<h4>").append(groupName).append("</h4>\n").append(infoStatus.toString().trim()).append("</div>\n")
+								.append("<table class='table table-sm mt-4'>\n<thead>\n<tr><th class=\"status-col\">Status</th><th class=\"timestamp-col\">Timestamp</th><th>TestName</th></tr>\n</thead>\n<tbody>\n")
+								.append(tableRows.toString())
+								.append("</tbody>\n</table>\n</div>\n</li>\n");
+					}
+
 					String updatedCatView = catView.substring(0, listWrapperStart + "<ul class=\"test-list-item\">".length())
 							+ "\n" + cleanedItems.toString() + catView.substring(listWrapperEnd);
 					// Update category count badge in tools
 					updatedCatView = updatedCatView.replaceAll("(?s)<ul class=\"tools text-right\">\\s*<li><a href=\"#\"><span class=\"badge badge-primary\">\\d+</span>",
-							"<ul class=\"tools text-right\"><li><a href=\"#\"><span class=\"badge badge-primary\">" + groupCount + "</span>");
+							"<ul class=\"tools text-right\"><li><a href=\"#\"><span class=\"badge badge-primary\">" + validGroupCount + "</span>");
 					content = content.substring(0, catStart) + updatedCatView + content.substring(catEnd);
 				}
 			}
@@ -531,49 +578,53 @@ public class HtmlReportEnricher {
 		sb.append(SUMMARY_SECTION_START).append("\n");
 		sb.append("<div class=\"test-class-summary-wrapper m-b-25\" id=\"test-class-summary-section\">\n");
 
-		// ── Banner Card ──
+		// ── Banner Card: Minimal & Aesthetic ──
 		sb.append("  <div class=\"row m-b-15\">\n");
 		sb.append("    <div class=\"col-md-12\">\n");
-		sb.append("      <div class=\"card border-0 shadow-sm\" style=\"background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; border-radius: 12px;\">\n");
+		sb.append("      <div class=\"card border-0\" style=\"background: #ffffff; border: 1px solid #e2e8f0 !important; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);\">\n");
 		sb.append("        <div class=\"card-body p-3 d-flex align-items-center justify-content-between flex-wrap\">\n");
 		sb.append("          <div class=\"d-flex align-items-center\">\n");
-		sb.append("            <div style=\"width: 46px; height: 46px; border-radius: 10px; background: rgba(59, 130, 246, 0.2); display: flex; align-items: center; justify-content: center; margin-right: 14px;\">\n");
-		sb.append("              <i class=\"fa fa-cubes text-primary\" style=\"font-size: 22px;\"></i>\n");
+		sb.append("            <div style=\"width: 42px; height: 42px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; margin-right: 14px;\">\n");
+		sb.append("              <i class=\"fa fa-cubes\" style=\"font-size: 18px; color: #475569;\"></i>\n");
 		sb.append("            </div>\n");
 		sb.append("            <div>\n");
-		sb.append("              <h5 class=\"m-b-0 text-white font-weight-bold\" style=\"letter-spacing: 0.3px;\">Test Classes Executive Summary</h5>\n");
-		sb.append("              <small style=\"color: #94a3b8;\">Automated Suite Execution Metrics &amp; Class Health Status</small>\n");
+		sb.append("              <h5 class=\"m-b-0 font-weight-bold\" style=\"color: #0f172a; font-size: 16px; letter-spacing: -0.2px;\">Test Classes Executive Summary</h5>\n");
+		sb.append("              <small style=\"color: #64748b; font-size: 12px;\">Automated Suite Execution Metrics &amp; Class Health Status</small>\n");
 		sb.append("            </div>\n");
 		sb.append("          </div>\n");
 		sb.append("          <div class=\"d-flex align-items-center flex-wrap gap-2 mt-2 mt-md-0\">\n");
-		sb.append("            <span class=\"badge badge-pill font-size-13 m-r-10\" style=\"background: #3b82f6; padding: 7px 14px; font-weight: 600;\">Total Classes: ").append(total).append("</span>\n");
-		sb.append("            <span class=\"badge badge-pill font-size-13 m-r-10\" style=\"background: #10b981; padding: 7px 14px; font-weight: 600;\">Passed: ").append(passed).append("</span>\n");
-		sb.append("            <span class=\"badge badge-pill font-size-13 m-r-10\" style=\"background: ").append(failed > 0 ? "#ef4444" : "#64748b").append("; padding: 7px 14px; font-weight: 600;\">Failed: ").append(failed).append("</span>\n");
-		if (skipped > 0) {
-			sb.append("            <span class=\"badge badge-pill font-size-13 m-r-10\" style=\"background: #f59e0b; padding: 7px 14px; font-weight: 600;\">Skipped: ").append(skipped).append("</span>\n");
+		sb.append("            <span class=\"badge badge-pill font-size-12 m-r-8\" style=\"background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; padding: 6px 12px; font-weight: 600;\">Total Classes: ").append(total).append("</span>\n");
+		sb.append("            <span class=\"badge badge-pill font-size-12 m-r-8\" style=\"background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 6px 12px; font-weight: 600;\">Passed: ").append(passed).append("</span>\n");
+		if (failed > 0) {
+			sb.append("            <span class=\"badge badge-pill font-size-12 m-r-8\" style=\"background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; padding: 6px 12px; font-weight: 600;\">Failed: ").append(failed).append("</span>\n");
+		} else {
+			sb.append("            <span class=\"badge badge-pill font-size-12 m-r-8\" style=\"background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; padding: 6px 12px; font-weight: 500;\">Failed: 0</span>\n");
 		}
-		sb.append("            <span class=\"badge badge-pill font-size-13\" style=\"background: #8b5cf6; padding: 7px 14px; font-weight: 600;\">Pass Rate: ").append(String.format("%.1f%%", passRate)).append("</span>\n");
+		if (skipped > 0) {
+			sb.append("            <span class=\"badge badge-pill font-size-12 m-r-8\" style=\"background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 6px 12px; font-weight: 600;\">Skipped: ").append(skipped).append("</span>\n");
+		}
+		sb.append("            <span class=\"badge badge-pill font-size-12\" style=\"background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; padding: 6px 12px; font-weight: 600;\">Pass Rate: ").append(String.format("%.1f%%", passRate)).append("</span>\n");
 		sb.append("          </div>\n");
 		sb.append("        </div>\n");
 		sb.append("      </div>\n");
 		sb.append("    </div>\n");
 		sb.append("  </div>\n");
 
-		// ── 4 Metric Cards ──
+		// ── 4 Metric Cards: Clean, minimal pastel aesthetic ──
 		sb.append("  <div class=\"row m-b-15\">\n");
 
 		// Card 1: Total Test Classes
 		sb.append("    <div class=\"col-md-3\">\n");
-		sb.append("      <div class=\"card class-metric-card border-0 shadow-sm\" style=\"border-radius: 10px; border-left: 5px solid #3b82f6 !important;\">\n");
-		sb.append("        <div class=\"card-body\">\n");
+		sb.append("      <div class=\"card class-metric-card border-0\" style=\"background: #ffffff; border: 1px solid #e2e8f0 !important; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);\">\n");
+		sb.append("        <div class=\"card-body p-3\">\n");
 		sb.append("          <div class=\"d-flex justify-content-between align-items-center\">\n");
 		sb.append("            <div>\n");
-		sb.append("              <p class=\"m-b-0 text-muted font-weight-semibold text-uppercase font-size-12\">Total Test Classes</p>\n");
-		sb.append("              <h2 class=\"m-b-0 font-weight-bold text-dark mt-1\">").append(total).append("</h2>\n");
-		sb.append("              <small class=\"text-primary font-weight-semibold\"><i class=\"fa fa-tasks m-r-5\"></i>100% Executed</small>\n");
+		sb.append("              <p class=\"m-b-0 text-muted font-weight-semibold text-uppercase font-size-11\" style=\"letter-spacing: 0.5px;\">Total Test Classes</p>\n");
+		sb.append("              <h2 class=\"m-b-0 font-weight-bold mt-1\" style=\"color: #0f172a; font-size: 26px;\">").append(total).append("</h2>\n");
+		sb.append("              <small style=\"color: #64748b; font-weight: 500;\"><i class=\"fa fa-tasks m-r-5 text-muted\"></i>100% Executed</small>\n");
 		sb.append("            </div>\n");
-		sb.append("            <div class=\"metric-icon-circle\" style=\"width: 48px; height: 48px; border-radius: 50%; background: rgba(59, 130, 246, 0.12); display: flex; align-items: center; justify-content: center;\">\n");
-		sb.append("              <i class=\"fa fa-folder-open text-primary\" style=\"font-size: 22px;\"></i>\n");
+		sb.append("            <div style=\"width: 42px; height: 42px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center;\">\n");
+		sb.append("              <i class=\"fa fa-folder-open\" style=\"font-size: 18px; color: #475569;\"></i>\n");
 		sb.append("            </div>\n");
 		sb.append("          </div>\n");
 		sb.append("        </div>\n");
@@ -582,16 +633,16 @@ public class HtmlReportEnricher {
 
 		// Card 2: Classes Passed
 		sb.append("    <div class=\"col-md-3\">\n");
-		sb.append("      <div class=\"card class-metric-card border-0 shadow-sm\" style=\"border-radius: 10px; border-left: 5px solid #10b981 !important;\">\n");
-		sb.append("        <div class=\"card-body\">\n");
+		sb.append("      <div class=\"card class-metric-card border-0\" style=\"background: #ffffff; border: 1px solid #e2e8f0 !important; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);\">\n");
+		sb.append("        <div class=\"card-body p-3\">\n");
 		sb.append("          <div class=\"d-flex justify-content-between align-items-center\">\n");
 		sb.append("            <div>\n");
-		sb.append("              <p class=\"m-b-0 text-success font-weight-semibold text-uppercase font-size-12\">Classes Passed</p>\n");
-		sb.append("              <h2 class=\"m-b-0 font-weight-bold text-success mt-1\">").append(passed).append("</h2>\n");
-		sb.append("              <small class=\"text-success font-weight-semibold\"><i class=\"fa fa-check-circle m-r-5\"></i>").append(String.format("%.1f%%", passRate)).append(" Success Rate</small>\n");
+		sb.append("              <p class=\"m-b-0 font-weight-semibold text-uppercase font-size-11\" style=\"letter-spacing: 0.5px; color: #059669;\">Classes Passed</p>\n");
+		sb.append("              <h2 class=\"m-b-0 font-weight-bold mt-1\" style=\"color: #059669; font-size: 26px;\">").append(passed).append("</h2>\n");
+		sb.append("              <small style=\"color: #059669; font-weight: 500;\"><i class=\"fa fa-check-circle m-r-5\"></i>").append(String.format("%.1f%%", passRate)).append(" Success Rate</small>\n");
 		sb.append("            </div>\n");
-		sb.append("            <div class=\"metric-icon-circle\" style=\"width: 48px; height: 48px; border-radius: 50%; background: rgba(16, 185, 129, 0.12); display: flex; align-items: center; justify-content: center;\">\n");
-		sb.append("              <i class=\"fa fa-check-circle text-success\" style=\"font-size: 22px;\"></i>\n");
+		sb.append("            <div style=\"width: 42px; height: 42px; border-radius: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center;\">\n");
+		sb.append("              <i class=\"fa fa-check\" style=\"font-size: 18px; color: #059669;\"></i>\n");
 		sb.append("            </div>\n");
 		sb.append("          </div>\n");
 		sb.append("        </div>\n");
@@ -599,17 +650,21 @@ public class HtmlReportEnricher {
 		sb.append("    </div>\n");
 
 		// Card 3: Classes Failed
+		String failTextColor = failed > 0 ? "#dc2626" : "#64748b";
+		String failBgColor = failed > 0 ? "#fef2f2" : "#f8fafc";
+		String failBorderColor = failed > 0 ? "#fecaca" : "#e2e8f0";
+		String failIcon = failed > 0 ? "fa-times" : "fa-shield";
 		sb.append("    <div class=\"col-md-3\">\n");
-		sb.append("      <div class=\"card class-metric-card border-0 shadow-sm\" style=\"border-radius: 10px; border-left: 5px solid #ef4444 !important;\">\n");
-		sb.append("        <div class=\"card-body\">\n");
+		sb.append("      <div class=\"card class-metric-card border-0\" style=\"background: #ffffff; border: 1px solid #e2e8f0 !important; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);\">\n");
+		sb.append("        <div class=\"card-body p-3\">\n");
 		sb.append("          <div class=\"d-flex justify-content-between align-items-center\">\n");
 		sb.append("            <div>\n");
-		sb.append("              <p class=\"m-b-0 text-danger font-weight-semibold text-uppercase font-size-12\">Classes Failed</p>\n");
-		sb.append("              <h2 class=\"m-b-0 font-weight-bold text-danger mt-1\">").append(failed).append("</h2>\n");
-		sb.append("              <small class=\"font-weight-semibold\" style=\"color: ").append(failed > 0 ? "#ef4444" : "#64748b").append(";\"><i class=\"fa fa-shield m-r-5\"></i>").append(failed).append(" Failures</small>\n");
+		sb.append("              <p class=\"m-b-0 font-weight-semibold text-uppercase font-size-11\" style=\"letter-spacing: 0.5px; color: ").append(failTextColor).append(";\">Classes Failed</p>\n");
+		sb.append("              <h2 class=\"m-b-0 font-weight-bold mt-1\" style=\"color: ").append(failTextColor).append("; font-size: 26px;\">").append(failed).append("</h2>\n");
+		sb.append("              <small style=\"color: ").append(failTextColor).append("; font-weight: 500;\"><i class=\"fa ").append(failIcon).append(" m-r-5\"></i>").append(failed).append(" Failures</small>\n");
 		sb.append("            </div>\n");
-		sb.append("            <div class=\"metric-icon-circle\" style=\"width: 48px; height: 48px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); display: flex; align-items: center; justify-content: center;\">\n");
-		sb.append("              <i class=\"fa fa-times-circle text-danger\" style=\"font-size: 22px;\"></i>\n");
+		sb.append("            <div style=\"width: 42px; height: 42px; border-radius: 10px; background: ").append(failBgColor).append("; border: 1px solid ").append(failBorderColor).append("; display: flex; align-items: center; justify-content: center;\">\n");
+		sb.append("              <i class=\"fa ").append(failIcon).append("\" style=\"font-size: 18px; color: ").append(failTextColor).append(";\"></i>\n");
 		sb.append("            </div>\n");
 		sb.append("          </div>\n");
 		sb.append("        </div>\n");
@@ -617,19 +672,20 @@ public class HtmlReportEnricher {
 		sb.append("    </div>\n");
 
 		// Card 4: Class Pass Rate
+		String rateBarColor = passRate >= 80.0 ? "#059669" : (passRate >= 50.0 ? "#4f46e5" : "#dc2626");
 		sb.append("    <div class=\"col-md-3\">\n");
-		sb.append("      <div class=\"card class-metric-card border-0 shadow-sm\" style=\"border-radius: 10px; border-left: 5px solid #8b5cf6 !important;\">\n");
-		sb.append("        <div class=\"card-body\">\n");
+		sb.append("      <div class=\"card class-metric-card border-0\" style=\"background: #ffffff; border: 1px solid #e2e8f0 !important; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);\">\n");
+		sb.append("        <div class=\"card-body p-3\">\n");
 		sb.append("          <div class=\"d-flex justify-content-between align-items-center\">\n");
 		sb.append("            <div style=\"width: 100%;\">\n");
-		sb.append("              <p class=\"m-b-0 font-weight-semibold text-uppercase font-size-12\" style=\"color: #8b5cf6;\">Class Pass Rate</p>\n");
-		sb.append("              <h2 class=\"m-b-0 font-weight-bold mt-1\" style=\"color: #8b5cf6;\">").append(String.format("%.1f%%", passRate)).append("</h2>\n");
-		sb.append("              <div class=\"progress m-t-10\" style=\"height: 6px; border-radius: 3px; background-color: #ede9fe; width: 85%;\">\n");
-		sb.append("                <div class=\"progress-bar\" role=\"progressbar\" style=\"width: ").append(Math.min(100.0, passRate)).append("%; background: linear-gradient(90deg, #8b5cf6, #10b981); border-radius: 3px;\" aria-valuenow=\"").append((int) passRate).append("\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div>\n");
+		sb.append("              <p class=\"m-b-0 font-weight-semibold text-uppercase font-size-11\" style=\"letter-spacing: 0.5px; color: #4f46e5;\">Class Pass Rate</p>\n");
+		sb.append("              <h2 class=\"m-b-0 font-weight-bold mt-1\" style=\"color: #4f46e5; font-size: 26px;\">").append(String.format("%.1f%%", passRate)).append("</h2>\n");
+		sb.append("              <div class=\"progress m-t-8\" style=\"height: 5px; border-radius: 3px; background-color: #f1f5f9; width: 85%;\">\n");
+		sb.append("                <div class=\"progress-bar\" role=\"progressbar\" style=\"width: ").append(Math.min(100.0, passRate)).append("%; background: ").append(rateBarColor).append("; border-radius: 3px;\" aria-valuenow=\"").append((int) passRate).append("\" aria-valuemin=\"0\" aria-valuemax=\"100\"></div>\n");
 		sb.append("              </div>\n");
 		sb.append("            </div>\n");
-		sb.append("            <div class=\"metric-icon-circle\" style=\"width: 48px; height: 48px; border-radius: 50%; background: rgba(139, 92, 246, 0.12); display: flex; align-items: center; justify-content: center;\">\n");
-		sb.append("              <i class=\"fa fa-percent\" style=\"font-size: 20px; color: #8b5cf6;\"></i>\n");
+		sb.append("            <div style=\"width: 42px; height: 42px; border-radius: 10px; background: #eef2ff; border: 1px solid #c7d2fe; display: flex; align-items: center; justify-content: center;\">\n");
+		sb.append("              <i class=\"fa fa-percent\" style=\"font-size: 16px; color: #4f46e5;\"></i>\n");
 		sb.append("            </div>\n");
 		sb.append("          </div>\n");
 		sb.append("        </div>\n");
@@ -638,19 +694,19 @@ public class HtmlReportEnricher {
 
 		sb.append("  </div>\n");
 
-		// ── Breakdown Table Card ──
+		// ── Breakdown Table Card: Clean & Aesthetic ──
 		sb.append("  <div class=\"row\">\n");
 		sb.append("    <div class=\"col-md-12\">\n");
-		sb.append("      <div class=\"card border-0 shadow-sm\" style=\"border-radius: 10px; overflow: hidden;\">\n");
-		sb.append("        <div class=\"card-header d-flex justify-content-between align-items-center\" style=\"background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 12px 20px;\">\n");
-		sb.append("          <h6 class=\"card-title m-b-0 font-weight-bold text-dark\" style=\"font-size: 14px;\">\n");
-		sb.append("            <i class=\"fa fa-list-alt text-primary m-r-8\"></i>Test Classes Execution Breakdown\n");
+		sb.append("      <div class=\"card border-0\" style=\"background: #ffffff; border: 1px solid #e2e8f0 !important; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03);\">\n");
+		sb.append("        <div class=\"card-header d-flex justify-content-between align-items-center\" style=\"background: #ffffff; border-bottom: 1px solid #f1f5f9; padding: 14px 20px;\">\n");
+		sb.append("          <h6 class=\"card-title m-b-0 font-weight-bold\" style=\"color: #0f172a; font-size: 14px;\">\n");
+		sb.append("            <i class=\"fa fa-list-alt m-r-8\" style=\"color: #64748b;\"></i>Test Classes Execution Breakdown\n");
 		sb.append("          </h6>\n");
-		sb.append("          <span class=\"badge font-weight-semibold\" style=\"background: #e2e8f0; color: #334155; padding: 5px 10px; border-radius: 6px;\">").append(total).append(" Classes</span>\n");
+		sb.append("          <span class=\"badge\" style=\"background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; font-weight: 600;\">").append(total).append(" Classes</span>\n");
 		sb.append("        </div>\n");
 		sb.append("        <div class=\"card-body p-0 table-responsive\">\n");
-		sb.append("          <table class=\"table table-hover table-striped m-b-0 align-middle\" style=\"font-size: 13px;\">\n");
-		sb.append("            <thead style=\"background: #f1f5f9; color: #475569;\">\n");
+		sb.append("          <table class=\"table table-hover m-b-0 align-middle\" style=\"font-size: 13px;\">\n");
+		sb.append("            <thead style=\"background: #f8fafc; color: #475569; border-bottom: 1px solid #e2e8f0;\">\n");
 		sb.append("              <tr>\n");
 		sb.append("                <th style=\"width: 50px; text-align: center;\">#</th>\n");
 		sb.append("                <th>Test Class Name</th>\n");
@@ -673,22 +729,22 @@ public class HtmlReportEnricher {
 
 			String statusBadge;
 			if (isPass) {
-				statusBadge = "<span class=\"badge badge-success p-2 px-3 font-weight-bold\" style=\"background-color: #10b981; letter-spacing: 0.5px; border-radius: 6px;\">PASSED</span>";
+				statusBadge = "<span class=\"badge\" style=\"background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 4px 12px; font-weight: 600; font-size: 11px; letter-spacing: 0.5px; border-radius: 6px;\">PASSED</span>";
 			} else if (isFail) {
-				statusBadge = "<span class=\"badge badge-danger p-2 px-3 font-weight-bold\" style=\"background-color: #ef4444; letter-spacing: 0.5px; border-radius: 6px;\">FAILED</span>";
+				statusBadge = "<span class=\"badge\" style=\"background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; padding: 4px 12px; font-weight: 600; font-size: 11px; letter-spacing: 0.5px; border-radius: 6px;\">FAILED</span>";
 			} else {
-				statusBadge = "<span class=\"badge badge-warning p-2 px-3 font-weight-bold\" style=\"background-color: #f59e0b; letter-spacing: 0.5px; border-radius: 6px;\">SKIPPED</span>";
+				statusBadge = "<span class=\"badge\" style=\"background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 4px 12px; font-weight: 600; font-size: 11px; letter-spacing: 0.5px; border-radius: 6px;\">SKIPPED</span>";
 			}
 
 			sb.append("              <tr>\n");
-			sb.append("                <td style=\"text-align: center; font-weight: 600; color: #64748b;\">").append(idx++).append("</td>\n");
-			sb.append("                <td><strong class=\"text-dark\">").append(cs.getSimpleClassName()).append("</strong></td>\n");
-			sb.append("                <td><span class=\"badge badge-pill\" style=\"background: #e2e8f0; color: #334155; font-size: 11px;\">").append(cs.getPackageName()).append("</span></td>\n");
-			sb.append("                <td style=\"text-align: center; font-weight: 600;\">").append(cs.getTotalMethods()).append("</td>\n");
-			sb.append("                <td style=\"text-align: center;\"><span class=\"badge badge-pill badge-success\" style=\"background-color: #10b981;\">").append(cs.getPassedMethods()).append("</span></td>\n");
-			sb.append("                <td style=\"text-align: center;\"><span class=\"badge badge-pill\" style=\"background-color: ").append(cs.getFailedMethods() > 0 ? "#ef4444" : "#e2e8f0").append("; color: ").append(cs.getFailedMethods() > 0 ? "#fff" : "#64748b").append(";\">").append(cs.getFailedMethods()).append("</span></td>\n");
-			sb.append("                <td style=\"text-align: center;\"><span class=\"badge badge-pill\" style=\"background-color: ").append(cs.getSkippedMethods() > 0 ? "#f59e0b" : "#e2e8f0").append("; color: ").append(cs.getSkippedMethods() > 0 ? "#fff" : "#64748b").append(";\">").append(cs.getSkippedMethods()).append("</span></td>\n");
-			sb.append("                <td style=\"text-align: center; color: #475569; font-weight: 500;\"><i class=\"fa fa-clock-o m-r-5 text-muted\"></i>").append(cs.getDurationFormatted()).append("</td>\n");
+			sb.append("                <td style=\"text-align: center; font-weight: 600; color: #94a3b8;\">").append(idx++).append("</td>\n");
+			sb.append("                <td><strong style=\"color: #0f172a;\">").append(cs.getSimpleClassName()).append("</strong></td>\n");
+			sb.append("                <td><span style=\"background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; font-size: 11px; padding: 2px 8px; border-radius: 4px;\">").append(cs.getPackageName()).append("</span></td>\n");
+			sb.append("                <td style=\"text-align: center; font-weight: 600; color: #334155;\">").append(cs.getTotalMethods()).append("</td>\n");
+			sb.append("                <td style=\"text-align: center;\"><span style=\"background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;\">").append(cs.getPassedMethods()).append("</span></td>\n");
+			sb.append("                <td style=\"text-align: center;\">").append(cs.getFailedMethods() > 0 ? "<span style=\"background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;\">" + cs.getFailedMethods() + "</span>" : "<span style=\"color: #94a3b8;\">0</span>").append("</td>\n");
+			sb.append("                <td style=\"text-align: center;\">").append(cs.getSkippedMethods() > 0 ? "<span style=\"background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;\">" + cs.getSkippedMethods() + "</span>" : "<span style=\"color: #94a3b8;\">0</span>").append("</td>\n");
+			sb.append("                <td style=\"text-align: center; color: #64748b; font-weight: 500; font-size: 12px;\"><i class=\"fa fa-clock-o m-r-5 text-muted\"></i>").append(cs.getDurationFormatted()).append("</td>\n");
 			sb.append("                <td style=\"text-align: center;\">").append(statusBadge).append("</td>\n");
 			sb.append("              </tr>\n");
 		}
@@ -707,23 +763,25 @@ public class HtmlReportEnricher {
 	}
 
 	private static String getEnhancedCss() {
-		return "/* Antigravity Modern Extent Report Theme Enhancements */\n"
+		return "/* Minimal & Aesthetic Modern Theme Enhancements */\n"
 				+ "body, .app, .card, table {\n"
 				+ "  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif !important;\n"
 				+ "}\n"
 				+ ".card {\n"
-				+ "  border-radius: 10px !important;\n"
-				+ "  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;\n"
+				+ "  border-radius: 12px !important;\n"
+				+ "  border: 1px solid #e2e8f0 !important;\n"
+				+ "  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;\n"
 				+ "  transition: transform 0.2s ease, box-shadow 0.2s ease;\n"
 				+ "}\n"
 				+ ".card:hover {\n"
-				+ "  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;\n"
+				+ "  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;\n"
 				+ "}\n"
 				+ ".class-metric-card {\n"
-				+ "  transition: transform 0.2s ease;\n"
+				+ "  transition: transform 0.2s ease, box-shadow 0.2s ease;\n"
 				+ "}\n"
 				+ ".class-metric-card:hover {\n"
-				+ "  transform: translateY(-3px);\n"
+				+ "  transform: translateY(-2px);\n"
+				+ "  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;\n"
 				+ "}\n"
 				+ ".table thead th {\n"
 				+ "  font-weight: 600 !important;\n"
@@ -735,7 +793,9 @@ public class HtmlReportEnricher {
 				+ "  font-weight: 600;\n"
 				+ "}\n"
 				+ ".vheader .nav-right .badge-primary {\n"
-				+ "  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;\n"
+				+ "  background: #f1f5f9 !important;\n"
+				+ "  color: #334155 !important;\n"
+				+ "  border: 1px solid #e2e8f0;\n"
 				+ "  border-radius: 6px;\n"
 				+ "  padding: 6px 12px;\n"
 				+ "}\n";
@@ -913,5 +973,72 @@ public class HtmlReportEnricher {
 			return m.group(1);
 		}
 		return null;
+	}
+
+	private static class ExtentTestRecord {
+		String id = "1";
+		String status = "pass";
+		String name = "Unknown Test";
+		String timestamp = "";
+		Set<String> tags = new HashSet<>();
+	}
+
+	private static List<ExtentTestRecord> extractTestRecordsFromTestView(String content) {
+		List<ExtentTestRecord> list = new ArrayList<>();
+		int start = content.indexOf("view test-view");
+		if (start == -1) {
+			return list;
+		}
+		int end = content.indexOf("view category-view", start);
+		if (end == -1) {
+			end = content.indexOf("view author-view", start);
+		}
+		if (end == -1) {
+			end = content.indexOf("view dashboard-view", start);
+		}
+		if (end == -1) {
+			end = content.length();
+		}
+
+		String testView = content.substring(start, end);
+		Matcher itemMatcher = Pattern.compile("<li class=\"test-item\"([^>]*)>(.*?)(?=<li class=\"test-item\"|</ul>)", Pattern.DOTALL).matcher(testView);
+		while (itemMatcher.find()) {
+			String attrs = itemMatcher.group(1);
+			String body = itemMatcher.group(2);
+
+			ExtentTestRecord rec = new ExtentTestRecord();
+
+			Matcher sm = Pattern.compile("status=\"([^\"]*)\"").matcher(attrs);
+			if (sm.find()) {
+				rec.status = sm.group(1).trim().toLowerCase();
+			}
+
+			Matcher idm = Pattern.compile("test-id=\"([^\"]*)\"").matcher(attrs);
+			if (idm.find()) {
+				rec.id = idm.group(1).trim();
+			}
+
+			Matcher tm = Pattern.compile("tag=\"([^\"]*)\"").matcher(attrs);
+			if (tm.find()) {
+				for (String t : tm.group(1).trim().split("\\s+")) {
+					if (!t.isEmpty()) {
+						rec.tags.add(t.toLowerCase());
+					}
+				}
+			}
+
+			Matcher nm = Pattern.compile("<p class=\"name\">([^<]*)</p>").matcher(body);
+			if (nm.find()) {
+				rec.name = nm.group(1).trim();
+			}
+
+			Matcher tim = Pattern.compile("<span>([^<]*[ap]m)</span>", Pattern.CASE_INSENSITIVE).matcher(body);
+			if (tim.find()) {
+				rec.timestamp = tim.group(1).trim();
+			}
+
+			list.add(rec);
+		}
+		return list;
 	}
 }

@@ -79,6 +79,17 @@ public class TestClassTracker {
 			return packageName;
 		}
 
+		public Map<String, String> getMethodResults() {
+			return Collections.unmodifiableMap(methodResults);
+		}
+
+		public String getTestedMethodsDisplay() {
+			if (methodResults.isEmpty()) {
+				return "testLifecycle";
+			}
+			return String.join(", ", methodResults.keySet());
+		}
+
 		public int getTotalMethods() {
 			return methodResults.size();
 		}
