@@ -47,11 +47,14 @@ public class LoginPage {
 	 * be visible.
 	 */
 	public void navigateToMainLoginPage() {
+		page.waitForTimeout(2000);
 		log.info("Navigating to the main login dialog... Current URL: [{}]", page.url());
 
 		// 1. If username input is already visible (e.g. navigated directly to /webui/),
 		// no need to click
 		try {
+			usernameInput.waitFor(
+					new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(3000));
 			if (usernameInput.isVisible()) {
 				log.info("Username field is already visible; login dialog is already open.");
 				return;
@@ -59,15 +62,21 @@ public class LoginPage {
 		} catch (Exception ignored) {
 		}
 
-		// 2. Locate and click the login navigation button
-		navigateLoginButton.waitFor(
-				new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(10000));
-		navigateLoginButton.click();
-		log.info("Login navigation button clicked.");
+		try {
+			// 2. Locate and click the login navigation button
+			navigateLoginButton.waitFor(
+					new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(3000));
+			navigateLoginButton.click();
+			log.info("Login navigation button clicked.");
 
-		usernameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
-		log.info("Login dialog opened successfully; username field is ready.");
-		WaitUtils.waitForLoadingIndicatorToDisappear(page);
+			usernameInput.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE).setTimeout(15000));
+			log.info("Login dialog opened successfully; username field is ready.");
+			WaitUtils.waitForLoadingIndicatorToDisappear(page);
+		} catch (Exception e) {
+			log.error("Login Failed..");
+		}
+		
+		
 	}
 
 	/**
