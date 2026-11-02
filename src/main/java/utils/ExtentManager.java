@@ -22,6 +22,29 @@ public class ExtentManager {
 	private static ExtentSparkReporter sparkReporter;
 	private static final ThreadLocal<ExtentTest> testTL = new ThreadLocal<>();
 
+	static {
+		try {
+			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+				try {
+					if (extent != null) {
+						ExtentTest activeTest = testTL.get();
+						if (activeTest != null) {
+							activeTest.warning("⚠️ Script execution was aborted or interrupted before completion.");
+							log.warn("Shutdown Hook: Active test [{}] marked as aborted.", activeTest.getModel().getName());
+						}
+						updateClassSummary();
+						extent.flush();
+						String reportPath = System.getProperty("user.dir") + "/test-output/ExtentReport.html";
+						HtmlReportEnricher.enrich(reportPath);
+						log.info("Shutdown Hook: ExtentReports successfully flushed on script abort.");
+					}
+				} catch (Throwable ignored) {
+				}
+			}, "ExtentReport-AbortHook"));
+		} catch (Throwable ignored) {
+		}
+	}
+
 	private ExtentManager() {
 		// Utility class
 	}
@@ -38,7 +61,7 @@ public class ExtentManager {
 				String reportPath = reportFolder + "/ExtentReport.html";
 				sparkReporter = new ExtentSparkReporter(reportPath);
 
-				String fwVersion = "v" + ConfigReader.getOrDefault("framework.version", "1.0.0");
+				String fwVersion = "v" + ConfigReader.getOrDefault("framework.version", "1.0.1");
 				sparkReporter.config().setDocumentTitle("Automation Test Report (" + fwVersion + ")");
 				sparkReporter.config().setReportName("Playwright Automation Report (" + fwVersion + ")");
 				sparkReporter.config().setTheme(Theme.STANDARD);
@@ -76,6 +99,7 @@ public class ExtentManager {
 					String plantDisplay = "M".equalsIgnoreCase(plantCode) ? "Medical Device (M)"
 							: ("A".equalsIgnoreCase(plantCode) ? "API/Chemical Plant (A)" : "Formulation (F)");
 					extent.setSystemInfo("Plant Type", plantDisplay);
+					extent.setSystemInfo("Plant Value (Code)", plantCode);
 				} catch (Exception ignored) {
 				}
 

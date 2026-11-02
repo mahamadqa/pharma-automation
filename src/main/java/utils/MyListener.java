@@ -48,6 +48,7 @@ public class MyListener implements ITestListener, ISuiteListener {
 			}
 		}
 		log.info("Test Started: " + className + "." + result.getName() + (invocation > 0 ? " (Retry Attempt " + (invocation + 1) + ")" : ""));
+		ExtentManager.flush();
 	}
 
 	@Override
@@ -61,6 +62,7 @@ public class MyListener implements ITestListener, ISuiteListener {
 		}
 		log.info("✅ Test Passed: " + className + "." + result.getName());
 		ExtentManager.removeTest();
+		ExtentManager.flush();
 	}
 
 	@Override
@@ -83,6 +85,7 @@ public class MyListener implements ITestListener, ISuiteListener {
 			BaseTest.captureFailureScreenshot(className + "_" + result.getName());
 		}
 		ExtentManager.removeTest();
+		ExtentManager.flush();
 	}
 
 	@Override
@@ -102,6 +105,7 @@ public class MyListener implements ITestListener, ISuiteListener {
 			} else {
 				ExtentManager.removeTest();
 			}
+			ExtentManager.flush();
 			return;
 		}
 
@@ -113,6 +117,7 @@ public class MyListener implements ITestListener, ISuiteListener {
 			}
 		}
 		ExtentManager.removeTest();
+		ExtentManager.flush();
 	}
 
 	@Override
