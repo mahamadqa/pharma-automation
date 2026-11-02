@@ -17,6 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Plant Type Parameterization & Config Overwriting:**
+  - Added `PLANT_TYPE` choice parameter in `Jenkinsfile` with options:
+    - `Formulation (F)`
+    - `Medical Device (M)`
+    - `API/Chemical Plant (A)`
+  - Automatic resolution to short codes (`F`, `M`, `A`) and persistence/overwriting directly into `config.properties`.
+  - Added `-DplantType` runtime JVM system property flag pass-through to Maven Surefire.
+  - Added `ConfigReader.getPlantType()` and bidirectional synchronization between System properties and `config.properties`.
+  - Added `Plant Type` parameter display in ExtentReports System/Environment dashboard and Jenkins execution emails.
+
 ### Planned
 - Parallel suite execution optimization across multiple browser instances.
 - Docker containerization for standardized test agent runners.

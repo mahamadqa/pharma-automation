@@ -38,8 +38,9 @@ public class ExtentManager {
 				String reportPath = reportFolder + "/ExtentReport.html";
 				sparkReporter = new ExtentSparkReporter(reportPath);
 
-				sparkReporter.config().setDocumentTitle("Automation Test Report");
-				sparkReporter.config().setReportName("Playwright Automation Report");
+				String fwVersion = "v" + ConfigReader.getOrDefault("framework.version", "1.0.0");
+				sparkReporter.config().setDocumentTitle("Automation Test Report (" + fwVersion + ")");
+				sparkReporter.config().setReportName("Playwright Automation Report (" + fwVersion + ")");
 				sparkReporter.config().setTheme(Theme.STANDARD);
 				sparkReporter.config().setTimeStampFormat("MMM dd, yyyy HH:mm:ss");
 				sparkReporter.config().setCss(getCustomCss());
@@ -48,9 +49,9 @@ public class ExtentManager {
 				extent.attachReporter(sparkReporter);
 				extent.keepLastRetryOnly(true);
 
+				extent.setSystemInfo("Framework Version", fwVersion);
 				extent.setSystemInfo("OS", System.getProperty("os.name"));
 				extent.setSystemInfo("Java Version", System.getProperty("java.version"));
-				extent.setSystemInfo("Framework Version", "v" + ConfigReader.getOrDefault("framework.version", "1.0.0"));
 				extent.setSystemInfo("User", capitalizeWord(getReportUser()));
 				extent.setSystemInfo("Jenkins Build No", getJenkinsBuildNo());
 
@@ -67,6 +68,14 @@ public class ExtentManager {
 					if (region != null && !region.isEmpty()) {
 						extent.setSystemInfo("Region / Profile", capitalizeWord(region));
 					}
+				} catch (Exception ignored) {
+				}
+
+				try {
+					String plantCode = ConfigReader.getPlantType();
+					String plantDisplay = "M".equalsIgnoreCase(plantCode) ? "Medical Device (M)"
+							: ("A".equalsIgnoreCase(plantCode) ? "API/Chemical Plant (A)" : "Formulation (F)");
+					extent.setSystemInfo("Plant Type", plantDisplay);
 				} catch (Exception ignored) {
 				}
 

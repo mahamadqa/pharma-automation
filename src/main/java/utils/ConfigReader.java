@@ -24,6 +24,23 @@ public class ConfigReader {
 
 			prop.load(configFile);
 			prop.load(loginCred);
+
+			// Synchronize plantType from system property if passed via CLI or Jenkins (-DplantType=F, -Dplant_type=M, -DPLANT_TYPE=A)
+			String sysPlant = System.getProperty("plantType");
+			if (sysPlant == null || sysPlant.trim().isEmpty()) {
+				sysPlant = System.getProperty("plant_type");
+			}
+			if (sysPlant == null || sysPlant.trim().isEmpty()) {
+				sysPlant = System.getProperty("PLANT_TYPE");
+			}
+			if (sysPlant != null && !sysPlant.trim().isEmpty()) {
+				String code = normalizePlantCode(sysPlant);
+				prop.setProperty("plantType", code);
+				System.setProperty("plantType", code);
+				String baseDir = System.getProperty("user.dir");
+				updatePropertyInFile(baseDir + "/src/test/resources/config.properties", "plantType", code);
+				updatePropertyInFile(baseDir + "/target/test-classes/config.properties", "plantType", code);
+			}
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -59,6 +76,24 @@ public class ConfigReader {
 		}
 	}
 
+	public static String normalizePlantCode(String raw) {
+		if (raw == null || raw.trim().isEmpty()) {
+			return "F";
+		}
+		String trimmed = raw.trim();
+		if (trimmed.equalsIgnoreCase("M") || trimmed.contains("(M)") || trimmed.equalsIgnoreCase("Medical Device")) {
+			return "M";
+		}
+		if (trimmed.equalsIgnoreCase("A") || trimmed.contains("(A)") || trimmed.contains("API") || trimmed.contains("Chemical")) {
+			return "A";
+		}
+		return "F";
+	}
+
+	public static String getPlantType() {
+		return normalizePlantCode(getOrDefault("plantType", "F"));
+	}
+
 	public static synchronized void setProperty(String key, String value) {
 		if (key == null || value == null) {
 			return;
@@ -81,11 +116,13 @@ public class ConfigReader {
 		// Priority 3: Persist to properties files on disk (preserving comments and layout)
 		String baseDir = System.getProperty("user.dir");
 		
+		updatePropertyInFile(baseDir + "/src/test/resources/config.properties", key, value);
 		updatePropertyInFile(baseDir + "/src/test/resources/testData_SOP/sop_master_localization.properties", key, value);
 		updatePropertyInFile(baseDir + "/src/test/resources/testData_SOP/sop_master_non-localization.properties", key, value);
 
 		// Update compiled target directory copies if present
 	
+		updatePropertyInFile(baseDir + "/target/test-classes/config.properties", key, value);
 		updatePropertyInFile(baseDir + "/target/test-classes/testData_SOP/sop_master_localization.properties", key, value);
 		updatePropertyInFile(baseDir + "/target/test-classes/testData_SOP/sop_master_non-localization.properties", key, value);
 	}

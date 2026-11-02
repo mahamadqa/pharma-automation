@@ -317,10 +317,12 @@ The framework utilizes a hierarchical configuration model where **CLI system pro
 
 ### 6.1. Global Configuration ([config.properties](file:///home/mahamadgaus/Documents/Pharma_Automation/com.pharma.automation/src/test/resources/config.properties))
 ```properties
+client=PharmaVerge ERP       # Default ERP tenant/client name
 browser=chrome               # Options: chrome, chromium, firefox
 url=https://192.168.2.65:8443/# Target ERP application endpoint
 headless=false               # Default local run mode: false (headed), true (headless)
-client=PharmaVerge ERP       # Default ERP tenant/client name
+framework.version=1.0.1      # Current framework release version
+plantType=F                  # Plant type code: F (Formulation), M (Medical Device), A (API/Chemical Plant)
 ```
 
 ### 6.2. Credentials Configuration ([loginCredentials.properties](file:///home/mahamadgaus/Documents/Pharma_Automation/com.pharma.automation/src/test/resources/loginCredentials.properties))
@@ -425,6 +427,7 @@ The framework includes a fully productionized Jenkins pipeline script ([`Jenkins
 
 | Parameter | Type | Options / Default | Description |
 | :--- | :--- | :--- | :--- |
+| `PLANT_TYPE` | Choice | `Formulation (F)` (Default), `Medical Device (M)`, `API/Chemical Plant (A)` | Selects target plant type and persists/overwrites `plantType` in `config.properties`. |
 | `REGION` | Choice | `Localization`, `Non-Localization` | Determines the test data property set. |
 | `MODULE` | Choice | `Basic`, `Advance`, `Both` | Maps to TestNG `-Dgroups`. |
 | `BROWSER` | Choice | `Chrome`, `Firefox` | Target browser engine. |

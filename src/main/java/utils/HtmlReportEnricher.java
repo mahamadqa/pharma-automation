@@ -113,6 +113,12 @@ public class HtmlReportEnricher {
 			// 6. Inject Enhanced CSS
 			updatedContent = injectEnhancedCss(updatedContent, enhancedCss);
 
+			// 7. Update navbar report title badge with framework version
+			String fwVer = "v" + ConfigReader.getOrDefault("framework.version", "1.0.0");
+			updatedContent = updatedContent.replaceAll(
+					"<span class=\"badge badge-primary\">Playwright Automation Report(?: \\(v[0-9.]+\\))?</span>",
+					"<span class=\"badge badge-primary\">Playwright Automation Report (" + fwVer + ")</span>");
+
 			Files.writeString(path, updatedContent, StandardCharsets.UTF_8);
 			log.info("ExtentReport successfully enriched: {} total classes, {} passed, {} failed, {} skipped",
 					totalClasses, passedClasses, failedClasses, skippedClasses);
@@ -143,8 +149,8 @@ public class HtmlReportEnricher {
 	}
 
 	/**
-	 * Strictly formats the System/Environment section to keep only the requested 10 fields:
-	 * Total Test Classes, Test Classes Passed, Test Classes Failed, Test Classes Skipped,
+	 * Strictly formats the System/Environment section to keep only the requested fields:
+	 * Framework Version, Total Test Classes, Test Classes Passed, Test Classes Failed, Test Classes Skipped,
 	 * Class Pass Rate, OS, Java Version, User, Browser, Region / Profile.
 	 */
 	private static String injectSystemInfo(String content, int total, int passed, int failed, int skipped, double passRate) {
@@ -162,6 +168,8 @@ public class HtmlReportEnricher {
 
 		String existingTbody = content.substring(tbodyStart, tbodyEnd + "</tbody>".length());
 
+		String defaultFwVersion = "v" + ConfigReader.getOrDefault("framework.version", "1.0.0");
+		String frameworkVersion = extractEnvValue(existingTbody, "Framework Version", defaultFwVersion);
 		String os = extractEnvValue(existingTbody, "OS", System.getProperty("os.name"));
 		String javaVersion = extractEnvValue(existingTbody, "Java Version", System.getProperty("java.version"));
 		String user = extractEnvValue(existingTbody, "User", ExtentManager.getReportUser());
@@ -177,15 +185,23 @@ public class HtmlReportEnricher {
 		browser = capitalizeWord(browser);
 		String region = extractEnvValue(existingTbody, "Region / Profile", "Localization");
 		region = capitalizeWord(region);
+		String plantType = extractEnvValue(existingTbody, "Plant Type", "");
+		if (plantType.isEmpty()) {
+			String code = ConfigReader.getPlantType();
+			plantType = "M".equalsIgnoreCase(code) ? "Medical Device (M)"
+					: ("A".equalsIgnoreCase(code) ? "API/Chemical Plant (A)" : "Formulation (F)");
+		}
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("<tbody>\n");
+		sb.append("<tr><td>Framework Version</td><td>").append(frameworkVersion).append("</td></tr>\n");
 		sb.append("<tr><td>OS</td><td>").append(os).append("</td></tr>\n");
 		sb.append("<tr><td>Java Version</td><td>").append(javaVersion).append("</td></tr>\n");
 		sb.append("<tr><td>User</td><td>").append(user).append("</td></tr>\n");
 		sb.append("<tr><td>Jenkins Build No</td><td>").append(jenkinsBuild).append("</td></tr>\n");
 		sb.append("<tr><td>Browser</td><td>").append(browser).append("</td></tr>\n");
 		sb.append("<tr><td>Region / Profile</td><td>").append(region).append("</td></tr>\n");
+		sb.append("<tr><td>Plant Type</td><td>").append(plantType).append("</td></tr>\n");
 		sb.append("<tr><td>Total Test Classes</td><td>").append(total).append("</td></tr>\n");
 		sb.append("<tr><td>Test Classes Passed</td><td>").append(passed).append("</td></tr>\n");
 		sb.append("<tr><td>Test Classes Failed</td><td>").append(failed).append("</td></tr>\n");
@@ -543,9 +559,11 @@ public class HtmlReportEnricher {
 		}
 		int insertionPoint = idx + target.length();
 
+		String fwVersion = "v" + ConfigReader.getOrDefault("framework.version", "1.0.0");
 		String pillHtml = "\n<!-- TEST_CLASS_HEADER_PILL_START -->\n"
 				+ "<li class=\"m-r-10 d-none d-md-inline-block\">\n"
 				+ "  <span class=\"badge text-white\" style=\"background: linear-gradient(135deg, #1e293b, #334155); padding: 7px 14px; border-radius: 20px; font-size: 12px; border: 1px solid rgba(255,255,255,0.15);\">\n"
+				+ "    <span style=\"color: #38bdf8; font-weight: 700;\"><i class=\"fa fa-tag m-r-5\"></i>" + fwVersion + "</span> &nbsp;|&nbsp; "
 				+ "    <i class=\"fa fa-cubes m-r-5 text-primary\"></i>Classes: <strong>" + total + "</strong> Total &nbsp;|&nbsp; "
 				+ "    <span style=\"color: #4ade80;\"><i class=\"fa fa-check-circle m-r-5\"></i>" + passed + " Passed</span> &nbsp;|&nbsp; "
 				+ "    <span style=\"color: " + (failed > 0 ? "#f87171" : "#94a3b8") + ";\"><i class=\"fa fa-times-circle m-r-5\"></i>" + failed + " Failed</span>"
@@ -592,7 +610,9 @@ public class HtmlReportEnricher {
 		sb.append("              <small style=\"color: #64748b; font-size: 12px;\">Automated Suite Execution Metrics &amp; Class Health Status</small>\n");
 		sb.append("            </div>\n");
 		sb.append("          </div>\n");
+		String fwVersion = "v" + ConfigReader.getOrDefault("framework.version", "1.0.0");
 		sb.append("          <div class=\"d-flex align-items-center flex-wrap gap-2 mt-2 mt-md-0\">\n");
+		sb.append("            <span class=\"badge badge-pill font-size-12 m-r-8\" style=\"background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 6px 12px; font-weight: 600;\"><i class=\"fa fa-tag m-r-5\"></i>").append(fwVersion).append("</span>\n");
 		sb.append("            <span class=\"badge badge-pill font-size-12 m-r-8\" style=\"background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; padding: 6px 12px; font-weight: 600;\">Total Classes: ").append(total).append("</span>\n");
 		sb.append("            <span class=\"badge badge-pill font-size-12 m-r-8\" style=\"background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 6px 12px; font-weight: 600;\">Passed: ").append(passed).append("</span>\n");
 		if (failed > 0) {

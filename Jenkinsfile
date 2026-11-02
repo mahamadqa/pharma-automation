@@ -25,6 +25,12 @@ pipeline {
         )
 
         choice(
+            name: 'PLANT_TYPE',
+            choices: ['Formulation (F)', 'Medical Device (M)', 'API/Chemical Plant (A)'],
+            description: 'Select Plant Type: Formulation (F), Medical Device (M), or API/Chemical Plant (A)'
+        )
+
+        choice(
             name: 'BROWSER',
             choices: ['Chrome', 'Firefox'],
             description: 'Select Browser to run tests'
@@ -65,6 +71,7 @@ pipeline {
                     echo "=================================================="
                     echo " Framework Version          : 1.0.0"
                     echo " Executed / Triggered By    : ${buildUser}"
+                    echo " Plant Type                 : ${params.PLANT_TYPE}"
                     echo " Test Data Profile (Region) : ${params.REGION}"
                     echo " Module                     : ${params.MODULE}"
                     echo " Target Browser             : ${params.BROWSER}"
@@ -122,6 +129,17 @@ pipeline {
                     }
                     def groupFlag = "-Dgroups=${groupsValue}"
 
+                    // Resolve plant type code: Formulation -> F, Medical Device -> M, API/Chemical Plant -> A
+                    def plantCode = 'F'
+                    if (params.PLANT_TYPE?.contains('(M)') || params.PLANT_TYPE == 'Medical Device' || params.PLANT_TYPE == 'M') {
+                        plantCode = 'M'
+                    } else if (params.PLANT_TYPE?.contains('(A)') || params.PLANT_TYPE?.contains('API') || params.PLANT_TYPE == 'A') {
+                        plantCode = 'A'
+                    } else {
+                        plantCode = 'F'
+                    }
+                    def plantFlag = "-DplantType=${plantCode}"
+
                     // Execute Maven test
                     // Wrap with xvfb-run if headed mode is selected on headless Linux
                     sh """
@@ -131,6 +149,17 @@ pipeline {
                         elif [ -d "/usr/lib/jvm/java-1.17.0-openjdk-amd64" ]; then
                             export JAVA_HOME="/usr/lib/jvm/java-1.17.0-openjdk-amd64"
                             export PATH="\$JAVA_HOME/bin:\$PATH"
+                        fi
+
+                        # Overwrite plantType in config.properties
+                        CONFIG_FILE="src/test/resources/config.properties"
+                        if [ -f "\$CONFIG_FILE" ]; then
+                            if grep -q "^[[:space:]]*plantType=" "\$CONFIG_FILE"; then
+                                sed -i "s/^[[:space:]]*plantType=.*/plantType=${plantCode}/" "\$CONFIG_FILE"
+                            else
+                                echo "plantType=${plantCode}" >> "\$CONFIG_FILE"
+                            fi
+                            echo "Configured plantType in \$CONFIG_FILE -> ${plantCode}"
                         fi
 
                         if [ "${params.HEADLESS}" = "false" ] && [ -z "\$DISPLAY" ] && which xvfb-run >/dev/null 2>&1; then
@@ -145,6 +174,7 @@ pipeline {
                                 ${groupFlag} \
                                 -Dbrowser=${params.BROWSER.toLowerCase()} \
                                 -Dheadless=${params.HEADLESS} \
+                                ${plantFlag} \
                                 ${userFlag}
 
                         else
@@ -154,6 +184,7 @@ pipeline {
                                 ${groupFlag} \
                                 -Dbrowser=${params.BROWSER.toLowerCase()} \
                                 -Dheadless=${params.HEADLESS} \
+                                ${plantFlag} \
                                 ${userFlag}
 
                         fi
@@ -368,6 +399,12 @@ pipeline {
                                         <tr>
                                             <th>Executed By</th>
                                             <td><b>${buildUser}</b></td>
+                                        </tr>
+
+
+                                        <tr>
+                                            <th>Plant Type</th>
+                                            <td>${params.PLANT_TYPE}</td>
                                         </tr>
 
 
