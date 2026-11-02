@@ -61,8 +61,9 @@ pipeline {
                 script {
                     def buildUser = getBuildUser()
                     echo "=================================================="
-                    echo " Pharma Automation Test Execution Pipeline"
+                    echo " Pharma Automation Test Execution Pipeline (v1.0.0)"
                     echo "=================================================="
+                    echo " Framework Version          : 1.0.0"
                     echo " Executed / Triggered By    : ${buildUser}"
                     echo " Test Data Profile (Region) : ${params.REGION}"
                     echo " Module                     : ${params.MODULE}"

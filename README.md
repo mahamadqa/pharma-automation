@@ -1,5 +1,6 @@
 # 🏥 Pharma Automation — Technical Framework Documentation
 
+[![Framework Version](https://img.shields.io/badge/Framework%20Version-v1.0.0-informational?logo=git)](CHANGELOG.md)
 [![Java Version](https://img.shields.io/badge/Java-17%2B-orange?logo=openjdk)](https://openjdk.org/)
 [![Playwright Version](https://img.shields.io/badge/Playwright-1.52.0-green?logo=playwright)](https://playwright.dev/java/)
 [![TestNG Version](https://img.shields.io/badge/TestNG-7.10.2-red?logo=testng)](https://testng.org/)
@@ -32,6 +33,7 @@
 9. [Reporting & Diagnostic Artifacts](#-9-reporting--diagnostic-artifacts)
 10. [Developer Guide: Extending the Framework](#-10-developer-guide-extending-the-framework)
 11. [Troubleshooting & Debugging](#-11-troubleshooting--debugging)
+12. [Versioning & Changelog](#-12-versioning--changelog)
 
 ---
 
@@ -556,7 +558,30 @@ public class SampleTestFlow extends BaseTest {
 
 ---
 
+## 🏷️ 12. Versioning & Changelog
+
+This framework adheres strictly to [Semantic Versioning (SemVer 2.0.0)](https://semver.org/):
+```
+MAJOR.MINOR.PATCH (e.g., 1.0.0)
+```
+- **MAJOR (`X.0.0`):** Incompatible or breaking architectural overhauls (e.g., core Java upgrade, major test engine changes).
+- **MINOR (`0.Y.0`):** Backward-compatible additions (e.g., new business workflow Page Objects, new test suites, new utility helpers).
+- **PATCH (`0.0.Z`):** Backward-compatible bug fixes, locator refinements, wait stabilization, or minor config tweaks.
+
+Full historical records of all releases, features, and fixes are maintained in [CHANGELOG.md](file:///home/mahamadgaus/Documents/Pharma_Automation/com.pharma.automation/CHANGELOG.md).
+
+### Version Maintenance Workflow:
+When updating the framework:
+1. Update `<version>` in [pom.xml](file:///home/mahamadgaus/Documents/Pharma_Automation/com.pharma.automation/pom.xml).
+2. Update `framework.version` in [config.properties](file:///home/mahamadgaus/Documents/Pharma_Automation/com.pharma.automation/src/test/resources/config.properties).
+3. Record release notes in [CHANGELOG.md](file:///home/mahamadgaus/Documents/Pharma_Automation/com.pharma.automation/CHANGELOG.md).
+4. Update the framework version badge in [README.md](file:///home/mahamadgaus/Documents/Pharma_Automation/com.pharma.automation/README.md).
+5. Tag the git release: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`.
+
+---
+
 ## 👥 Contributors & Maintainers
 
 - **Automation SDET:** Mahamadgaus Mulla ([mmulla@logilite.com](mailto:mmulla@logilite.com))
 - **Repository:** `com.pharma.automation`
+

@@ -50,6 +50,7 @@ public class ExtentManager {
 
 				extent.setSystemInfo("OS", System.getProperty("os.name"));
 				extent.setSystemInfo("Java Version", System.getProperty("java.version"));
+				extent.setSystemInfo("Framework Version", "v" + ConfigReader.getOrDefault("framework.version", "1.0.0"));
 				extent.setSystemInfo("User", capitalizeWord(getReportUser()));
 				extent.setSystemInfo("Jenkins Build No", getJenkinsBuildNo());
 

@@ -1,5 +1,7 @@
 # 🏥 Pharma Automation — Test Automation Framework (Non-Technical Guide)
 
+[![Framework Version](https://img.shields.io/badge/Framework%20Version-v1.0.0-informational?logo=git)](CHANGELOG.md)
+
 > **A beginner-friendly guide to understanding how automated testing works in this project.**  
 > *No coding or technical experience needed to read this!*
 
