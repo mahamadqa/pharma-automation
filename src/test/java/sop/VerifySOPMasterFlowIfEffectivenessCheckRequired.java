@@ -12,21 +12,18 @@ import utils.ExcelReader;
 import utils.FileUtils;
 
 /**
- * Test Case PHX-3499: Verification of SOP Master.
- * Comprehensive end-to-end verification of SOP Master lifecycle covering:
- * - SOP Master creation, Content sections (Objective, Scope, Responsibility,
- * Procedure)
- * - Subtabs: Abbreviations, Annexure, SOP Formats, Distribution List
- * - Digital signatures (Prepared By, Checked By, Reviewed By, Approver)
- * - Multi-level Workflow approval (EngUser -> EngReviewer -> EngManager ->
- * QAReviewer -> QAManager)
- * - Rejection and correction cycle (Not Approved status & field clearing)
- * - Report Preview and Master Copy stamp verification
- * - DMS Training Completion Report upload in Document Explorer
- * - Effective date & status transition
- * - Revise SOP flow (Revision 1, Annexure format revision, SOP Formats
- * revision, Revision History)
- * - Previous version superseding and Supersede Copy stamp verification
+ * Test Case PHX-3499: Verification of SOP Master. Comprehensive end-to-end
+ * verification of SOP Master lifecycle covering: - SOP Master creation, Content
+ * sections (Objective, Scope, Responsibility, Procedure) - Subtabs:
+ * Abbreviations, Annexure, SOP Formats, Distribution List - Digital signatures
+ * (Prepared By, Checked By, Reviewed By, Approver) - Multi-level Workflow
+ * approval (EngUser -> EngReviewer -> EngManager -> QAReviewer -> QAManager) -
+ * Rejection and correction cycle (Not Approved status & field clearing) -
+ * Report Preview and Master Copy stamp verification - DMS Training Completion
+ * Report upload in Document Explorer - Effective date & status transition -
+ * Revise SOP flow (Revision 1, Annexure format revision, SOP Formats revision,
+ * Revision History) - Previous version superseding and Supersede Copy stamp
+ * verification
  */
 public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 
@@ -276,144 +273,165 @@ public class VerifySOPMasterFlowIfEffectivenessCheckRequired extends BaseTest {
 
 		// STAGE 1: Internal Reviewal (EngReviewer)
 
-		
-		  log.
-		  info("Stage 1 - Step 36-40: Logging in with EngReviewer [{}] and zooming to SOP record [{}]..."
-		  ,engReviewer, sopDocNo); loginPage.login(engReviewer, password);
-		  clientAndRole.selectClientAndRole(client, engReviewerRole);
-		  
-		  workflowActivities.navigateToWorkflowActivities();
-		  workflowActivities.clickOnAssignedSOPRecord("Internal Review", sopDocNo);
-		  workflowActivities.zoomToRecord(); sopMaster.clickPreview();
-		  printReport.verifyPrintReport(); sopMaster.ensureOnSOPMasterHeader(sopDocNo);
-		  
-		  log.
-		  info("Stage 1 - Step 41: EngReviewer rejects SOP (Answer: No) -> Status updates to 'Not Approved'..."
-		  ); sopMaster.performDocActionWithAnswer("No", null);
-		  sopMaster.verifySOPStatus("Not Approved"); dashboard.clickLogout();
-		  
-		  log.
-		  info("Stage 1 - Step 42-45: Initiator [{}] re-signs Prepared By and re-submits to EngReviewer [{}]..."
-		  , engUser, engReviewer); loginPage.login(engUser, password);
-		  clientAndRole.selectClientAndRole(client, engUserRole);
-		  
-		  try { workflowActivities.navigateToWorkflowActivities();
-		  workflowActivities.clickOnAssignedSOPRecord("Draft", sopDocNo);
-		  workflowActivities.zoomToRecord(); } catch (Exception e) {
-		  log.info("Navigating to SOP Master via menu search fallback: {}",
-		  e.getMessage()); sopMaster.ensureOnSOPMasterHeader(sopDocNo); }
-		  
-		  sopMaster.completeDigitalSignature("PreparedBy", engUserDept, password);
-		  sopMaster.completeDocActionAndAssignTo(engReviewer);
-		  sopMaster.verifySOPStatus("Internal Reviewal"); dashboard.clickLogout();
-		  
-		  log.
-		  info("Stage 1 - Step 46-49: EngReviewer [{}] signs Checked By, approves and assigns to EngManager [{}]..."
-		  , engReviewer, engManager); loginPage.login(engReviewer, password);
-		  clientAndRole.selectClientAndRole(client, engReviewerRole);
-		  
-		  workflowActivities.navigateToWorkflowActivities();
-		  workflowActivities.clickOnAssignedSOPRecord("Internal Review", sopDocNo);
-		  workflowActivities.zoomToRecord(); // sopMaster.clickPreview(); //
-		  printReport.verifyPrintReport(); sopMaster.ensureOnSOPMasterHeader(sopDocNo);
-		  sopMaster.completeDigitalSignature("CheckedBy", engReviewerDept, password);
-		  sopMaster.performDocActionWithAnswer("Yes", engManager);
-		  sopMaster.verifySOPStatus("Department Approval"); dashboard.clickLogout();
-		  
-		  // STAGE 2: Department Approval (EngManager)
-		  
-		  log.
-		  info("Stage 2 - Step 50-52: EngManager [{}] logs in, previews report and rejects workflow (Answer: No)..."
-		  , engManager); loginPage.login(engManager, password);
-		  clientAndRole.selectClientAndRole(client, engManagerRole);
-		  
-		  workflowActivities.navigateToWorkflowActivities();
-		  workflowActivities.clickOnAssignedSOPRecord("Department Approval", sopDocNo);
-		  workflowActivities.zoomToRecord();
-		  sopMaster.verifySOPStatus("Department Approval"); //
-		  sopMaster.clickPreview(); // printReport.verifyPrintReport();
-		  sopMaster.ensureOnSOPMasterHeader(sopDocNo);
-		  
-		  log.
-		  info("Stage 2 - Step 52: EngManager rejects SOP (Answer: No) -> Status updates to 'Not Approved'..."
-		  ); sopMaster.performDocActionWithAnswer("No", null);
-		  sopMaster.verifySOPStatus("Not Approved"); dashboard.clickLogout();
-		  
-		  log.
-		  info("Stage 2 - Step 53: Initiator [{}] re-signs Prepared By and re-submits to EngReviewer [{}]..."
-		  , engUser, engReviewer); loginPage.login(engUser, password);
-		  clientAndRole.selectClientAndRole(client, engUserRole);
-		  
-		  try { workflowActivities.navigateToWorkflowActivities();
-		  workflowActivities.clickOnAssignedSOPRecord("Draft", sopDocNo);
-		  workflowActivities.zoomToRecord(); } catch (Exception e) {
-		  log.info("Navigating to SOP Master via menu search fallback: {}",
-		  e.getMessage()); sopMaster.ensureOnSOPMasterHeader(sopDocNo); }
-		  
-		  sopMaster.completeDigitalSignature("PreparedBy", engUserDept, password);
-		  sopMaster.completeDocActionAndAssignTo(engReviewer);
-		  sopMaster.verifySOPStatus("Internal Reviewal"); dashboard.clickLogout();
-		  
-		  log.
-		  info("Stage 2 - Step 54: EngReviewer [{}] signs Checked By and assigns to EngManager [{}]..."
-		  , engReviewer, engManager); loginPage.login(engReviewer, password);
-		  clientAndRole.selectClientAndRole(client, engReviewerRole);
-		  
-		  workflowActivities.navigateToWorkflowActivities();
-		  workflowActivities.clickOnAssignedSOPRecord("Internal Review", sopDocNo);
-		  workflowActivities.zoomToRecord();
-		  sopMaster.completeDigitalSignature("CheckedBy", engReviewerDept, password);
-		  sopMaster.performDocActionWithAnswer("Yes", engManager);
-		  sopMaster.verifySOPStatus("Department Approval"); dashboard.clickLogout();
-		  
-		  log.
-		  info("Stage 2 - Step 55-58: EngManager [{}] signs Reviewed By and approves workflow -> 'QA Approval'..."
-		  , engManager); loginPage.login(engManager, password);
-		  clientAndRole.selectClientAndRole(client, engManagerRole);
-		  
-		  workflowActivities.navigateToWorkflowActivities();
-		  workflowActivities.clickOnAssignedSOPRecord("Department Approval", sopDocNo);
-		  workflowActivities.zoomToRecord();
-		  sopMaster.verifySOPStatus("Department Approval"); //
-		  sopMaster.clickPreview(); // printReport.verifyPrintReport();
-		  sopMaster.ensureOnSOPMasterHeader(sopDocNo);
-		  sopMaster.completeDigitalSignature("ReviewedBy", engManagerDept, password);
-		  sopMaster.performDocActionWithAnswer("Yes", null);
-		  sopMaster.verifySOPStatus("QA Approval"); dashboard.clickLogout();
-		  
-		  // STAGE 3: QA Approval (QAReviewer)
-		  
-		  log.
-		  info("Stage 3 - Step 60-62: QAReviewer [{}] logs in, previews report and rejects workflow (Answer: No)..."
-		  , qaReviewer); loginPage.login(qaReviewer, password);
-		  clientAndRole.selectClientAndRole(client, qaReviewerRole);
-		  
-		  workflowActivities.navigateToWorkflowActivities();
-		  workflowActivities.clickOnAssignedSOPRecord("QA Approval", sopDocNo);
-		  workflowActivities.zoomToRecord(); sopMaster.verifySOPStatus("QA Approval");
-		  // sopMaster.clickPreview(); // printReport.verifyPrintReport();
-		  sopMaster.ensureOnSOPMasterHeader(sopDocNo);
-		  
-		  log.
-		  info("Stage 3 - Step 62: QAReviewer rejects SOP (Answer: No) -> Status updates to 'Not Approved'..."
-		  ); sopMaster.performDocActionWithAnswer("No", null);
-		  sopMaster.verifySOPStatus("Not Approved"); dashboard.clickLogout();
-		  
-		  log.
-		  info("Stage 3 - Step 63: Initiator [{}] re-signs Prepared By and re-submits to EngReviewer [{}]..."
-		  , engUser, engReviewer); loginPage.login(engUser, password);
-		  clientAndRole.selectClientAndRole(client, engUserRole);
-		  
-		  try { workflowActivities.navigateToWorkflowActivities();
-		  workflowActivities.clickOnAssignedSOPRecord("Draft", sopDocNo);
-		  workflowActivities.zoomToRecord(); } catch (Exception e) {
-		  log.info("Navigating to SOP Master via menu search fallback: {}",
-		  e.getMessage()); sopMaster.ensureOnSOPMasterHeader(sopDocNo); }
-		  
-		  sopMaster.completeDigitalSignature("PreparedBy", engUserDept, password);
-		  sopMaster.completeDocActionAndAssignTo(engReviewer);
-		  sopMaster.verifySOPStatus("Internal Reviewal"); dashboard.clickLogout();
-		 
+		log.info("Stage 1 - Step 36-40: Logging in with EngReviewer [{}] and zooming to SOP record [{}]...",
+				engReviewer, sopDocNo);
+		loginPage.login(engReviewer, password);
+		clientAndRole.selectClientAndRole(client, engReviewerRole);
+
+		workflowActivities.navigateToWorkflowActivities();
+		workflowActivities.clickOnAssignedSOPRecord("Internal Review", sopDocNo);
+		workflowActivities.zoomToRecord();
+		sopMaster.clickPreview();
+		printReport.verifyPrintReport();
+		sopMaster.ensureOnSOPMasterHeader(sopDocNo);
+
+		log.info("Stage 1 - Step 41: EngReviewer rejects SOP (Answer: No) -> Status updates to 'Not Approved'...");
+		sopMaster.performDocActionWithAnswer("No", null);
+		sopMaster.verifySOPStatus("Not Approved");
+		dashboard.clickLogout();
+
+		log.info("Stage 1 - Step 42-45: Initiator [{}] re-signs Prepared By and re-submits to EngReviewer [{}]...",
+				engUser, engReviewer);
+		loginPage.login(engUser, password);
+		clientAndRole.selectClientAndRole(client, engUserRole);
+
+		try {
+			workflowActivities.navigateToWorkflowActivities();
+			workflowActivities.clickOnAssignedSOPRecord("Draft", sopDocNo);
+			workflowActivities.zoomToRecord();
+		} catch (Exception e) {
+			log.info("Navigating to SOP Master via menu search fallback: {}", e.getMessage());
+			sopMaster.ensureOnSOPMasterHeader(sopDocNo);
+		}
+
+		sopMaster.completeDigitalSignature("PreparedBy", engUserDept, password);
+		sopMaster.completeDocActionAndAssignTo(engReviewer);
+		sopMaster.verifySOPStatus("Internal Reviewal");
+		dashboard.clickLogout();
+
+		log.info("Stage 1 - Step 46-49: EngReviewer [{}] signs Checked By, approves and assigns to EngManager [{}]...",
+				engReviewer, engManager);
+		loginPage.login(engReviewer, password);
+		clientAndRole.selectClientAndRole(client, engReviewerRole);
+
+		workflowActivities.navigateToWorkflowActivities();
+		workflowActivities.clickOnAssignedSOPRecord("Internal Review", sopDocNo);
+		workflowActivities.zoomToRecord();
+		sopMaster.clickPreview();
+		printReport.verifyPrintReport();
+		sopMaster.ensureOnSOPMasterHeader(sopDocNo);
+		sopMaster.completeDigitalSignature("CheckedBy", engReviewerDept, password);
+		sopMaster.performDocActionWithAnswer("Yes", engManager);
+		sopMaster.verifySOPStatus("Department Approval");
+		dashboard.clickLogout();
+
+		// STAGE 2: Department Approval (EngManager)
+
+		log.info("Stage 2 - Step 50-52: EngManager [{}] logs in, previews report and rejects workflow (Answer: No)...",
+				engManager);
+		loginPage.login(engManager, password);
+		clientAndRole.selectClientAndRole(client, engManagerRole);
+
+		workflowActivities.navigateToWorkflowActivities();
+		workflowActivities.clickOnAssignedSOPRecord("Department Approval", sopDocNo);
+		workflowActivities.zoomToRecord();
+		sopMaster.verifySOPStatus("Department Approval");
+		sopMaster.clickPreview(); 
+		printReport.verifyPrintReport();
+		sopMaster.ensureOnSOPMasterHeader(sopDocNo);
+
+		log.info("Stage 2 - Step 52: EngManager rejects SOP (Answer: No) -> Status updates to 'Not Approved'...");
+		sopMaster.performDocActionWithAnswer("No", null);
+		sopMaster.verifySOPStatus("Not Approved");
+		dashboard.clickLogout();
+
+		log.info("Stage 2 - Step 53: Initiator [{}] re-signs Prepared By and re-submits to EngReviewer [{}]...",
+				engUser, engReviewer);
+		loginPage.login(engUser, password);
+		clientAndRole.selectClientAndRole(client, engUserRole);
+
+		try {
+			workflowActivities.navigateToWorkflowActivities();
+			workflowActivities.clickOnAssignedSOPRecord("Draft", sopDocNo);
+			workflowActivities.zoomToRecord();
+		} catch (Exception e) {
+			log.info("Navigating to SOP Master via menu search fallback: {}", e.getMessage());
+			sopMaster.ensureOnSOPMasterHeader(sopDocNo);
+		}
+
+		sopMaster.completeDigitalSignature("PreparedBy", engUserDept, password);
+		sopMaster.completeDocActionAndAssignTo(engReviewer);
+		sopMaster.verifySOPStatus("Internal Reviewal");
+		dashboard.clickLogout();
+
+		log.info("Stage 2 - Step 54: EngReviewer [{}] signs Checked By and assigns to EngManager [{}]...", engReviewer,
+				engManager);
+		loginPage.login(engReviewer, password);
+		clientAndRole.selectClientAndRole(client, engReviewerRole);
+
+		workflowActivities.navigateToWorkflowActivities();
+		workflowActivities.clickOnAssignedSOPRecord("Internal Review", sopDocNo);
+		workflowActivities.zoomToRecord();
+		sopMaster.completeDigitalSignature("CheckedBy", engReviewerDept, password);
+		sopMaster.performDocActionWithAnswer("Yes", engManager);
+		sopMaster.verifySOPStatus("Department Approval");
+		dashboard.clickLogout();
+
+		log.info("Stage 2 - Step 55-58: EngManager [{}] signs Reviewed By and approves workflow -> 'QA Approval'...",
+				engManager);
+		loginPage.login(engManager, password);
+		clientAndRole.selectClientAndRole(client, engManagerRole);
+
+		workflowActivities.navigateToWorkflowActivities();
+		workflowActivities.clickOnAssignedSOPRecord("Department Approval", sopDocNo);
+		workflowActivities.zoomToRecord();
+		sopMaster.verifySOPStatus("Department Approval");
+		sopMaster.clickPreview(); 
+		printReport.verifyPrintReport();
+		sopMaster.ensureOnSOPMasterHeader(sopDocNo);
+		sopMaster.completeDigitalSignature("ReviewedBy", engManagerDept, password);
+		sopMaster.performDocActionWithAnswer("Yes", null);
+		sopMaster.verifySOPStatus("QA Approval");
+		dashboard.clickLogout();
+
+		// STAGE 3: QA Approval (QAReviewer)
+
+		log.info("Stage 3 - Step 60-62: QAReviewer [{}] logs in, previews report and rejects workflow (Answer: No)...",
+				qaReviewer);
+		loginPage.login(qaReviewer, password);
+		clientAndRole.selectClientAndRole(client, qaReviewerRole);
+
+		workflowActivities.navigateToWorkflowActivities();
+		workflowActivities.clickOnAssignedSOPRecord("QA Approval", sopDocNo);
+		workflowActivities.zoomToRecord();
+		sopMaster.verifySOPStatus("QA Approval");
+		// sopMaster.clickPreview(); 
+		// printReport.verifyPrintReport();
+		sopMaster.ensureOnSOPMasterHeader(sopDocNo);
+
+		log.info("Stage 3 - Step 62: QAReviewer rejects SOP (Answer: No) -> Status updates to 'Not Approved'...");
+		sopMaster.performDocActionWithAnswer("No", null);
+		sopMaster.verifySOPStatus("Not Approved");
+		dashboard.clickLogout();
+
+		log.info("Stage 3 - Step 63: Initiator [{}] re-signs Prepared By and re-submits to EngReviewer [{}]...",
+				engUser, engReviewer);
+		loginPage.login(engUser, password);
+		clientAndRole.selectClientAndRole(client, engUserRole);
+
+		try {
+			workflowActivities.navigateToWorkflowActivities();
+			workflowActivities.clickOnAssignedSOPRecord("Draft", sopDocNo);
+			workflowActivities.zoomToRecord();
+		} catch (Exception e) {
+			log.info("Navigating to SOP Master via menu search fallback: {}", e.getMessage());
+			sopMaster.ensureOnSOPMasterHeader(sopDocNo);
+		}
+
+		sopMaster.completeDigitalSignature("PreparedBy", engUserDept, password);
+		sopMaster.completeDocActionAndAssignTo(engReviewer);
+		sopMaster.verifySOPStatus("Internal Reviewal");
+		dashboard.clickLogout();
 
 		log.info("Stage 3 - Step 64: EngReviewer [{}] signs Checked By and assigns to EngManager [{}]...", engReviewer,
 				engManager);

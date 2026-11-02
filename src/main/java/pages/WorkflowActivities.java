@@ -141,6 +141,7 @@ public class WorkflowActivities {
 	 * Clicks the Zoom button to open the SOP Master window for the selected record.
 	 */
 	public void zoomToRecord() {
+		page.waitForTimeout(2000);
 		log.info("Clicking Zoom button to open SOP Master record...");
 		Locator zoomBtn = page.locator(
 				"//button[@title='Zoom'] | //button[contains(@class,'z-button') and contains(@title,'Zoom')] | //button[contains(.,'Zoom')]")
