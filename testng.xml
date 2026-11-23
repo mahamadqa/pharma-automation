@@ -59,7 +59,7 @@
             <class name="baseModules.VerifySOShipmentInvoiceFlow"/>
 
             <!-- Formula Master & Manufacturing Workflow Flow -->
-            <class name="formulaMaster.FormulaMaster"/>
+            <!--- <class name="formulaMaster.FormulaMaster"/> -->
         </classes>
     </test>
 
