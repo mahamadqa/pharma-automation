@@ -57,6 +57,9 @@
             <!-- Base Modules (Run concurrently in parallel across worker threads) -->
             <class name="baseModules.CreateGRNFromPOFlow"/>
             <class name="baseModules.VerifySOShipmentInvoiceFlow"/>
+
+            <!-- Formula Master & Manufacturing Workflow Flow -->
+            <class name="formulaMaster.FormulaMaster"/>
         </classes>
     </test>
 

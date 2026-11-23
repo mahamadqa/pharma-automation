@@ -43,9 +43,12 @@ import pages.DocumentExplorer;
 import pages.SystemConfiguration;
 import pages.SOPRequest;
 import pages.SOPFormatRequest;
+import pages.ManufacturingWorkflow;
+import pages.FormulaMasterPage;
 import utils.ConfigReader;
 import utils.CustomSoftAssert;
 import utils.ExtentManager;
+import utils.RetryAnalyzer;
 
 @Listeners({ utils.MyListener.class, utils.RetryListener.class })
 public class BaseTest {
@@ -89,6 +92,8 @@ public class BaseTest {
 	protected SystemConfiguration systemConfiguration;
 	protected SOPRequest sopRequest;
 	protected SOPFormatRequest sopFormatRequest;
+	protected ManufacturingWorkflow manufacturingWorkflow;
+	protected FormulaMasterPage formulaMasterPage;
 
 	protected static ExtentReports extent;
 	protected static ExtentSparkReporter sparkReporter;
@@ -238,6 +243,8 @@ public class BaseTest {
 		systemConfiguration = new SystemConfiguration(page);
 		sopRequest = new SOPRequest(page);
 		sopFormatRequest = new SOPFormatRequest(page);
+		manufacturingWorkflow = new ManufacturingWorkflow(page);
+		formulaMasterPage = new FormulaMasterPage(page);
 
 		loginPage.navigateToMainLoginPage();
 		loginPage.checkLogoOnLogin();
@@ -255,7 +262,9 @@ public class BaseTest {
 			log.error("Soft assertion failure(s) detected in [{}] (Total: {})",
 					result.getMethod().getMethodName(), sa.getFailureCount());
 			sa.attachAllFailuresToReport();
-			result.setStatus(ITestResult.FAILURE);
+			if (!RetryAnalyzer.isRetrying(result)) {
+				result.setStatus(ITestResult.FAILURE);
+			}
 		}
 
 		// 2. Capture screenshot & log status if test failed
@@ -299,9 +308,11 @@ public class BaseTest {
 
 		// 4. Finally call sa.assertAll() if there were soft assertion failures
 		// This ensures TestNG records the test as failed with full assertion details!
+		// DO NOT throw inside tearDown if a retry is currently in progress, to avoid
+		// marking the @AfterMethod configuration as FAILED in TestNG.
 		if (sa != null) {
 			softAssertTL.remove();
-			if (hasSoftFailures) {
+			if (hasSoftFailures && !RetryAnalyzer.isRetrying(result)) {
 				sa.assertAll();
 			}
 		}
